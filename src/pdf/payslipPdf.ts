@@ -1,4 +1,4 @@
-import type { Payslip } from "../payslip";
+import { combinePayslips, siteRateText, type Payslip } from "../payslip";
 import { BAND, BRAND, GROSS, INK, LINE, MUTED, NET, NIS, PAGE_H, PAGE_W, PAYE, SURCHARGE, rgb, usd } from "./common";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -42,7 +42,7 @@ function drawSlip(doc: Doc, s: Payslip, preparedOn: string) {
   text(doc, "PAYSLIP", M, 66, { size: 26, bold: true });
   text(doc, `Pay period: ${name}`, M, 86, { size: 11, color: MUTED });
   text(doc, "PAYSLIP FOR", RIGHT, 48, { size: 8, bold: true, color: MUTED, align: "right" });
-  text(doc, s.payerName, RIGHT, 68, { size: 16, bold: true, align: "right" });
+  text(doc, s.employee || "All sites", RIGHT, 68, { size: 16, bold: true, align: "right" });
   hr(doc, 104, LINE, 1);
 
   // Details
@@ -62,29 +62,37 @@ function drawSlip(doc: Doc, s: Payslip, preparedOn: string) {
     text(doc, value, x, y + 15, { size: 11, bold: true });
   });
 
-  // Earnings
+  // Earnings: each site once
   let y = 232;
   sectionTitle(doc, "EARNINGS", y);
   y += 14;
   doc.setFillColor(...rgb(BAND));
   doc.rect(M, y, RIGHT - M, 22, "F");
-  text(doc, "Description", M + 8, y + 15, { size: 9, bold: true, color: MUTED });
-  text(doc, "Quantity", 360, y + 15, { size: 9, bold: true, color: MUTED, align: "right" });
-  text(doc, "Rate", 450, y + 15, { size: 9, bold: true, color: MUTED, align: "right" });
+  const cx = { days: 300, hours: 372, rate: 462 };
+  text(doc, "Site", M + 8, y + 15, { size: 9, bold: true, color: MUTED });
+  text(doc, "Days", cx.days, y + 15, { size: 9, bold: true, color: MUTED, align: "right" });
+  text(doc, "Hours", cx.hours, y + 15, { size: 9, bold: true, color: MUTED, align: "right" });
+  text(doc, "Rate", cx.rate, y + 15, { size: 9, bold: true, color: MUTED, align: "right" });
   text(doc, "Amount", RIGHT - 8, y + 15, { size: 9, bold: true, color: MUTED, align: "right" });
   y += 22;
-  const rowH = s.lines.length > 12 ? 16 : 21;
-  const font = s.lines.length > 12 ? 9 : 10;
-  s.lines.forEach((l, i) => {
+  const rows = [...s.sites.map((b) => ({
+    label: b.label, days: String(b.days), hours: b.weighted ? `${Math.round(b.weighted * 100) / 100} h` : "-",
+    rate: siteRateText(b, usd), amount: b.amount,
+  })), ...s.lines.map((l) => ({ label: l.description, days: "", hours: "", rate: "", amount: l.amount }))];
+  const rowH = rows.length > 12 ? 16 : 21;
+  const font = rows.length > 12 ? 9 : 10;
+  rows.forEach((r, i) => {
     if (i % 2 === 1) { doc.setFillColor(250, 251, 252); doc.rect(M, y, RIGHT - M, rowH, "F"); }
     const baseline = y + rowH / 2 + font / 3;
-    const label = l.description.length > 50 ? `${l.description.slice(0, 49)}...` : l.description;
-    text(doc, label, M + 8, baseline, { size: font });
-    if (l.unit) text(doc, `${l.qty} ${l.unit === "days" && l.qty === 1 ? "day" : l.unit}`, 360, baseline, { size: font, align: "right" });
-    text(doc, usd(l.rate), 450, baseline, { size: font, align: "right" });
-    text(doc, usd(l.amount), RIGHT - 8, baseline, { size: font, align: "right" });
+    text(doc, r.label.length > 34 ? `${r.label.slice(0, 33)}...` : r.label, M + 8, baseline, { size: font });
+    if (r.days) text(doc, r.days, cx.days, baseline, { size: font, align: "right" });
+    if (r.hours) text(doc, r.hours, cx.hours, baseline, { size: font, align: "right" });
+    if (r.rate) text(doc, r.rate, cx.rate, baseline, { size: font - 1, align: "right" });
+    text(doc, usd(r.amount), RIGHT - 8, baseline, { size: font, align: "right" });
     y += rowH;
   });
+  text(doc, "Hours are weighted: overtime counted as normal hours (x1.5, x2, x3). See the next page.", M + 8, y + 12, { size: 7.5, color: MUTED });
+  y += 16;
   hr(doc, y, INK, 0.9);
   y += 18;
   text(doc, "Gross pay", M + 8, y, { size: 11, bold: true });
@@ -280,11 +288,8 @@ export async function payslipPdf(slips: Payslip[], preparedOn = new Date()): Pro
   doc.setProperties({ title: `Payslip ${slips[0]?.month ?? ""}`, creator: "HHSL Salary Tracker" });
   const on = `${preparedOn.getDate()} ${MONTHS[preparedOn.getMonth()]} ${preparedOn.getFullYear()}`;
 
-  slips.forEach((s, i) => {
-    if (i > 0) doc.addPage();
-    drawSlip(doc, s, on);
-
-  });
+  const combined = combinePayslips(slips);
+  if (combined) drawSlip(doc, combined, on);
   if (slips.some((x) => x.sites.length)) { doc.addPage(); drawBreakdown(doc, slips); }
   if (slips.length > 1) {
     doc.addPage();

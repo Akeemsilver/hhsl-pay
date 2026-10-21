@@ -61,6 +61,8 @@ export interface Payslip {
   days: number;
   /** The payslip's own gross or PAYE replaced the calculated figure. */
   corrected: boolean;
+  /** Dates worked, so payslips can be combined without double counting. */
+  dates: string[];
   /** Per site (and role) breakdown of hours at each pay multiple. */
   sites: SiteBreakdown[];
   ytd: { gross: number; net: number; paye: number; nis: number; surcharge: number };
@@ -130,8 +132,41 @@ export function buildPayslips(month: string, data: AppData, employee: string): P
       lines, sites: siteBreakdown(mine), gross: p.gross, paye: p.paye, nis: p.nis, surcharge: p.surcharge, net: p.net,
       hours: mine.reduce((s, e) => s + e.entry.hours, 0),
       days: new Set(mine.filter((e) => e.pay.total > 0).map((e) => e.entry.date)).size,
+      dates: [...new Set(mine.filter((e) => e.pay.total > 0).map((e) => e.entry.date))],
       corrected: p.corrected,
       ytd,
     };
   }).filter((s) => monthOf(`${s.month}-01`) === month);
+}
+
+/** One payslip covering every payer: each site is one line, taxes and totals are added up. */
+export function combinePayslips(slips: Payslip[]): Payslip | undefined {
+  const first = slips[0];
+  if (!first) return undefined;
+  const sum = (f: (s: Payslip) => number) => round2(slips.reduce((t, s) => t + f(s), 0));
+  const sites = slips.flatMap((s) => s.sites);
+  const siteTotal = round2(sites.reduce((t, b) => t + b.amount, 0));
+  const gross = sum((s) => s.gross);
+  const lines: PayslipLine[] = [];
+  if (Math.abs(gross - siteTotal) > 0.005) {
+    lines.push({ description: "Adjustment to match your payslip", qty: 1, unit: "", rate: round2(gross - siteTotal), amount: round2(gross - siteTotal) });
+  }
+  return {
+    month: first.month, payer: "all", payerName: "All sites", employee: first.employee,
+    lines, dates: [...new Set(slips.flatMap((s) => s.dates))], sites,
+    gross, paye: sum((s) => s.paye), nis: sum((s) => s.nis), surcharge: sum((s) => s.surcharge), net: sum((s) => s.net),
+    hours: sum((s) => s.hours),
+    days: new Set(slips.flatMap((s) => s.dates)).size,
+    corrected: slips.some((s) => s.corrected),
+    ytd: {
+      gross: sum((s) => s.ytd.gross), net: sum((s) => s.ytd.net), paye: sum((s) => s.ytd.paye),
+      nis: sum((s) => s.ytd.nis), surcharge: sum((s) => s.ytd.surcharge),
+    },
+  };
+}
+
+/** The text for a site's rate column: hourly, or per day on a flat-pay site; a range if the rate changed during the month. */
+export function siteRateText(b: SiteBreakdown, fmt: (n: number) => string): string {
+  const lo = b.rates[0] ?? 0, hi = b.rates[b.rates.length - 1] ?? 0;
+  return `${lo === hi ? fmt(lo) : `${fmt(lo)} - ${fmt(hi)}`}${b.flat ? " /day" : " /h"}`;
 }

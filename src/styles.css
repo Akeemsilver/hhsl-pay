@@ -574,3 +574,6 @@ button.icon.gear, .bar.page button.icon { transition: box-shadow .15s, transform
 .bar.page button.icon[aria-label="Back"] { border-radius: 50%; background: var(--card); border: 1px solid var(--line); box-shadow: 0 2px 3px rgba(16,24,40,.12), 0 8px 18px rgba(16,24,40,.18), 0 16px 30px rgba(16,24,40,.10); }
 :root[data-theme="dark"] button.icon.gear, :root[data-theme="dark"] .bar.page button.icon[aria-label="Back"] { box-shadow: 0 2px 4px rgba(0,0,0,.5), 0 8px 18px rgba(0,0,0,.55); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) button.icon.gear, :root:not([data-theme="light"]) .bar.page button.icon[aria-label="Back"] { box-shadow: 0 2px 4px rgba(0,0,0,.5), 0 8px 18px rgba(0,0,0,.55); } }
+.slip-lines .block { display: block; }
+.slip-lines th { font-size: 0.7rem; color: var(--muted); text-align: left; font-weight: 600; text-transform: uppercase; }
+.slip-lines th.num { text-align: right; }

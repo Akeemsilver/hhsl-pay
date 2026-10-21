@@ -104,3 +104,16 @@ describe("site breakdown", () => {
     void slip;
   });
 });
+
+describe("combined payslip", () => {
+  it("adds every payslip together with each site once", async () => {
+    const { combinePayslips } = await import("../src/payslip");
+    const entries = [e("1", "2026-07-01", "Alpha"), e("4", "2026-07-06", "Beta")];
+    const slips = buildPayslips("2026-07", data(entries), "Test");
+    const all = combinePayslips(slips)!;
+    expect(all.gross).toBeCloseTo(slips.reduce((s, p) => s + p.gross, 0), 2);
+    expect(all.net).toBeCloseTo(slips.reduce((s, p) => s + p.net, 0), 2);
+    expect(all.sites.map((b) => b.label).sort()).toEqual(["Alpha", "Beta"]);
+    expect(all.days).toBe(2);
+  });
+});

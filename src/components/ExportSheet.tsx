@@ -4,7 +4,7 @@ import { deliver } from "../backup";
 import { MONTHS, hoursText, money } from "../format";
 import { useTemplate } from "../hooks";
 import { useNav } from "../nav";
-import { buildPayslips, type Payslip } from "../payslip";
+import { buildPayslips, combinePayslips, siteRateText, type Payslip } from "../payslip";
 import { payslipFileName, payslipPdf } from "../pdf/payslipPdf";
 import { timesheetPdf } from "../pdf/timesheetPdf";
 import { useStore } from "../store";
@@ -22,13 +22,18 @@ function SlipPreview({ slip }: { slip: Payslip }) {
         <div className="right"><span className="muted small">{slip.days} days · {hoursText(slip.hours)} h</span></div>
       </div>
       <table className="slip-lines">
+        <thead><tr><th>Site</th><th className="num">Days</th><th className="num">Hours</th><th className="num">Amount</th></tr></thead>
         <tbody>
-          {slip.lines.map((l) => (
-            <tr key={l.description + l.rate}>
-              <td>{l.description}</td>
-              <td className="num">{l.unit ? `${hoursText(l.qty)} ${l.unit === "days" && l.qty === 1 ? "day" : l.unit}` : ""}</td>
-              <td className="num">{money(l.amount)}</td>
+          {slip.sites.map((b) => (
+            <tr key={b.label}>
+              <td>{b.label}<small className="muted block">{siteRateText(b, money)}</small></td>
+              <td className="num">{b.days}</td>
+              <td className="num">{b.weighted ? `${hoursText(b.weighted)} h` : "-"}</td>
+              <td className="num">{money(b.amount)}</td>
             </tr>
+          ))}
+          {slip.lines.map((l) => (
+            <tr key={l.description}><td>{l.description}</td><td /><td /><td className="num">{money(l.amount)}</td></tr>
           ))}
         </tbody>
       </table>
@@ -36,20 +41,6 @@ function SlipPreview({ slip }: { slip: Payslip }) {
       <div className="slip-row"><span><i className="dot dot-paye" />PAYE{slip.corrected ? " *" : ""}</span><span className="c-paye">-{money(slip.paye)}</span></div>
       <div className="slip-row"><span><i className="dot dot-nis" />NIS</span><span className="c-nis">-{money(slip.nis)}</span></div>
       <div className="slip-row"><span><i className="dot dot-sur" />Health surcharge</span><span className="c-sur">-{money(slip.surcharge)}</span></div>
-      {slip.sites.length > 0 && (
-        <div className="slip-sites">
-          <h3>Hours &amp; rates by site</h3>
-          {slip.sites.map((b) => (
-            <div className="slip-site" key={b.label}>
-              <div className="slip-site-head"><strong>{b.label}</strong><span className="c-gross">{money(b.amount)}</span></div>
-              <div className="muted small">{b.rates.map((r) => money(r)).join(" / ")}{b.flat ? " per day" : " per hour"} · {b.days} day{b.days === 1 ? "" : "s"} · worked {hoursText(b.hours)} h · weighted {hoursText(b.weighted)} h</div>
-              <div className="slip-tiers">
-                <span>x1<b>{hoursText(b.x1)}</b></span><span>x1.5<b>{hoursText(b.x15)}</b></span><span>x2<b>{hoursText(b.x2)}</b></span><span>x3<b>{hoursText(b.x3)}</b></span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
       <div className="slip-net"><span>NET PAY</span><strong>{money(slip.net)}</strong></div>
     </section>
   );
@@ -68,6 +59,7 @@ export function ExportSheet({ month }: { month: string }) {
   const name = settings.name;
   const { rows, warnings } = useMemo(() => buildTimesheet(month, data.entries, data.history, rules), [month, data, rules]);
   const slips = useMemo(() => buildPayslips(month, data, name), [month, data, name]);
+  const combined = useMemo(() => combinePayslips(slips), [slips]);
   const total = rows.reduce((s, r) => ({ t: s.t + r.hours.t, t15: s.t15 + r.hours.t15, t2: s.t2 + r.hours.t2, t3: s.t3 + r.hours.t3 }), { t: 0, t15: 0, t2: 0, t3: 0 });
   const monthName = `${MONTHS[Number(month.slice(5)) - 1]} ${month.slice(0, 4)}`;
 
@@ -150,7 +142,7 @@ export function ExportSheet({ month }: { month: string }) {
           {slips.length === 0 ? (
             <p className="muted">No pay logged in {monthName}, so there is no payslip yet.</p>
           ) : (
-            slips.map((s) => <SlipPreview key={s.payer} slip={s} />)
+            combined && <SlipPreview slip={combined} />
           )}
           {slips.some((s) => s.corrected) && <p className="muted small">* PAYE or gross was entered from your own payslip.</p>}
           {!name && slips.length > 0 && (
