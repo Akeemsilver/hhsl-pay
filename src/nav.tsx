@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 export type Tab = "home" | "calendar" | "year" | "charts";
 export type Page = "settings" | "rates" | "backup";
@@ -22,8 +22,15 @@ function read(): Loc {
   return s && typeof s.n === "number" && typeof s.tab === "string" ? s : ROOT;
 }
 
+/** Lets a screen refuse a Back press, for example to ask before discarding unsaved changes. */
+export interface Guard {
+  blocks: (next: Loc, current: Loc) => boolean;
+  onBlocked: () => void;
+}
+
 interface Nav {
   loc: Loc;
+  setGuard: (g: Guard | null) => void;
   /** Open a settings page or a day sheet on top of the current screen. */
   open: (next: { page?: Page; day?: string; sub?: string }) => void;
   /** Switch tab; going back to Home returns to the first history entry. */
@@ -41,10 +48,24 @@ export function useNav(): Nav {
 
 export function NavProvider({ children }: { children: ReactNode }) {
   const [loc, setLoc] = useState<Loc>(read);
+  const locRef = useRef(loc);
+  locRef.current = loc;
+  const guard = useRef<Guard | null>(null);
+  const setGuard = useCallback((g: Guard | null) => { guard.current = g; }, []);
 
   useEffect(() => {
     if (!(window.history.state as Loc | null)?.tab) window.history.replaceState(ROOT, "");
-    const onPop = () => setLoc(read());
+    const onPop = () => {
+      const next = read();
+      const g = guard.current;
+      if (g && g.blocks(next, locRef.current)) {
+        // Undo the Back press by putting the current screen back on top, then let the screen react.
+        window.history.pushState(locRef.current, "");
+        g.onBlocked();
+        return;
+      }
+      setLoc(next);
+    };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
@@ -75,6 +96,6 @@ export function NavProvider({ children }: { children: ReactNode }) {
   );
 
   const back = useCallback(() => window.history.back(), []);
-  const value = useMemo(() => ({ loc, open, selectTab, back }), [loc, open, selectTab, back]);
+  const value = useMemo(() => ({ loc, setGuard, open, selectTab, back }), [loc, setGuard, open, selectTab, back]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

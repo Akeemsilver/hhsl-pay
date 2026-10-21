@@ -6,7 +6,7 @@ export interface Entry extends DayEntry {
   kind?: "site" | "other";
   /** What the other job was. */
   description?: string;
-  /** "HH:MM" start and end. Optional for an other job; for a shift they work out the paid hours. */
+  /** "HH:MM" start and end. Optional for an other job; for a job they work out the paid hours. */
   startTime?: string;
   endTime?: string;
   /** Lunch was paid, so no time is taken off. When false or unset, lunchMinutes comes off. */

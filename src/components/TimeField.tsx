@@ -1,22 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { parseTimeInput, to12h, toMinutes } from "../engine";
+import { parseTimeInput, toMinutes } from "../engine";
+import { BottomSheet } from "./BottomSheet";
 import { useNav } from "../nav";
 
 const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const two = (n: number) => String(n).padStart(2, "0");
 
-function split(t: string | undefined): { ampm: "AM" | "PM"; hour: number; minute: number } {
-  const mins = toMinutes(t) ?? 7 * 60;
-  const h = Math.floor(mins / 60);
-  return { ampm: h < 12 ? "AM" : "PM", hour: h % 12 === 0 ? 12 : h % 12, minute: mins % 60 };
-}
-
-function join(ampm: "AM" | "PM", hour: number, minute: number): string {
-  const h24 = (hour % 12) + (ampm === "PM" ? 12 : 0);
-  return `${String(h24).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-}
-
-/** The time picker: quick times, AM/PM, hour and minute, or type it. Saved as 24-hour "HH:MM". */
+/** The time picker: quick times, hour (0-23) and minute dials, or type it. Saved as 24-hour "HH:MM". */
 function TimeSheet({ title, value, quick, onSet, onCancel }: {
   title: string; value: string | undefined; quick: string[];
   onSet: (v: string | undefined) => void; onCancel: () => void;
@@ -25,7 +17,8 @@ function TimeSheet({ title, value, quick, onSet, onCancel }: {
   const [typed, setTyped] = useState("");
   const [typedError, setTypedError] = useState(false);
   const first = useRef<HTMLButtonElement>(null);
-  const { ampm, hour, minute } = split(current);
+  const mins = toMinutes(current) ?? 7 * 60;
+  const hour = Math.floor(mins / 60), minute = mins % 60;
   const minuteOptions = MINUTES.includes(minute) ? MINUTES : [...MINUTES, minute].sort((a, b) => a - b);
 
   useEffect(() => first.current?.focus(), []);
@@ -38,17 +31,11 @@ function TimeSheet({ title, value, quick, onSet, onCancel }: {
   };
 
   return (
-    <div className="sheet-backdrop top" onClick={onCancel}>
-      <div className="sheet time-sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
+    <BottomSheet label={title} onRequestClose={onCancel} top>
+      <div className="time-sheet">
         <div className="time-head">
-          <div>
-            <strong>{title}</strong>
-            <span className="badge">saved as 24-hour</span>
-          </div>
-          <div className="time-big">
-            <span>{current}</span>
-            <small>{to12h(current)}</small>
-          </div>
+          <strong>{title}</strong>
+          <div className="time-big">{current}</div>
         </div>
 
         {quick.length > 0 && (
@@ -63,19 +50,14 @@ function TimeSheet({ title, value, quick, onSet, onCancel }: {
         )}
 
         <div className="dials">
-          <label>AM / PM
-            <select value={ampm} onChange={(e) => setCurrent(join(e.target.value as "AM" | "PM", hour, minute))}>
-              <option>AM</option><option>PM</option>
-            </select>
-          </label>
           <label>Hour
-            <select value={hour} onChange={(e) => setCurrent(join(ampm, Number(e.target.value), minute))}>
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => <option key={h} value={h}>{h}</option>)}
+            <select value={hour} onChange={(e) => setCurrent(`${two(Number(e.target.value))}:${two(minute)}`)}>
+              {HOURS.map((h) => <option key={h} value={h}>{two(h)}</option>)}
             </select>
           </label>
           <label>Minute
-            <select value={minute} onChange={(e) => setCurrent(join(ampm, hour, Number(e.target.value)))}>
-              {minuteOptions.map((m) => <option key={m} value={m}>{String(m).padStart(2, "0")}</option>)}
+            <select value={minute} onChange={(e) => setCurrent(`${two(hour)}:${two(Number(e.target.value))}`)}>
+              {minuteOptions.map((m) => <option key={m} value={m}>{two(m)}</option>)}
             </select>
           </label>
         </div>
@@ -83,11 +65,11 @@ function TimeSheet({ title, value, quick, onSet, onCancel }: {
         <label className="typed">
           Or type the time
           <input
-            value={typed} placeholder="1930, 19:30 or 7:30pm" aria-invalid={typedError}
+            value={typed} placeholder="1930 or 19:30" aria-invalid={typedError} inputMode="numeric"
             onChange={(e) => setTyped(e.target.value)} onBlur={commitTyped}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commitTyped(); } }}
           />
-          {typedError && <span className="bad small" role="alert">That is not a time. Try 1930 or 7:30pm.</span>}
+          {typedError && <span className="bad small" role="alert">That is not a time. Try 1930 or 07:30.</span>}
         </label>
 
         <div className="time-actions">
@@ -99,7 +81,7 @@ function TimeSheet({ title, value, quick, onSet, onCancel }: {
           >Set</button>
         </div>
       </div>
-    </div>
+    </BottomSheet>
   );
 }
 
@@ -132,7 +114,7 @@ export function TimeField({ label, value, quick, onChange }: {
   );
 }
 
-/** The times used most in existing entries, so the picker offers your usual shift times. */
+/** The times used most in existing entries, so the picker offers your usual start and end times. */
 export function quickTimes(times: Array<string | undefined>): string[] {
   const counts = new Map<string, number>();
   for (const t of times) if (t) counts.set(t, (counts.get(t) ?? 0) + 1);

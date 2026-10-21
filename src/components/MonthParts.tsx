@@ -87,7 +87,7 @@ export function DayList({ days, result, today, onPick }: { days: string[]; resul
             <button
               className={`day ${wd === 0 || wd === 6 ? "weekend" : ""} ${date === today ? "today" : ""}`}
               onClick={() => onPick(date)}
-              aria-label={`${WEEKDAYS[wd]} ${Number(date.slice(8))}, ${priced.length ? money(total) : "no shift"}${extra.length ? `, ${extra.length} other job${extra.length > 1 ? "s" : ""}` : ""}`}
+              aria-label={`${WEEKDAYS[wd]} ${Number(date.slice(8))}, ${priced.length ? money(total) : "no job"}${extra.length ? `, ${extra.length} other job${extra.length > 1 ? "s" : ""}` : ""}`}
             >
               <span className="dow">{WEEKDAYS[wd]}</span>
               <span className="dom">{Number(date.slice(8))}</span>
@@ -152,7 +152,7 @@ export function CalendarGrid({ month, days, result, today, onPick, payerOrder }:
               key={date}
               className={`cal-cell ${wd === 0 || wd === 6 ? "weekend" : ""} ${date === today ? "today" : ""} ${state}`}
               onClick={() => onPick(date)}
-              aria-label={`${WEEKDAYS[wd]} ${Number(date.slice(8))}, ${priced.length ? money(total) : "no shift"}${extra.length ? `, ${extra.length} other job${extra.length > 1 ? "s" : ""}` : ""}`}
+              aria-label={`${WEEKDAYS[wd]} ${Number(date.slice(8))}, ${priced.length ? money(total) : "no job"}${extra.length ? `, ${extra.length} other job${extra.length > 1 ? "s" : ""}` : ""}`}
             >
               <span className="n">{Number(date.slice(8))}</span>
               {first && (

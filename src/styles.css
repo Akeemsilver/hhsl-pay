@@ -380,3 +380,19 @@ button.pill { min-height: 32px; padding: 0 12px; border-radius: 999px; font-size
 .dials { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0 4px; }
 .typed { margin-top: 8px; }
 .time-actions { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 8px; margin-top: 12px; }
+
+/* Sheets: grabber, footer, confirm */
+.grabber { width: 40px; height: 5px; border-radius: 999px; background: var(--line); margin: 8px auto 2px; cursor: grab; touch-action: none; }
+.sheet { transition: transform 0.18s ease-out; overscroll-behavior: contain; }
+.sheet-footer {
+  position: sticky; bottom: calc(-16px - env(safe-area-inset-bottom)); display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px;
+  margin: 12px -16px calc(-16px - env(safe-area-inset-bottom)); padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: var(--bg); border-top: 1px solid var(--line);
+}
+.confirm-backdrop { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(0, 0, 0, 0.5); }
+.confirm { width: 100%; max-width: 360px; padding: 18px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
+.confirm h2 { margin-bottom: 6px; }
+.confirm .row { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; margin-top: 14px; }
+@media (prefers-reduced-motion: reduce) { .sheet { transition: none; } }
+.time-big { font-size: 2.6rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1; }
+.dials { grid-template-columns: repeat(2, 1fr); }
