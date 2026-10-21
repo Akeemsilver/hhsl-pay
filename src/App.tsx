@@ -2,16 +2,18 @@ import { NavProvider, useNav, type Tab } from "./nav";
 import { HomeScreen } from "./screens/HomeScreen";
 import { CalendarScreen } from "./screens/CalendarScreen";
 import { YearScreen } from "./screens/YearScreen";
+import { ChartsScreen } from "./screens/ChartsScreen";
 import { SettingsHub } from "./screens/SettingsHub";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { BackupScreen } from "./screens/BackupScreen";
 import { DayEditor } from "./screens/DayEditor";
-import { CalendarIcon, ChartIcon, HomeIcon } from "./components/Icons";
+import { CalendarIcon, HomeIcon, PieIcon, TableIcon } from "./components/Icons";
 
 const TABS: Array<{ id: Tab; label: string; Icon: () => JSX.Element }> = [
   { id: "home", label: "Home", Icon: HomeIcon },
   { id: "calendar", label: "Calendar", Icon: CalendarIcon },
-  { id: "year", label: "Year", Icon: ChartIcon },
+  { id: "year", label: "Year", Icon: TableIcon },
+  { id: "charts", label: "Charts", Icon: PieIcon },
 ];
 
 function Shell() {
@@ -25,6 +27,7 @@ function Shell() {
         {!loc.page && loc.tab === "home" && <HomeScreen />}
         {!loc.page && loc.tab === "calendar" && <CalendarScreen />}
         {!loc.page && loc.tab === "year" && <YearScreen />}
+        {!loc.page && loc.tab === "charts" && <ChartsScreen />}
       </main>
       {!loc.page && (
         <nav className="tabs" aria-label="Main">

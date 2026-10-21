@@ -13,6 +13,8 @@ phone (IndexedDB), with no account and no server. Backup and moving to a new pho
 - PAYE, NIS and health surcharge per payslip, plus a year-end estimate and charts
 - Effective-dated rates and tax rules: a raise applies from its start date only, and a backdated raise reprices the days it covers
 - Payslip corrections (actual gross / PAYE) per month and payslip
+- Dashboard home, calendar grid, and a Charts tab (year to date by site, gross vs net, PAYE vs NIS, split by payslip)
+- Light, dark or system theme from the settings gear
 - Backup, restore, and a rates-only file for sharing a setup
 
 ## Development

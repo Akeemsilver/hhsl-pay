@@ -1,10 +1,11 @@
 import { valueOn } from "../engine";
-import { MONTHS, WEEKDAYS, hoursText, money, shiftMonth, todayISO } from "../format";
+import { MONTHS, WEEKDAYS, daysOfMonth, hoursText, money, shiftMonth, todayISO } from "../format";
 import { useMonth, useYear } from "../hooks";
 import { useNav } from "../nav";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
 import { PlusIcon } from "../components/Icons";
+import { CalendarGrid } from "../components/MonthParts";
 
 const DAY_MS = 86_400_000;
 
@@ -112,6 +113,14 @@ export function HomeScreen() {
       <div className="actions">
         <button className="primary" onClick={() => open({ day: today })}><PlusIcon /> Log today</button>
         <button onClick={() => selectTab("calendar")}>Open calendar</button>
+      </div>
+
+      <div className="home-cal">
+        <div className="card-head">
+          <h2>{MONTHS[thisMonthIndex]}</h2>
+          <button className="link" onClick={() => selectTab("calendar")}>Full calendar</button>
+        </div>
+        <CalendarGrid month={month} days={daysOfMonth(month)} result={thisMonth} today={today} onPick={(d) => open({ day: d })} payerOrder={Object.keys(data.payerNames)} />
       </div>
 
       <section className="card">
