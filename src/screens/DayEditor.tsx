@@ -1,15 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { computeDay, findSite, paidHoursFrom, valueOn, type SiteRates } from "../engine";
+import { computeDay, findSite, paidHoursFrom, valueOn } from "../engine";
 import { WEEKDAYS, durationText, hoursText, money } from "../format";
-import { isOther, newId, withComputedHours, type Entry } from "../model";
+import { isOther, newId, rolesFor, withComputedHours, type Entry } from "../model";
 import { useNav } from "../nav";
 import { useStore } from "../store";
-import { matchRule } from "../timesheet";
 import { BottomSheet } from "../components/BottomSheet";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { TimeField, quickTimes } from "../components/TimeField";
-
-const hasLead = (site: SiteRates | undefined) => !!site && ((site.leadRate ?? 0) > 0 || (site.dailyLead ?? 0) > 0);
 
 const QUICK_JOBS = ["Airport pickup", "Delivery", "Drop-off", "Yard run"];
 
@@ -17,13 +14,14 @@ const QUICK_JOBS = ["Airport pickup", "Delivery", "Drop-off", "Yard run"];
  * Edit one day. Changes are held as a draft until Save. Closing with unsaved changes
  * (pull down, tap outside, the X, Escape or the phone's Back button) asks before discarding.
  */
-export function DayEditor({ date, onClose }: { date: string; onClose: () => void }) {
+export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "job" | "other"; focus?: string; onClose: () => void }) {
   const { data, update } = useStore();
   const { setGuard } = useNav();
   const sites = valueOn(data.history.sites, date);
   const siteNames = Object.keys(sites);
   const original = useRef<Entry[]>(data.entries.filter((e) => e.date === date));
   const [draft, setDraft] = useState<Entry[]>(() => structuredClone(original.current));
+  const started = useRef(false);
   const [confirming, setConfirming] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const wd = new Date(`${date}T00:00:00Z`).getUTCDay();
@@ -31,6 +29,16 @@ export function DayEditor({ date, onClose }: { date: string; onClose: () => void
   const quick = quickTimes(data.entries.flatMap((e) => [e.startTime, e.endTime]));
 
   useEffect(() => closeRef.current?.focus(), []);
+
+  // Opened from the calendar's "Add job": start with a blank job already on the form. Or scroll to the job being edited.
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    if (add === "job" && siteNames.length > 0) setDraft((list) => [...list, newJob()]);
+    else if (add === "other") setDraft((list) => [...list, newOther()]);
+    else if (focus) document.querySelector(`[data-entry-id="${focus}"]`)?.scrollIntoView({ block: "start" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Pressing the phone's Back button while there are unsaved changes asks first instead of closing.
   useEffect(() => {
@@ -46,33 +54,27 @@ export function DayEditor({ date, onClose }: { date: string; onClose: () => void
     leave();
   };
 
-  const timesheetRules = data.timesheet?.rules ?? [];
-
-  /** Changing the site drops a role or lead flag that the new site does not have. */
+  /** Changing the site keeps the role when the new site offers it, otherwise it goes back to "Not applicable". */
   const changeSite = (entry: Entry, name: string) => {
     const next = findSite(sites, name);
-    patch(entry.id, {
-      site: name,
-      role: entry.role && next?.roles && Object.keys(next.roles).some((r) => r.toLowerCase() === entry.role!.toLowerCase()) ? entry.role : undefined,
-      lead: entry.lead && hasLead(next) ? entry.lead : false,
-    });
+    const keep = entry.role && rolesFor(next).some((r) => r.toLowerCase() === entry.role!.toLowerCase());
+    patch(entry.id, { site: name, role: keep ? entry.role : undefined });
   };
-  const setRole = (entry: Entry, value: string) =>
-    patch(entry.id, value === "" ? { role: undefined, lead: false } : value === "__lead" ? { role: undefined, lead: true } : { role: value, lead: false });
 
   const patch = (id: string, changes: Partial<Entry>) =>
     setDraft((list) => list.map((e) => (e.id === id ? withComputedHours({ ...e, ...changes }) : e)));
   const remove = (id: string) => setDraft((list) => list.filter((e) => e.id !== id));
 
   // A new job starts from your most recent job's times and lunch, so a usual 07:00-19:00 day is two taps.
-  const addJob = () => {
+  const newJob = (): Entry => {
     const last = [...data.entries].reverse().find((e) => !isOther(e) && e.startTime && e.endTime);
     const fresh: Entry = { id: newId(), date, site: siteNames[0] ?? "", hours: 0 };
     if (last) Object.assign(fresh, { startTime: last.startTime, endTime: last.endTime, lunchPaid: last.lunchPaid, lunchMinutes: last.lunchMinutes });
-    setDraft((list) => [...list, withComputedHours(fresh)]);
+    return withComputedHours(fresh);
   };
-  const addOther = () =>
-    setDraft((list) => [...list, { id: newId(), date, kind: "other", site: "", hours: 0, description: "" }]);
+  const newOther = (): Entry => ({ id: newId(), date, kind: "other", site: "", hours: 0, description: "" });
+  const addJob = () => setDraft((list) => [...list, newJob()]);
+  const addOther = () => setDraft((list) => [...list, newOther()]);
 
   return (
     <>
@@ -88,7 +90,7 @@ export function DayEditor({ date, onClose }: { date: string; onClose: () => void
           if (isOther(entry)) {
             const duration = durationText(entry.startTime, entry.endTime);
             return (
-              <div className="entry other" key={entry.id}>
+              <div className="entry other" key={entry.id} data-entry-id={entry.id}>
                 <strong className="entry-kind">Other job</strong>
                 <label>
                   What was the job?
@@ -124,7 +126,7 @@ export function DayEditor({ date, onClose }: { date: string; onClose: () => void
           const pay = computeDay(entry, sites);
           const known = siteNames.some((n) => n.toLowerCase() === entry.site.trim().toLowerCase());
           return (
-            <div className="entry" key={entry.id}>
+            <div className="entry" key={entry.id} data-entry-id={entry.id}>
               <label>
                 Site
                 <select value={entry.site} onChange={(e) => changeSite(entry, e.target.value)}>
@@ -133,18 +135,13 @@ export function DayEditor({ date, onClose }: { date: string; onClose: () => void
                 </select>
               </label>
               {(() => {
-                const rates = findSite(sites, entry.site);
-                const roleNames = Object.keys(rates?.roles ?? {});
-                const value = entry.role ?? (entry.lead ? "__lead" : "");
-                const showLead = hasLead(rates) || value === "__lead";
+                const roleNames = rolesFor(findSite(sites, entry.site));
                 const orphan = entry.role && !roleNames.some((r) => r.toLowerCase() === entry.role!.toLowerCase());
-                if (!showLead && roleNames.length === 0 && !orphan) return null;
                 return (
                   <label className="field-short">
                     Role
-                    <select value={value} onChange={(e) => setRole(entry, e.target.value)}>
-                      <option value="">Standard</option>
-                      {showLead && <option value="__lead">Lead / instructor</option>}
+                    <select value={entry.role ?? ""} onChange={(e) => patch(entry.id, { role: e.target.value || undefined })}>
+                      <option value="">Not applicable</option>
                       {roleNames.map((r) => <option key={r} value={r}>{r}</option>)}
                       {orphan && <option value={entry.role}>{entry.role} (not in rates)</option>}
                     </select>
@@ -189,20 +186,22 @@ export function DayEditor({ date, onClose }: { date: string; onClose: () => void
                 </label>
               )}
               <div className="checks">
-                <label><input type="checkbox" checked={!!entry.holiday} onChange={(e) => patch(entry.id, { holiday: e.target.checked })} /> Public holiday</label>
+                <label><input type="checkbox" checked={!!entry.lead} onChange={(e) => patch(entry.id, { lead: e.target.checked })} /> Team lead / instructor</label>
+                <label><input type="checkbox" checked={!!entry.holiday} onChange={(e) => patch(entry.id, { holiday: e.target.checked })} /> Public holiday / TAR</label>
               </div>
-              {matchRule(entry, timesheetRules) && (
-                <label>Job ticket number (optional)
-                  <input value={entry.ticket ?? ""} placeholder="Printed on the timesheet" onChange={(e) => patch(entry.id, { ticket: e.target.value || undefined })} />
-                </label>
-              )}
               <div className="preview">
-                <span>
-                  Paid for {hoursText(entry.hours)} h · {pay.dailyPay > 0 ? `flat ${money(pay.dailyPay)}` : `${money(pay.rate)}/h`}
-                  {pay.tierHours.x15 + pay.tierHours.x2 + pay.tierHours.x3 > 0 &&
-                    ` · OT ${[["×1.5", pay.tierHours.x15], ["×2", pay.tierHours.x2], ["×3", pay.tierHours.x3]].filter(([, h]) => Number(h) > 0).map(([l, h]) => `${h}h ${l}`).join(", ")}`}
-                </span>
-                <strong>{money(pay.total)}</strong>
+                {entry.hours > 0 || pay.dailyPay > 0 ? (
+                  <>
+                    <span>
+                      Paid for {hoursText(entry.hours)} h · {pay.dailyPay > 0 ? `flat ${money(pay.dailyPay)}` : `${money(pay.rate)}/h`}
+                      {pay.tierHours.x15 + pay.tierHours.x2 + pay.tierHours.x3 > 0 &&
+                        ` · OT ${[["×1.5", pay.tierHours.x15], ["×2", pay.tierHours.x2], ["×3", pay.tierHours.x3]].filter(([, h]) => Number(h) > 0).map(([l, h]) => `${h}h ${l}`).join(", ")}`}
+                    </span>
+                    <strong>{money(pay.total)}</strong>
+                  </>
+                ) : (
+                  <span className="muted">Set the start and end time, or the hours, to see the pay.</span>
+                )}
               </div>
               <button className="danger" onClick={() => remove(entry.id)}>Remove</button>
             </div>

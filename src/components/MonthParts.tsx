@@ -119,8 +119,8 @@ export function DayList({ days, result, today, onPick }: { days: string[]; resul
 }
 
 /** Month grid, Sunday first. Each cell shows the day's total and the site(s) worked, plus other jobs. */
-export function CalendarGrid({ month, days, result, today, onPick, payerOrder }: {
-  month: string; days: string[]; result: MonthResult<Entry>; today: string; onPick: (d: string) => void; payerOrder: string[];
+export function CalendarGrid({ month, days, result, today, onPick, payerOrder, selected }: {
+  month: string; days: string[]; result: MonthResult<Entry>; today: string; onPick: (d: string) => void; payerOrder: string[]; selected?: string | null;
 }) {
   const { data } = useStore();
   const others = othersByDate(data.entries, month);
@@ -147,18 +147,24 @@ export function CalendarGrid({ month, days, result, today, onPick, payerOrder }:
           const first = priced[0];
           const tone = first ? Math.max(0, payerOrder.indexOf(siteOf(first.entry.site)?.payer ?? "")) % 4 : 0;
           const state = first ? `worked tone${tone}` : extra.length ? "worked other" : "";
+          const jobCount = priced.length + extra.length;
+          const dotTones = [
+            ...priced.map((p) => Math.max(0, payerOrder.indexOf(siteOf(p.entry.site)?.payer ?? "")) % 4),
+            ...extra.map(() => "o"),
+          ].slice(0, 4);
           return (
             <button
               key={date}
-              className={`cal-cell ${wd === 0 || wd === 6 ? "weekend" : ""} ${date === today ? "today" : ""} ${state}`}
+              className={`cal-cell ${wd === 0 || wd === 6 ? "weekend" : ""} ${date === today ? "today" : ""} ${selected === date ? "selected" : ""} ${state}`}
               onClick={() => onPick(date)}
+              aria-pressed={selected === undefined ? undefined : selected === date}
               aria-label={`${WEEKDAYS[wd]} ${Number(date.slice(8))}, ${priced.length ? money(total) : "no job"}${extra.length ? `, ${extra.length} other job${extra.length > 1 ? "s" : ""}` : ""}`}
             >
               <span className="n">{Number(date.slice(8))}</span>
               {first && (
                 <>
                   <span className="amt">${Math.round(total).toLocaleString("en-US")}</span>
-                  <span className="cal-site">{first.entry.site.slice(0, 5)}{priced.length > 1 ? ` +${priced.length - 1}` : ""}</span>
+                  {jobCount === 1 && <span className="cal-site">{first.entry.site.slice(0, 5)}</span>}
                 </>
               )}
               {!first && extra[0] && (
@@ -167,7 +173,12 @@ export function CalendarGrid({ month, days, result, today, onPick, payerOrder }:
                   <span className="cal-site">{(extra[0].description || "job").slice(0, 6)}</span>
                 </>
               )}
-              {first && extra.length > 0 && <span className="dot" title="Other job" aria-hidden="true" />}
+              {jobCount > 1 && (
+                <span className="dots" aria-hidden="true">
+                  {dotTones.map((t, i) => <span key={i} className={`d tone${t}`} />)}
+                  {jobCount > 4 && <span className="more">+</span>}
+                </span>
+              )}
             </button>
           );
         })}

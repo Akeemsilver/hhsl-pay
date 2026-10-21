@@ -99,7 +99,7 @@ export async function fillTimesheet(template: ArrayBuffer | Uint8Array, input: T
     xml = setCell(xml, `H${r}`, row ? num(row.hours.t2) : null);
     xml = setCell(xml, `I${r}`, row ? num(row.hours.t3) : null);
     xml = setCell(xml, `J${r}`, row?.client ?? null);
-    xml = setCell(xml, `K${r}`, row?.ticket ?? null);
+    xml = setCell(xml, `K${r}`, null);
     if (row) {
       totals.t += row.hours.t; totals.t15 += row.hours.t15; totals.t2 += row.hours.t2; totals.t3 += row.hours.t3;
     }

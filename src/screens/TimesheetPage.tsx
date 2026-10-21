@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { emptyTimesheetSettings, type TimesheetRule } from "../timesheet";
 import { useTemplate } from "../hooks";
+import { DEFAULT_ROLES } from "../model";
 import { useStore } from "../store";
 import { PageHeader } from "../components/TopBar";
 
@@ -14,7 +15,7 @@ export function TimesheetPage() {
 
   const sites = new Map<string, string[]>();
   for (const v of data.history.sites) for (const [name, s] of Object.entries(v.value)) {
-    const roles = new Set([...(sites.get(name) ?? []), ...Object.keys(s.roles ?? {})]);
+    const roles = new Set([...DEFAULT_ROLES, ...(sites.get(name) ?? []), ...Object.keys(s.roles ?? {})]);
     sites.set(name, [...roles]);
   }
   const siteNames = [...sites.keys()];

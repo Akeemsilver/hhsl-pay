@@ -38,3 +38,13 @@ describe("other jobs", () => {
     expect(m.get("2026-07-01")?.[0]?.description).toBe("Airport pickup");
   });
 });
+
+import { DEFAULT_ROLES, rolesFor } from "../src/model";
+
+describe("roles", () => {
+  it("offers the default roles everywhere, plus any custom ones on the site", () => {
+    expect(rolesFor(undefined)).toEqual([...DEFAULT_ROLES]);
+    expect(rolesFor({ payer: "main", weekday: {}, weekend: {}, holiday: {}, roles: { Instructor: {}, "client MEDIC": { rate: 70 } } }))
+      .toEqual(["Client medic", "Offshore", "Paramedic", "Instructor"]);
+  });
+});

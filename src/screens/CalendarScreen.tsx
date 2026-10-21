@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { valueOn } from "../engine";
 import { MONTHS, daysOfMonth, shiftMonth, todayISO } from "../format";
 import { useMonth } from "../hooks";
@@ -7,6 +7,7 @@ import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
 import { BackIcon, DownloadIcon, ForwardIcon } from "../components/Icons";
 import { TimesheetSheet } from "../components/TimesheetSheet";
+import { DayPanel } from "../components/DayPanel";
 import { CalendarGrid, CorrectionBox, DayList, MonthSummary } from "../components/MonthParts";
 
 export function CalendarScreen() {
@@ -14,6 +15,9 @@ export function CalendarScreen() {
   const { loc, open } = useNav();
   const [month, setMonth] = useState(todayISO().slice(0, 7));
   const [view, setView] = useState<"calendar" | "list">("calendar");
+  const [selected, setSelected] = useState<string | null>(todayISO);
+  // Switching month selects today when it is in that month, otherwise nothing.
+  useEffect(() => setSelected(todayISO().startsWith(month) ? todayISO() : null), [month]);
   const result = useMonth(month);
   const days = daysOfMonth(month);
   const today = todayISO();
@@ -45,9 +49,14 @@ export function CalendarScreen() {
 
       {noSites && <p className="notice">Add your sites under the settings gear before logging days.</p>}
 
-      {view === "calendar"
-        ? <CalendarGrid month={month} days={days} result={result} today={today} onPick={(d) => open({ day: d })} payerOrder={payerOrder} />
-        : <DayList days={days} result={result} today={today} onPick={(d) => open({ day: d })} />}
+      {view === "calendar" ? (
+        <>
+          <CalendarGrid month={month} days={days} result={result} today={today} selected={selected} onPick={setSelected} payerOrder={payerOrder} />
+          {selected ? <DayPanel date={selected} /> : <p className="muted pad">Tap a date to see its jobs and add one.</p>}
+        </>
+      ) : (
+        <DayList days={days} result={result} today={today} onPick={(d) => open({ day: d })} />
+      )}
 
       {loc.sub === "timesheet" && !loc.day && !loc.page && <TimesheetSheet month={month} />}
 

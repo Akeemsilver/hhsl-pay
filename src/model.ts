@@ -16,8 +16,18 @@ export interface Entry extends DayEntry {
   lunchMinutes?: number;
   /** Amount paid, kept as a note. It is never added to pay totals. */
   amount?: number;
-  /** Job ticket number, printed on the payroll timesheet for jobs that go on it. */
-  ticket?: string;
+}
+
+/** Roles offered on every site. A site can give each one its own rate; without one the site's standard rate is used. */
+export const DEFAULT_ROLES = ["Client medic", "Offshore", "Paramedic"] as const;
+
+/** Default roles plus any custom roles defined on the site. */
+export function rolesFor(site: SiteRates | undefined): string[] {
+  const out: string[] = [...DEFAULT_ROLES];
+  for (const r of Object.keys(site?.roles ?? {})) {
+    if (!out.some((x) => x.toLowerCase() === r.toLowerCase())) out.push(r);
+  }
+  return out;
 }
 
 export const isOther = (e: Entry): boolean => e.kind === "other";

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { RoleRates, SiteRates, SiteTable, TierCaps } from "../engine";
-import { emptySite } from "../model";
+import { DEFAULT_ROLES, emptySite, rolesFor } from "../model";
 import { useStore } from "../store";
 import { PageHeader } from "../components/TopBar";
 import { NumInput, VersionBar, addVersion, type Num } from "../components/settingsParts";
@@ -18,21 +18,25 @@ function CapsRow({ label, caps, onChange, withX3 }: { label: string; caps: TierC
   );
 }
 
-function RoleCard({ name, role, onChange, onRename, onRemove }: {
-  name: string; role: RoleRates; onChange: (r: RoleRates) => void; onRename: (n: string) => void; onRemove: () => void;
+function RoleCard({ name, role, builtIn, onChange, onRename, onRemove }: {
+  name: string; role: RoleRates; builtIn: boolean; onChange: (r: RoleRates) => void; onRename: (n: string) => void; onRemove: () => void;
 }) {
   const [draft, setDraft] = useState(name);
   return (
     <div className="role-card">
-      <label>Role name
-        <input value={draft} onChange={(e) => setDraft(e.target.value)} onBlur={() => draft.trim() && draft !== name && onRename(draft.trim())} />
-      </label>
+      {builtIn ? <strong>{name}</strong> : (
+        <label>Role name
+          <input value={draft} onChange={(e) => setDraft(e.target.value)} onBlur={() => draft.trim() && draft !== name && onRename(draft.trim())} />
+        </label>
+      )}
       <div className="grid3">
         <label>Hourly rate<NumInput label={`${name} hourly rate`} value={role.rate} onChange={(v) => onChange({ ...role, rate: v })} /></label>
         <label>Flat day<NumInput label={`${name} flat daily pay`} value={role.dailyPay} onChange={(v) => onChange({ ...role, dailyPay: v })} /></label>
         <label>Holiday day<NumInput label={`${name} holiday daily pay`} value={role.dailyHoliday} onChange={(v) => onChange({ ...role, dailyHoliday: v })} /></label>
       </div>
-      <button className="danger" onClick={() => confirm(`Remove the role ${name}? Days that used it go back to the standard rate.`) && onRemove()}>Remove role</button>
+      {builtIn
+        ? <p className="muted small">Leave blank to pay this role at the site's standard rate.</p>
+        : <button className="danger" onClick={() => confirm(`Remove the role ${name}? Days that used it go back to the standard rate.`) && onRemove()}>Remove role</button>}
     </div>
   );
 }
@@ -45,7 +49,7 @@ function SiteCard({ name, site, payers, onChange, onRename, onRemove, onRenameRo
   const [newRole, setNewRole] = useState("");
   const set = <K extends keyof SiteRates>(k: K, v: SiteRates[K]) => onChange({ ...site, [k]: v });
   const roles = site.roles ?? {};
-  const roleCount = Object.keys(roles).length;
+  const roleCount = Object.values(roles).filter((r) => r.rate || r.dailyPay || r.dailyHoliday).length;
   return (
     <details className="site">
       <summary>
@@ -65,20 +69,24 @@ function SiteCard({ name, site, payers, onChange, onRename, onRemove, onRenameRo
         <label>Lead / instructor rate<NumInput label="Lead rate" value={site.leadRate} onChange={(v) => set("leadRate", v)} /></label>
       </div>
 
-      <h3 className="section-title">Other roles at this site</h3>
-      <p className="muted small">A role is a position paid differently from the standard rate, for example a client medic. You pick it on the job under the site.</p>
-      {Object.entries(roles).map(([roleName, role]) => (
-        <RoleCard
-          key={roleName} name={roleName} role={role}
-          onChange={(r) => set("roles", { ...roles, [roleName]: r })}
-          onRename={(to) => onRenameRole(roleName, to)}
-          onRemove={() => set("roles", Object.fromEntries(Object.entries(roles).filter(([k]) => k !== roleName)))}
-        />
-      ))}
+      <h3 className="section-title">Role rates</h3>
+      <p className="muted small">You pick the role on the job, under the site. Give a role its own pay here, or leave it blank to use the site's standard rate.</p>
+      {rolesFor(site).map((roleName) => {
+        const builtIn = (DEFAULT_ROLES as readonly string[]).some((d) => d.toLowerCase() === roleName.toLowerCase());
+        const key = Object.keys(roles).find((k) => k.toLowerCase() === roleName.toLowerCase()) ?? roleName;
+        return (
+          <RoleCard
+            key={roleName} name={roleName} role={roles[key] ?? {}} builtIn={builtIn}
+            onChange={(r) => set("roles", { ...roles, [key]: r })}
+            onRename={(to) => onRenameRole(roleName, to)}
+            onRemove={() => set("roles", Object.fromEntries(Object.entries(roles).filter(([k]) => k !== key)))}
+          />
+        );
+      })}
       <div className="row add">
-        <input placeholder="New role, e.g. Client medic" aria-label={`New role for ${name}`} value={newRole} onChange={(e) => setNewRole(e.target.value)} />
+        <input placeholder="Add another role" aria-label={`New role for ${name}`} value={newRole} onChange={(e) => setNewRole(e.target.value)} />
         <button
-          disabled={!newRole.trim() || Object.keys(roles).some((k) => k.toLowerCase() === newRole.trim().toLowerCase())}
+          disabled={!newRole.trim() || rolesFor(site).some((k) => k.toLowerCase() === newRole.trim().toLowerCase())}
           onClick={() => { set("roles", { ...roles, [newRole.trim()]: {} }); setNewRole(""); }}
         >Add role</button>
       </div>

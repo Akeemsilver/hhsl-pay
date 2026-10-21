@@ -65,7 +65,7 @@ export function TimesheetSheet({ month }: { month: string }) {
                   <td>{r.onDuty ?? "–"}–{r.offDuty ?? "–"}</td>
                   <td>{hoursText(r.hours.t)}</td><td>{r.hours.t15 ? hoursText(r.hours.t15) : ""}</td>
                   <td>{r.hours.t2 ? hoursText(r.hours.t2) : ""}</td><td>{r.hours.t3 ? hoursText(r.hours.t3) : ""}</td>
-                  <td>{r.client}{r.ticket ? ` · ${r.ticket}` : ""}</td>
+                  <td>{r.client}</td>
                 </tr>
               ))}
             </tbody>

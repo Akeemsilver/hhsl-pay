@@ -30,7 +30,7 @@ describe("which jobs go on the timesheet", () => {
   it("includes HHSL Compound (any role) and PLNL only as client medic", () => {
     const entries = [
       e("1", "2026-10-21", "HHSL Compound", { startTime: "08:00", endTime: "16:30" }),
-      e("2", "2026-10-22", "PLNL", { role: "Client medic", startTime: "07:00", endTime: "19:00", hours: 11, ticket: "JT-100" }),
+      e("2", "2026-10-22", "PLNL", { role: "Client medic", startTime: "07:00", endTime: "19:00", hours: 11 }),
       e("3", "2026-10-23", "PLNL"),
       e("4", "2026-10-24", "Atlantic"),
       e("5", "2026-10-25", "HHSL Compound", { lead: true, startTime: "08:00", endTime: "16:00" }),
@@ -38,7 +38,6 @@ describe("which jobs go on the timesheet", () => {
     const { rows } = buildTimesheet("2026-10", entries, history, rules);
     expect(rows.map((r) => r.date)).toEqual(["2026-10-21", "2026-10-22", "2026-10-25"]);
     expect(rows.map((r) => r.client)).toEqual(["HHSL Compound", "PLNL Medic", "HHSL Compound"]);
-    expect(rows[1]?.ticket).toBe("JT-100");
   });
 
   it("ignores other jobs, other months and unmatched sites", () => {
@@ -125,11 +124,11 @@ describe("filling the template", () => {
     name: "akeem silverton", siteLabel: "ERT Offsite", month: "2026-10",
     rows: buildTimesheet("2026-10", [
       e("1", "2026-10-21", "HHSL Compound", { hours: 8, startTime: "08:00", endTime: "16:30" }),
-      e("2", "2026-10-22", "PLNL", { role: "Client medic", hours: 14, startTime: "06:00", endTime: "21:00", ticket: "JT & Co <1>" }),
-    ], history, rules).rows,
+      e("2", "2026-10-22", "PLNL", { role: "Client medic", hours: 14, startTime: "06:00", endTime: "21:00" }),
+    ], history, [rules[0]!, { ...rules[1]!, label: "PLNL & Co <Medic>" }]).rows,
   };
 
-  it("writes the header, the day labels, times, hours, client and ticket", async () => {
+  it("writes the header, the day labels, times, hours and client", async () => {
     const xml = await sheetOf(await fillTimesheet(await miniTemplate(), input));
     expect(xml).toContain("E.R.T.&apos;S NAME".replace("&apos;", "'") + " (BLOCK LETTERS):  AKEEM SILVERTON");
     expect(xml).toContain("SITE: ERT Offsite");
@@ -144,7 +143,8 @@ describe("filling the template", () => {
     expect(xml).toMatch(/<c r="E34"[^>]*><v>0\.6875<\/v>/);
     expect(xml).toMatch(/<c r="F34"[^>]*><v>8<\/v>/);
     expect(xml).toMatch(/<c r="J34"[^>]*><is><t[^>]*>HHSL Compound<\/t>/);
-    expect(xml).toMatch(/<c r="K35"[^>]*><is><t[^>]*>JT &amp; Co &lt;1&gt;<\/t>/);
+    expect(xml).toMatch(/<c r="J35"[^>]*><is><t[^>]*>PLNL &amp; Co &lt;Medic&gt;<\/t>/);
+    expect(xml).toMatch(/<c r="K35" s="\d+"\/>/); // job ticket column stays empty
   });
 
   it("keeps each cell's own style and the logo", async () => {

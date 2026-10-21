@@ -11,6 +11,10 @@ export interface Loc {
   day?: string;
   /** A sheet opened on top of the day sheet, such as the time picker. */
   sub?: string;
+  /** Open the day sheet with a new job or other job already added. */
+  add?: "job" | "other";
+  /** Open the day sheet scrolled to this job. */
+  focus?: string;
   /** How many history entries deep we are (0 = the home screen). */
   n: number;
 }
@@ -32,7 +36,7 @@ interface Nav {
   loc: Loc;
   setGuard: (g: Guard | null) => void;
   /** Open a settings page or a day sheet on top of the current screen. */
-  open: (next: { page?: Page; day?: string; sub?: string }) => void;
+  open: (next: { page?: Page; day?: string; sub?: string; add?: "job" | "other"; focus?: string }) => void;
   /** Switch tab; going back to Home returns to the first history entry. */
   selectTab: (tab: Tab) => void;
   back: () => void;
@@ -71,7 +75,7 @@ export function NavProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const open = useCallback(
-    (next: { page?: Page; day?: string; sub?: string }) => {
+    (next: { page?: Page; day?: string; sub?: string; add?: "job" | "other"; focus?: string }) => {
       const l: Loc = { ...loc, ...next, n: loc.n + 1 };
       window.history.pushState(l, "");
       setLoc(l);

@@ -45,7 +45,7 @@ function Shell() {
           ))}
         </nav>
       )}
-      {loc.day && <DayEditor date={loc.day} onClose={back} />}
+      {loc.day && <DayEditor date={loc.day} add={loc.add} focus={loc.focus} onClose={back} />}
     </div>
   );
 }

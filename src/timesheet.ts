@@ -27,7 +27,6 @@ export interface TimesheetRow {
   offDuty?: string;
   hours: { t: number; t15: number; t2: number; t3: number };
   client: string;
-  ticket?: string;
   entryIds: string[];
 }
 
@@ -73,7 +72,6 @@ export function buildTimesheet(month: string, entries: Entry[], history: RuleHis
     }
     const starts = jobs.map((j) => j.entry.startTime).filter((t): t is string => !!t).sort();
     const ends = jobs.map((j) => j.entry.endTime).filter((t): t is string => !!t);
-    const tickets = [...new Set(jobs.map((j) => j.entry.ticket?.trim()).filter((t): t is string => !!t))];
     const clients = [...new Set(jobs.map((j) => j.rule.label))];
 
     if (jobs.some((j) => !j.entry.startTime || !j.entry.endTime)) warnings.push(`${dayLabel(date)}: start or end time is missing.`);
@@ -85,7 +83,6 @@ export function buildTimesheet(month: string, entries: Entry[], history: RuleHis
       offDuty: jobs.length === 1 ? ends[0] : ends.sort().at(-1),
       hours,
       client: clients.join(" / "),
-      ticket: tickets.join(", ") || undefined,
       entryIds: jobs.map((j) => j.entry.id),
     });
   }
