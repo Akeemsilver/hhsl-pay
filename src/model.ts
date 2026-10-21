@@ -7,7 +7,9 @@ export interface Entry extends DayEntry {
   kind?: "site" | "other";
   /** What the other job was. */
   description?: string;
-  /** "HH:MM" start and end. Optional for an other job; for a job they work out the paid hours. */
+  /** true = Detailed: paid hours are worked out from start/end and lunch. false = Simple: hours are typed. Unset: Detailed only if times were entered. */
+  detailed?: boolean;
+  /** "HH:MM" start and end. Optional for an other job; in Detailed mode they work out the paid hours. */
   startTime?: string;
   endTime?: string;
   /** Lunch was paid, so no time is taken off. When false or unset, lunchMinutes comes off. */
@@ -124,8 +126,23 @@ export function newId(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
 
-/** Re-works the paid hours from the entry's times and lunch; untimed entries keep their typed hours. */
+/** Detailed jobs work out their hours from times; Simple jobs keep the hours that were typed. */
+export function isDetailed(e: Entry): boolean {
+  return e.detailed ?? !!(e.startTime || e.endTime);
+}
+
+/** Re-works the paid hours of a Detailed job from its times and lunch (0 until both times are set). Simple jobs are left alone. */
 export function withComputedHours(e: Entry): Entry {
-  const h = paidHoursFrom(e);
-  return h === undefined ? e : { ...e, hours: h };
+  if (isOther(e) || !isDetailed(e)) return e;
+  return { ...e, hours: paidHoursFrom(e) ?? 0 };
+}
+
+/** Pressing Detailed clears the hours: they now come from the start and end time. */
+export function toDetailed(e: Entry): Entry {
+  return withComputedHours({ ...e, detailed: true, hours: 0 });
+}
+
+/** Back to Simple: keep the hours as they are and drop the times. */
+export function toSimple(e: Entry): Entry {
+  return { ...e, detailed: false, startTime: undefined, endTime: undefined };
 }

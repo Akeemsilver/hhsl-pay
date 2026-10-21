@@ -60,3 +60,44 @@ describe("quick times", () => {
     expect(quickTimes(["06:00", "18:00", "06:00", undefined, "06:00", "18:00", "08:00"])).toEqual(["06:00", "18:00", "08:00"]);
   });
 });
+
+import { isDetailed, toDetailed, toSimple, type Entry } from "../src/model";
+
+describe("Simple and Detailed jobs", () => {
+  const base: Entry = { id: "1", date: "2026-07-01", site: "A", hours: 12 };
+
+  it("a Simple job keeps its typed hours, even if it still has times", () => {
+    const simple = withComputedHours({ ...base, detailed: false, startTime: "07:00", endTime: "19:00" });
+    expect(simple.hours).toBe(12);
+    expect(isDetailed(simple)).toBe(false);
+  });
+
+  it("a Detailed job works hours out from its times, and is 0 until both are set", () => {
+    expect(withComputedHours({ ...base, detailed: true, startTime: "07:00", endTime: "19:00" }).hours).toBe(11);
+    expect(withComputedHours({ ...base, detailed: true, startTime: "07:00" }).hours).toBe(0);
+    expect(withComputedHours({ ...base, detailed: true }).hours).toBe(0);
+  });
+
+  it("older jobs count as Detailed only when they have times", () => {
+    expect(isDetailed(base)).toBe(false);
+    expect(isDetailed({ ...base, startTime: "07:00" })).toBe(true);
+  });
+
+  it("pressing Detailed clears the hours; going back to Simple keeps them and drops the times", () => {
+    const d = toDetailed(base);
+    expect(d.detailed).toBe(true);
+    expect(d.hours).toBe(0);
+    const timed = withComputedHours({ ...d, startTime: "07:00", endTime: "19:00" });
+    expect(timed.hours).toBe(11);
+    const back = toSimple(timed);
+    expect(back.detailed).toBe(false);
+    expect(back.hours).toBe(11);
+    expect(back.startTime).toBeUndefined();
+    expect(back.endTime).toBeUndefined();
+  });
+
+  it("never touches an other job", () => {
+    const other: Entry = { id: "2", date: "2026-07-01", kind: "other", site: "", hours: 0, startTime: "08:00", endTime: "10:00" };
+    expect(withComputedHours(other)).toBe(other);
+  });
+});

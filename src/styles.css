@@ -368,7 +368,7 @@ button.pill { min-height: 32px; padding: 0 12px; border-radius: 999px; font-size
 .lunch-length button, .quick-times button { min-height: 40px; }
 .lunch-length button.on, .quick-times button.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
 .hours-tile { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; margin: 0 0 10px; border-radius: 12px; background: var(--weekend); }
-.hours-tile strong { font-size: 1.5rem; }
+.hours-tile strong { font-size: 2.6rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
 .sheet-backdrop.top { z-index: 30; }
 .time-sheet { padding-top: 16px; }
 .time-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
@@ -428,3 +428,15 @@ button.pill { min-height: 32px; padding: 0 12px; border-radius: 999px; font-size
 .day-job .row button { min-height: 36px; }
 .badge { font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: var(--line); color: var(--text); }
 .day-panel .add-buttons { margin-top: 10px; }
+
+/* Big hours */
+.hours-block { margin: 6px 0 4px; }
+.hours-block .lbl { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
+.hours-big { display: grid; grid-template-columns: 56px 1fr 56px; gap: 10px; align-items: center; margin-bottom: 4px; }
+.hours-big button { min-height: 64px; font-size: 1.8rem; line-height: 1; padding: 0; }
+.hours-field { display: flex; align-items: baseline; justify-content: center; gap: 6px; margin: 0; padding: 6px 8px; border-radius: 12px; background: var(--weekend); color: var(--text); }
+.hours-field input { width: 5.2ch; max-width: 140px; margin: 0; min-height: 0; padding: 0; text-align: center; border: 0; background: transparent; font-size: 2.6rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.hours-field span { font-size: 1.6rem; font-weight: 700; color: var(--muted); }
+.hours-tile { padding: 8px 12px 10px; margin: 0 0 6px; }
+.detail-box { margin: 4px 0 6px; padding: 10px; border: 1px dashed var(--line); border-radius: 12px; }
+button.link.small { min-height: 36px; font-size: 0.9rem; padding: 0 2px; }

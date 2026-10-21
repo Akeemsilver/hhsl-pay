@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { computeDay, findSite, paidHoursFrom, valueOn } from "../engine";
+import { computeDay, findSite, valueOn } from "../engine";
 import { WEEKDAYS, durationText, hoursText, money } from "../format";
-import { isOther, newId, rolesFor, withComputedHours, type Entry } from "../model";
+import { isDetailed, isOther, newId, rolesFor, toDetailed, toSimple, withComputedHours, type Entry } from "../model";
 import { useNav } from "../nav";
 import { useStore } from "../store";
 import { BottomSheet } from "../components/BottomSheet";
@@ -67,9 +67,13 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
 
   // A new job starts from your most recent job's times and lunch, so a usual 07:00-19:00 day is two taps.
   const newJob = (): Entry => {
-    const last = [...data.entries].reverse().find((e) => !isOther(e) && e.startTime && e.endTime);
-    const fresh: Entry = { id: newId(), date, site: siteNames[0] ?? "", hours: 0 };
-    if (last) Object.assign(fresh, { startTime: last.startTime, endTime: last.endTime, lunchPaid: last.lunchPaid, lunchMinutes: last.lunchMinutes });
+    const last = [...data.entries].reverse().find((e) => !isOther(e));
+    const fresh: Entry = { id: newId(), date, site: siteNames[0] ?? "", hours: last?.hours ?? 12 };
+    if (last && isDetailed(last)) {
+      Object.assign(fresh, { detailed: true, startTime: last.startTime, endTime: last.endTime, lunchPaid: last.lunchPaid, lunchMinutes: last.lunchMinutes });
+    } else {
+      fresh.detailed = false;
+    }
     return withComputedHours(fresh);
   };
   const newOther = (): Entry => ({ id: newId(), date, kind: "other", site: "", hours: 0, description: "" });
@@ -125,6 +129,8 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
 
           const pay = computeDay(entry, sites);
           const known = siteNames.some((n) => n.toLowerCase() === entry.site.trim().toLowerCase());
+          const detailed = isDetailed(entry);
+          const bump = (delta: number) => patch(entry.id, { hours: Math.min(24, Math.max(0, Math.round((entry.hours + delta) * 4) / 4)) });
           return (
             <div className="entry" key={entry.id} data-entry-id={entry.id}>
               <label>
@@ -148,59 +154,78 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                   </label>
                 );
               })()}
-              <div className="grid2">
-                <TimeField label="Start time" value={entry.startTime} quick={quick} onChange={(v) => patch(entry.id, { startTime: v })} />
-                <TimeField label="End time" value={entry.endTime} quick={quick} onChange={(v) => patch(entry.id, { endTime: v })} />
-              </div>
-              <div className="checks lunch">
-                <label><input type="checkbox" checked={!!entry.lunchPaid} onChange={(e) => patch(entry.id, { lunchPaid: e.target.checked })} /> Lunch was paid</label>
-              </div>
-              {!entry.lunchPaid && (
-                <div className="lunch-length" role="group" aria-label="Unpaid lunch">
-                  <span className="lbl">Unpaid lunch</span>
-                  {[30, 60].map((m) => (
-                    <button key={m} type="button" aria-pressed={(entry.lunchMinutes ?? 60) === m} className={(entry.lunchMinutes ?? 60) === m ? "on" : ""} onClick={() => patch(entry.id, { lunchMinutes: m })}>
-                      {m === 30 ? "30 min" : "1 hour"}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {paidHoursFrom(entry) !== undefined ? (
-                <div className="hours-tile">
-                  <span className="lbl">Hours paid</span>
-                  <strong>{hoursText(entry.hours)} h</strong>
-                  <span className="muted small">
-                    {entry.startTime}–{entry.endTime} is {durationText(entry.startTime, entry.endTime)}
-                    {entry.lunchPaid ? ", lunch paid" : `, minus ${(entry.lunchMinutes ?? 60) === 30 ? "30 min" : "1 hour"} unpaid lunch`}
-                  </span>
-                </div>
-              ) : (
-                <label>
-                  Hours paid
-                  <input
-                    type="number" inputMode="decimal" min="0" max="24" step="0.25"
-                    value={entry.hours}
-                    onChange={(e) => patch(entry.id, { hours: Math.max(0, Number(e.target.value)) })}
-                  />
-                  <span className="muted small">Set a start and end time and the paid hours are worked out for you. Or type only the hours you are paid for (12 h on site minus a 1 h unpaid lunch, enter 11).</span>
-                </label>
-              )}
               <div className="checks">
                 <label><input type="checkbox" checked={!!entry.lead} onChange={(e) => patch(entry.id, { lead: e.target.checked })} /> Team lead / instructor</label>
                 <label><input type="checkbox" checked={!!entry.holiday} onChange={(e) => patch(entry.id, { holiday: e.target.checked })} /> Public holiday / TAR</label>
               </div>
+
+              <div className="hours-block">
+                <span className="lbl">Hours paid</span>
+                {detailed ? (
+                  <div className="hours-tile" aria-label="Hours paid">
+                    <strong>{hoursText(entry.hours)} h</strong>
+                    <span className="muted small">
+                      {entry.hours > 0 || (entry.startTime && entry.endTime)
+                        ? <>{entry.startTime}–{entry.endTime} is {durationText(entry.startTime, entry.endTime)}{entry.lunchPaid ? ", lunch paid" : `, minus ${(entry.lunchMinutes ?? 60) === 30 ? "30 min" : "1 hour"} unpaid lunch`}</>
+                        : "Set the start and end time below."}
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="hours-big">
+                      <button type="button" aria-label="Half an hour less" onClick={() => bump(-0.5)}>−</button>
+                      <label className="hours-field">
+                        <input
+                          type="number" inputMode="decimal" min="0" max="24" step="0.25" aria-label="Hours paid"
+                          value={entry.hours}
+                          onChange={(e) => patch(entry.id, { hours: Math.min(24, Math.max(0, Number(e.target.value))) })}
+                        />
+                        <span>h</span>
+                      </label>
+                      <button type="button" aria-label="Half an hour more" onClick={() => bump(0.5)}>+</button>
+                    </div>
+                    <span className="muted small">Only the hours you are paid for. 12 h on site minus a 1 h unpaid lunch, enter 11.</span>
+                  </>
+                )}
+              </div>
+
+              {detailed ? (
+                <div className="detail-box">
+                  <div className="grid2">
+                    <TimeField label="Start time" value={entry.startTime} quick={quick} onChange={(v) => patch(entry.id, { startTime: v })} />
+                    <TimeField label="End time" value={entry.endTime} quick={quick} onChange={(v) => patch(entry.id, { endTime: v })} />
+                  </div>
+                  <div className="checks lunch">
+                    <label><input type="checkbox" checked={!!entry.lunchPaid} onChange={(e) => patch(entry.id, { lunchPaid: e.target.checked })} /> Lunch was paid</label>
+                  </div>
+                  {!entry.lunchPaid && (
+                    <div className="lunch-length" role="group" aria-label="Unpaid lunch">
+                      <span className="lbl">Unpaid lunch</span>
+                      {[30, 60].map((m) => (
+                        <button key={m} type="button" aria-pressed={(entry.lunchMinutes ?? 60) === m} className={(entry.lunchMinutes ?? 60) === m ? "on" : ""} onClick={() => patch(entry.id, { lunchMinutes: m })}>
+                          {m === 30 ? "30 min" : "1 hour"}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <button type="button" className="link small" onClick={() => setDraft((list) => list.map((e) => (e.id === entry.id ? toSimple(e) : e)))}>Simple: type the hours instead</button>
+                </div>
+              ) : (
+                <button type="button" className="link small" onClick={() => setDraft((list) => list.map((e) => (e.id === entry.id ? toDetailed(e) : e)))}>Detailed: start and end time, lunch</button>
+              )}
+
               <div className="preview">
                 {entry.hours > 0 || pay.dailyPay > 0 ? (
                   <>
                     <span>
-                      Paid for {hoursText(entry.hours)} h · {pay.dailyPay > 0 ? `flat ${money(pay.dailyPay)}` : `${money(pay.rate)}/h`}
+                      {pay.dailyPay > 0 ? `Flat ${money(pay.dailyPay)}` : `${money(pay.rate)}/h`}
                       {pay.tierHours.x15 + pay.tierHours.x2 + pay.tierHours.x3 > 0 &&
                         ` · OT ${[["×1.5", pay.tierHours.x15], ["×2", pay.tierHours.x2], ["×3", pay.tierHours.x3]].filter(([, h]) => Number(h) > 0).map(([l, h]) => `${h}h ${l}`).join(", ")}`}
                     </span>
                     <strong>{money(pay.total)}</strong>
                   </>
                 ) : (
-                  <span className="muted">Set the start and end time, or the hours, to see the pay.</span>
+                  <span className="muted">{detailed ? "Set the start and end time to see the pay." : "Enter the hours to see the pay."}</span>
                 )}
               </div>
               <button className="danger" onClick={() => remove(entry.id)}>Remove</button>
