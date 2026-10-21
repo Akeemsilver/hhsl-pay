@@ -1,4 +1,4 @@
-import { combinePayslips, siteRateText, type Payslip } from "../payslip";
+import { adjustmentLines, combinePayslips, siteRateText, type Payslip } from "../payslip";
 import { BAND, BRAND, GROSS, INK, LINE, MUTED, NET, NIS, PAGE_H, PAGE_W, PAYE, SURCHARGE, rgb, usd } from "./common";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -42,7 +42,7 @@ function drawSlip(doc: Doc, s: Payslip, preparedOn: string) {
   text(doc, "PAYSLIP", M, 66, { size: 26, bold: true });
   text(doc, `Pay period: ${name}`, M, 86, { size: 11, color: MUTED });
   text(doc, "PAYSLIP FOR", RIGHT, 48, { size: 8, bold: true, color: MUTED, align: "right" });
-  text(doc, s.employee || "All sites", RIGHT, 68, { size: 16, bold: true, align: "right" });
+  text(doc, s.payer === "all" ? (s.employee || "All sites") : s.payerName, RIGHT, 68, { size: 16, bold: true, align: "right" });
   hr(doc, 104, LINE, 1);
 
   // Details
@@ -78,7 +78,7 @@ function drawSlip(doc: Doc, s: Payslip, preparedOn: string) {
   const rows = [...s.sites.map((b) => ({
     label: b.label, days: String(b.days), hours: b.weighted ? `${Math.round(b.weighted * 100) / 100} h` : "-",
     rate: siteRateText(b, usd), amount: b.amount,
-  })), ...s.lines.map((l) => ({ label: l.description, days: "", hours: "", rate: "", amount: l.amount }))];
+  })), ...adjustmentLines(s).map((l) => ({ label: l.description, days: "", hours: "", rate: "", amount: l.amount }))];
   const rowH = rows.length > 12 ? 16 : 21;
   const font = rows.length > 12 ? 9 : 10;
   rows.forEach((r, i) => {
@@ -288,8 +288,11 @@ export async function payslipPdf(slips: Payslip[], preparedOn = new Date()): Pro
   doc.setProperties({ title: `Payslip ${slips[0]?.month ?? ""}`, creator: "HHSL Salary Tracker" });
   const on = `${preparedOn.getDate()} ${MONTHS[preparedOn.getMonth()]} ${preparedOn.getFullYear()}`;
 
-  const combined = combinePayslips(slips);
-  if (combined) drawSlip(doc, combined, on);
+  // Split: one payslip page for each group, each with its own PAYE, NIS and surcharge. Combined: one page.
+  slips.forEach((s, i) => {
+    if (i > 0) doc.addPage();
+    drawSlip(doc, s, on);
+  });
   if (slips.some((x) => x.sites.length)) { doc.addPage(); drawBreakdown(doc, slips); }
   if (slips.length > 1) {
     doc.addPage();

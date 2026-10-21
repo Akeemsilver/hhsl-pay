@@ -117,3 +117,30 @@ describe("combined payslip", () => {
     expect(all.days).toBe(2);
   });
 });
+
+describe("split and combined tax", () => {
+  it("defaults to split and applies from the chosen month", async () => {
+    const { isCombined, setTaxModeFrom, setTaxModeForMonth } = await import("../src/model");
+    let d = data([]);
+    expect(isCombined(d, "2026-07")).toBe(false);
+    d = setTaxModeFrom(d, "2026-08", true);
+    expect(isCombined(d, "2026-07")).toBe(false);
+    expect(isCombined(d, "2026-08")).toBe(true);
+    expect(isCombined(d, "2027-01")).toBe(true);
+    d = setTaxModeForMonth(d, "2026-10", false);
+    expect(isCombined(d, "2026-10")).toBe(false);
+    expect(isCombined(d, "2026-09")).toBe(true);
+    expect(isCombined(d, "2026-11")).toBe(true);
+  });
+  it("taxes everything once when combined, with one payslip", async () => {
+    const { setTaxModeFrom } = await import("../src/model");
+    const entries = [e("1", "2026-07-01", "Alpha"), e("4", "2026-07-06", "Beta"), e("5", "2026-07-07", "Rig", { hours: 14 })];
+    const split = buildPayslips("2026-07", data(entries), "T");
+    const comb = buildPayslips("2026-07", setTaxModeFrom(data(entries), "2026-07", true), "T");
+    expect(split.length).toBeGreaterThan(1);
+    expect(comb).toHaveLength(1);
+    expect(comb[0]!.gross).toBeCloseTo(split.reduce((s, p) => s + p.gross, 0), 2);
+    expect(comb[0]!.sites.map((b) => b.label).sort()).toEqual(["Alpha", "Beta", "Rig"]);
+    expect(comb[0]!.nis + comb[0]!.surcharge).not.toBeCloseTo(split.reduce((s, p) => s + p.nis + p.surcharge, 0), 2);
+  });
+});

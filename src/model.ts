@@ -58,6 +58,8 @@ export interface AppData {
   holidays?: { added: { date: string; name: string }[]; removed: string[] };
   /** The name shown on payslips and timesheets. */
   userName?: string;
+  /** Whether PAYE, NIS and the surcharge are worked out per payslip group (split) or on everything together, from a month on. */
+  taxMode?: Array<{ effectiveFrom: string; combined: boolean }>;
   lastBackupAt?: string;
 }
 
@@ -159,4 +161,38 @@ export function userNameOf(data: Pick<AppData, "userName" | "timesheet">): strin
 export function timesheetSettingsOf(data: Pick<AppData, "userName" | "timesheet">): TimesheetSettings {
   const t = data.timesheet ?? { name: "", siteLabel: "ERT Offsite", rules: [] };
   return { ...t, name: userNameOf(data) };
+}
+
+/** Is tax worked out on all income together in this month? Split is the default. */
+export function isCombined(data: Pick<AppData, "taxMode">, month: string): boolean {
+  const on = `${month}-01`;
+  let result = false;
+  let best = "";
+  for (const t of data.taxMode ?? []) {
+    if (t.effectiveFrom <= on && t.effectiveFrom >= best) { best = t.effectiveFrom; result = t.combined; }
+  }
+  return result;
+}
+
+const nextMonth = (month: string): string => {
+  const [y, m] = month.split("-").map(Number) as [number, number];
+  return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, "0")}`;
+};
+
+/** Use split or combined tax from this month onwards. */
+export function setTaxModeFrom(data: AppData, month: string, combined: boolean): AppData {
+  const list = (data.taxMode ?? []).filter((t) => t.effectiveFrom !== `${month}-01`);
+  list.push({ effectiveFrom: `${month}-01`, combined });
+  list.sort((a, b) => a.effectiveFrom.localeCompare(b.effectiveFrom));
+  return { ...data, taxMode: list };
+}
+
+/** Use split or combined tax for just this one month; later months keep what they had. */
+export function setTaxModeForMonth(data: AppData, month: string, combined: boolean): AppData {
+  const before = isCombined(data, nextMonth(month));
+  const next = nextMonth(month);
+  const hasNext = (data.taxMode ?? []).some((t) => t.effectiveFrom === `${next}-01`);
+  let out = setTaxModeFrom(data, month, combined);
+  if (!hasNext) out = setTaxModeFrom(out, next, before);
+  return out;
 }

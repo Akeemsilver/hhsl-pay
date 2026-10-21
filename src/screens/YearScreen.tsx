@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { annualTaxEstimate, computeMonth, valueOn } from "../engine";
 import { MONTHS, money, todayISO } from "../format";
-import { overridesFor } from "../model";
+import { isCombined, overridesFor } from "../model";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
 import { BackIcon, ForwardIcon } from "../components/Icons";
@@ -11,7 +11,7 @@ export function YearScreen() {
   const [year, setYear] = useState(Number(todayISO().slice(0, 4)));
 
   const months = useMemo(
-    () => MONTHS.map((_, i) => computeMonth(`${year}-${String(i + 1).padStart(2, "0")}`, data.entries, data.history, overridesFor(data, `${year}-${String(i + 1).padStart(2, "0")}`))),
+    () => MONTHS.map((_, i) => computeMonth(`${year}-${String(i + 1).padStart(2, "0")}`, data.entries, data.history, overridesFor(data, `${year}-${String(i + 1).padStart(2, "0")}`), isCombined(data, `${year}-${String(i + 1).padStart(2, "0")}`))),
     [year, data],
   );
   const total = (pick: (m: (typeof months)[number]) => number) => months.reduce((s, m) => s + pick(m), 0);

@@ -5,6 +5,9 @@ import { valueOn } from "./rules";
 import { monthTax, type MonthTax } from "./tax";
 import type { DayEntry, DayPay, RuleHistory } from "./types";
 
+/** The payer id used when every site is taxed together. */
+export const COMBINED_PAYER = "all";
+
 export interface PricedEntry<E extends DayEntry = DayEntry> {
   entry: E;
   pay: DayPay;
@@ -40,6 +43,8 @@ export function computeMonth<E extends DayEntry>(
   allEntries: E[],
   history: RuleHistory,
   overrides: Record<string, PayerOverride> = {},
+  /** Tax everything together as one payer ("all") instead of each payslip group on its own. */
+  combined = false,
 ): MonthResult<E> {
   const { y, m } = parseISO(`${month}-01`);
   const mondays = mondaysInMonth(y, m);
@@ -50,7 +55,7 @@ export function computeMonth<E extends DayEntry>(
   const byPayer = new Map<string, { gross: number; hours: number }>();
   for (const { entry, pay } of entries) {
     const site = findSite(valueOn(history.sites, entry.date), entry.site);
-    const payer = site?.payer ?? "main";
+    const payer = combined ? COMBINED_PAYER : (site?.payer ?? "main");
     const acc = byPayer.get(payer) ?? { gross: 0, hours: 0 };
     acc.gross += pay.total;
     acc.hours += entry.hours;

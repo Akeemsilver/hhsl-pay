@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { isCombined, setTaxModeFrom } from "../model";
+import { MONTHS, todayISO } from "../format";
 import { useStore } from "../store";
 import { PageHeader } from "../components/TopBar";
 
@@ -7,9 +9,34 @@ export function PayslipsPage() {
   const [newPayer, setNewPayer] = useState("");
   const payers = { ...data.payerNames };
   for (const v of data.history.sites) for (const s of Object.values(v.value)) payers[s.payer] ??= s.payer;
+  const thisMonth = todayISO().slice(0, 7);
+  const [from, setFrom] = useState(thisMonth);
+  const combinedNow = isCombined(data, from);
   return (
     <>
       <PageHeader title="Payslips" />
+      <h2 className="section-title">How tax is worked out</h2>
+      <section className="card">
+        <div className="segmented" role="group" aria-label="Tax method">
+          <button aria-pressed={!combinedNow} className={!combinedNow ? "on" : ""} onClick={() => update((d) => setTaxModeFrom(d, from, false))}>Split</button>
+          <button aria-pressed={combinedNow} className={combinedNow ? "on" : ""} onClick={() => update((d) => setTaxModeFrom(d, from, true))}>Combined</button>
+        </div>
+        <label>From month
+          <input type="month" value={from} onChange={(e) => e.target.value && setFrom(e.target.value)} />
+        </label>
+        <p className="muted small"><strong>Split:</strong> each payslip below pays its own PAYE, NIS and health surcharge on its own income, and you get a separate payslip page for each. <strong>Combined:</strong> all income is added up and taxed once, on one payslip. The choice applies from the month shown onwards; earlier months keep theirs.</p>
+        {(data.taxMode ?? []).length > 0 && (
+          <ul className="plain small">
+            {(data.taxMode ?? []).map((t) => (
+              <li key={t.effectiveFrom} className="row">
+                <span>From {MONTHS[Number(t.effectiveFrom.slice(5, 7)) - 1]} {t.effectiveFrom.slice(0, 4)}: <strong>{t.combined ? "Combined" : "Split"}</strong></span>
+                <button aria-label={`Remove ${t.effectiveFrom}`} onClick={() => update((d) => ({ ...d, taxMode: (d.taxMode ?? []).filter((x) => x.effectiveFrom !== t.effectiveFrom) }))}>Remove</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      <h2 className="section-title">Payslip names</h2>
       <p className="muted pad">Income is taxed per payslip (each employer or paymaster has its own allowance). Name each payslip here, then assign sites to one under Site locations.</p>
       <section className="card">
         {Object.entries(payers).map(([id, name]) => (

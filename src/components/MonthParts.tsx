@@ -55,7 +55,7 @@ export function CorrectionBox({ month, result }: { month: string; result: MonthR
         const o = data.corrections?.[correctionKey(month, p.payer)];
         return (
           <fieldset key={p.payer}>
-            <legend>{data.payerNames[p.payer] ?? p.payer}</legend>
+            <legend>{p.payer === "all" ? "All sites (combined)" : (data.payerNames[p.payer] ?? p.payer)}</legend>
             <div className="grid2">
               <label>Actual gross
                 <input type="number" inputMode="decimal" step="any" placeholder={String(Math.round(p.gross * 100) / 100)}

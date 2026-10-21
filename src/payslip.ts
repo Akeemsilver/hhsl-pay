@@ -1,6 +1,7 @@
 import { computeDay, computeMonth, findSite, valueOn, type RuleHistory } from "./engine";
 import { monthOf } from "./engine";
-import { overridesFor, isOther, type AppData, type Entry } from "./model";
+import { COMBINED_PAYER } from "./engine";
+import { isCombined, overridesFor, isOther, type AppData, type Entry } from "./model";
 
 export interface SiteBreakdown {
   label: string;
@@ -106,12 +107,13 @@ export function buildPayslips(month: string, data: AppData, employee: string): P
   const upTo = Number(month.slice(5));
   const months = Array.from({ length: upTo }, (_, i) => {
     const m = `${year}-${String(i + 1).padStart(2, "0")}`;
-    return computeMonth(m, jobs, data.history, overridesFor(data, m));
+    return computeMonth(m, jobs, data.history, overridesFor(data, m), isCombined(data, m));
   });
   const current = months[upTo - 1]!;
 
   return current.payers.map((p) => {
     const mine = current.entries.filter((e) => {
+      if (p.payer === COMBINED_PAYER) return true;
       const site = findSite(valueOn(data.history.sites, e.entry.date), e.entry.site);
       return (site?.payer ?? "main") === p.payer;
     });
@@ -128,7 +130,7 @@ export function buildPayslips(month: string, data: AppData, employee: string): P
       ytd.gross += mp.gross; ytd.net += mp.net; ytd.paye += mp.paye; ytd.nis += mp.nis; ytd.surcharge += mp.surcharge;
     }
     return {
-      month, payer: p.payer, payerName: data.payerNames[p.payer] ?? p.payer, employee,
+      month, payer: p.payer, payerName: p.payer === COMBINED_PAYER ? "All sites" : (data.payerNames[p.payer] ?? p.payer), employee,
       lines, sites: siteBreakdown(mine), gross: p.gross, paye: p.paye, nis: p.nis, surcharge: p.surcharge, net: p.net,
       hours: mine.reduce((s, e) => s + e.entry.hours, 0),
       days: new Set(mine.filter((e) => e.pay.total > 0).map((e) => e.entry.date)).size,
@@ -170,3 +172,6 @@ export function siteRateText(b: SiteBreakdown, fmt: (n: number) => string): stri
   const lo = b.rates[0] ?? 0, hi = b.rates[b.rates.length - 1] ?? 0;
   return `${lo === hi ? fmt(lo) : `${fmt(lo)} - ${fmt(hi)}`}${b.flat ? " /day" : " /h"}`;
 }
+
+/** Lines on a payslip that are not a site: today only the "adjustment to match your payslip" line. */
+export const adjustmentLines = (s: Payslip): PayslipLine[] => s.lines.filter((l) => l.unit === "");

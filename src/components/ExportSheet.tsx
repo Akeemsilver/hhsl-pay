@@ -1,10 +1,10 @@
-import { timesheetSettingsOf } from "../model";
+import { isCombined, setTaxModeForMonth, timesheetSettingsOf } from "../model";
 import { useMemo, useState } from "react";
 import { deliver } from "../backup";
 import { MONTHS, hoursText, money } from "../format";
 import { useTemplate } from "../hooks";
 import { useNav } from "../nav";
-import { buildPayslips, combinePayslips, siteRateText, type Payslip } from "../payslip";
+import { adjustmentLines, buildPayslips, siteRateText, type Payslip } from "../payslip";
 import { payslipFileName, payslipPdf } from "../pdf/payslipPdf";
 import { timesheetPdf } from "../pdf/timesheetPdf";
 import { useStore } from "../store";
@@ -32,7 +32,7 @@ function SlipPreview({ slip }: { slip: Payslip }) {
               <td className="num">{money(b.amount)}</td>
             </tr>
           ))}
-          {slip.lines.map((l) => (
+          {adjustmentLines(slip).map((l) => (
             <tr key={l.description}><td>{l.description}</td><td /><td /><td className="num">{money(l.amount)}</td></tr>
           ))}
         </tbody>
@@ -48,7 +48,8 @@ function SlipPreview({ slip }: { slip: Payslip }) {
 
 /** Download sheet for the month in view: the payroll timesheet (Excel or PDF) and the payslip (PDF). */
 export function ExportSheet({ month }: { month: string }) {
-  const { data } = useStore();
+  const { data, update } = useStore();
+  const combinedMonth = isCombined(data, month);
   const { back, open } = useNav();
   const { template } = useTemplate();
   const [tab, setTab] = useState<"timesheet" | "payslip">("timesheet");
@@ -59,7 +60,6 @@ export function ExportSheet({ month }: { month: string }) {
   const name = settings.name;
   const { rows, warnings } = useMemo(() => buildTimesheet(month, data.entries, data.history, rules), [month, data, rules]);
   const slips = useMemo(() => buildPayslips(month, data, name), [month, data, name]);
-  const combined = useMemo(() => combinePayslips(slips), [slips]);
   const total = rows.reduce((s, r) => ({ t: s.t + r.hours.t, t15: s.t15 + r.hours.t15, t2: s.t2 + r.hours.t2, t3: s.t3 + r.hours.t3 }), { t: 0, t15: 0, t2: 0, t3: 0 });
   const monthName = `${MONTHS[Number(month.slice(5)) - 1]} ${month.slice(0, 4)}`;
 
@@ -139,10 +139,17 @@ export function ExportSheet({ month }: { month: string }) {
         </>
       ) : (
         <>
+          <div className="row tax-mode">
+            <span className="muted small">Tax for {monthName}:</span>
+            <div className="segmented" role="group" aria-label="Tax for this month">
+              <button aria-pressed={!combinedMonth} className={!combinedMonth ? "on" : ""} onClick={() => update((d) => setTaxModeForMonth(d, month, false))}>Split</button>
+              <button aria-pressed={combinedMonth} className={combinedMonth ? "on" : ""} onClick={() => update((d) => setTaxModeForMonth(d, month, true))}>Combined</button>
+            </div>
+          </div>
           {slips.length === 0 ? (
             <p className="muted">No pay logged in {monthName}, so there is no payslip yet.</p>
           ) : (
-            combined && <SlipPreview slip={combined} />
+            slips.map((s) => <SlipPreview key={s.payer} slip={s} />)
           )}
           {slips.some((s) => s.corrected) && <p className="muted small">* PAYE or gross was entered from your own payslip.</p>}
           {!name && slips.length > 0 && (
