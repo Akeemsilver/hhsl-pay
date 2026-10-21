@@ -1,0 +1,1 @@
+# hhsl-salary-tracker
