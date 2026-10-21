@@ -37,11 +37,8 @@ export function computeDay(entry: DayEntry, sites: SiteTable): DayPay {
     rate = (role?.rate ?? (lead ? site.leadRate : site.baseRate)) ?? 0;
   }
 
-  const caps = entry.holiday
-    ? site.holiday
-    : (entry.weekend ?? isWeekend(entry.date))
-      ? site.weekend
-      : site.weekday;
+  const dayType = entry.holiday ? "holiday" : (entry.weekend ?? isWeekend(entry.date)) ? "weekend" : "weekday";
+  const caps = role?.[dayType] ?? site[dayType];
 
   const c1 = cap(caps.x1);
   const c15 = cap(caps.x15);

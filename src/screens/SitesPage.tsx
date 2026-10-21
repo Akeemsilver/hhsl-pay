@@ -18,10 +18,11 @@ function CapsRow({ label, caps, onChange, withX3 }: { label: string; caps: TierC
   );
 }
 
-function RoleCard({ name, role, builtIn, onChange, onRename, onRemove }: {
-  name: string; role: RoleRates; builtIn: boolean; onChange: (r: RoleRates) => void; onRename: (n: string) => void; onRemove: () => void;
+function RoleCard({ name, role, site, builtIn, onChange, onRename, onRemove }: {
+  name: string; role: RoleRates; site: SiteRates; builtIn: boolean; onChange: (r: RoleRates) => void; onRename: (n: string) => void; onRemove: () => void;
 }) {
   const [draft, setDraft] = useState(name);
+  const own = !!(role.weekday || role.weekend || role.holiday);
   return (
     <div className="role-card">
       {builtIn ? <strong>{name}</strong> : (
@@ -34,6 +35,21 @@ function RoleCard({ name, role, builtIn, onChange, onRename, onRemove }: {
         <label>Flat day<NumInput label={`${name} flat daily pay`} value={role.dailyPay} onChange={(v) => onChange({ ...role, dailyPay: v })} /></label>
         <label>Holiday day<NumInput label={`${name} holiday daily pay`} value={role.dailyHoliday} onChange={(v) => onChange({ ...role, dailyHoliday: v })} /></label>
       </div>
+      <label className="check">
+        <input type="checkbox" aria-label={`${name} has its own overtime hours`} checked={own}
+          onChange={(e) => onChange(e.target.checked
+            ? { ...role, weekday: { ...site.weekday }, weekend: { ...site.weekend }, holiday: { ...site.holiday } }
+            : { ...role, weekday: undefined, weekend: undefined, holiday: undefined })} />
+        {" "}Own overtime hours for {name}
+      </label>
+      {own ? (
+        <div className="caps">
+          <span /><span className="cap-h">×1</span><span className="cap-h">×1.5</span><span className="cap-h">×2</span><span className="cap-h">×3</span>
+          <CapsRow label="Weekday" caps={role.weekday ?? {}} onChange={(c) => onChange({ ...role, weekday: c })} />
+          <CapsRow label="Weekend" caps={role.weekend ?? {}} onChange={(c) => onChange({ ...role, weekend: c })} />
+          <CapsRow label="Holiday" caps={role.holiday ?? {}} onChange={(c) => onChange({ ...role, holiday: c })} withX3 />
+        </div>
+      ) : <p className="muted small">Uses the site's overtime hours below.</p>}
       {builtIn
         ? <p className="muted small">Leave blank to pay this role at the site's standard rate.</p>
         : <button className="danger" onClick={() => confirm(`Remove the role ${name}? Days that used it go back to the standard rate.`) && onRemove()}>Remove role</button>}
@@ -49,7 +65,7 @@ function SiteCard({ name, site, payers, onChange, onRename, onRemove, onRenameRo
   const [newRole, setNewRole] = useState("");
   const set = <K extends keyof SiteRates>(k: K, v: SiteRates[K]) => onChange({ ...site, [k]: v });
   const roles = site.roles ?? {};
-  const roleCount = Object.values(roles).filter((r) => r.rate || r.dailyPay || r.dailyHoliday).length;
+  const roleCount = Object.values(roles).filter((r) => r.rate || r.dailyPay || r.dailyHoliday || r.weekday || r.weekend || r.holiday).length;
   return (
     <details className="site">
       <summary>
@@ -76,7 +92,7 @@ function SiteCard({ name, site, payers, onChange, onRename, onRemove, onRenameRo
         const key = Object.keys(roles).find((k) => k.toLowerCase() === roleName.toLowerCase()) ?? roleName;
         return (
           <RoleCard
-            key={roleName} name={roleName} role={roles[key] ?? {}} builtIn={builtIn}
+            key={roleName} name={roleName} role={roles[key] ?? {}} site={site} builtIn={builtIn}
             onChange={(r) => set("roles", { ...roles, [key]: r })}
             onRename={(to) => onRenameRole(roleName, to)}
             onRemove={() => set("roles", Object.fromEntries(Object.entries(roles).filter(([k]) => k !== key)))}
@@ -92,7 +108,7 @@ function SiteCard({ name, site, payers, onChange, onRename, onRemove, onRenameRo
       </div>
 
       <h3 className="section-title">Overtime hours</h3>
-      <p className="muted small">Hours at each pay multiple per day. Use a large number such as 1000 for “no limit”. Leave blank for none. Roles share these.</p>
+      <p className="muted small">Hours at each pay multiple per day. Use a large number such as 1000 for “no limit”. Leave blank for none. Roles use these unless you give a role its own above.</p>
       <div className="caps">
         <span /><span className="cap-h">×1</span><span className="cap-h">×1.5</span><span className="cap-h">×2</span><span className="cap-h">×3</span>
         <CapsRow label="Weekday" caps={site.weekday} onChange={(c) => set("weekday", c)} />

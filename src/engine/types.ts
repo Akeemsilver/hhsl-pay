@@ -14,6 +14,10 @@ export interface RoleRates {
   rate?: number;
   dailyPay?: number;
   dailyHoliday?: number;
+  /** Overtime hours just for this role, for example 8 hours at x1 then 4 at x1.5. Missing means the site's own hours. */
+  weekday?: TierCaps;
+  weekend?: TierCaps;
+  holiday?: TierCaps;
 }
 
 export interface SiteRates {
@@ -30,7 +34,7 @@ export interface SiteRates {
   dailyStd?: number;
   dailyLead?: number;
   dailyHoliday?: number;
-  /** Extra positions with their own pay. Overtime caps are shared with the site. */
+  /** Extra positions with their own pay. Overtime hours are the site's unless the role sets its own. */
   roles?: Record<string, RoleRates>;
 }
 

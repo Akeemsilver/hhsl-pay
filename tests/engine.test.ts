@@ -215,3 +215,17 @@ describe("filtering a month to one location", () => {
     expect(a.net).toBeCloseTo(a.gross - a.paye - a.nis - a.surcharge);
   });
 });
+
+describe("role with its own overtime hours", () => {
+  it("uses the role's hours, and the site's when the role has none", () => {
+    const sites = { PLNL: { payer: "main", baseRate: 60, weekday: { x1: 12 }, weekend: {}, holiday: {}, roles: { "Client medic": { rate: 60, weekday: { x1: 8, x15: 4 } }, Offshore: { rate: 70 } } } };
+    const std = computeDay({ date: "2026-07-01", site: "PLNL", hours: 12 }, sites);
+    expect(std.tierHours).toMatchObject({ x1: 12, x15: 0 });
+    expect(std.total).toBeCloseTo(720);
+    const medic = computeDay({ date: "2026-07-01", site: "PLNL", hours: 12, role: "Client medic" }, sites);
+    expect(medic.tierHours).toMatchObject({ x1: 8, x15: 4 });
+    expect(medic.total).toBeCloseTo(8 * 60 + 4 * 60 * 1.5);
+    const off = computeDay({ date: "2026-07-01", site: "PLNL", hours: 12, role: "Offshore" }, sites);
+    expect(off.tierHours).toMatchObject({ x1: 12, x15: 0 });
+  });
+});
