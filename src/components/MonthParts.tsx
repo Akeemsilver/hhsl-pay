@@ -23,7 +23,7 @@ export function MonthSummary({ result, label }: { result: MonthResult<Entry>; la
           {result.payers.map((p) => (
             <li key={p.payer}>
               <span>{data.payerNames[p.payer] ?? p.payer}{p.corrected && " ✎"}</span>
-              <span>{hoursText(p.hours)} h · {money(p.gross)} → {money(p.net)}</span>
+              <span>{hoursText(p.hours)} hrs · {money(p.gross)} → {money(p.net)}</span>
             </li>
           ))}
         </ul>
@@ -96,7 +96,7 @@ export function DayList({ days, result, today, onPick }: { days: string[]; resul
                 {priced.map(({ entry, pay }) => (
                   <span key={entry.id} className="chip">
                     {entry.site}
-                    {entry.hours > 0 && ` · ${hoursText(entry.hours)}h`}
+                    {entry.hours > 0 && ` · ${hoursText(entry.hours)} hrs`}
                     {entry.lead && " · lead"}
                     {entry.holiday && " · hol"}
                     {pay.total === 0 && " ⚠"}

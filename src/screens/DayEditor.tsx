@@ -7,6 +7,7 @@ import { useStore } from "../store";
 import { BottomSheet } from "../components/BottomSheet";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { TimeField, quickTimes } from "../components/TimeField";
+import { ChevronDown, ChevronUp } from "../components/Icons";
 
 const QUICK_JOBS = ["Airport pickup", "Delivery", "Drop-off", "Yard run"];
 
@@ -163,7 +164,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                 <span className="lbl">Hours paid</span>
                 {detailed ? (
                   <div className="hours-tile" aria-label="Hours paid">
-                    <strong>{hoursText(entry.hours)} h</strong>
+                    <strong>{hoursText(entry.hours)}</strong>
                     <span className="muted small">
                       {entry.hours > 0 || (entry.startTime && entry.endTime)
                         ? <>{entry.startTime}–{entry.endTime} is {durationText(entry.startTime, entry.endTime)}{entry.lunchPaid ? ", lunch paid" : `, minus ${(entry.lunchMinutes ?? 60) === 30 ? "30 min" : "1 hour"} unpaid lunch`}</>
@@ -180,11 +181,10 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                           value={entry.hours}
                           onChange={(e) => patch(entry.id, { hours: Math.min(24, Math.max(0, Number(e.target.value))) })}
                         />
-                        <span>h</span>
                       </label>
                       <button type="button" aria-label="Half an hour more" onClick={() => bump(0.5)}>+</button>
                     </div>
-                    <span className="muted small">Only the hours you are paid for. 12 h on site minus a 1 h unpaid lunch, enter 11.</span>
+                    <span className="muted small">Only the hours you are paid for. 12 hours on site minus a 1 hour unpaid lunch, enter 11.</span>
                   </>
                 )}
               </div>
@@ -208,10 +208,20 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                       ))}
                     </div>
                   )}
-                  <button type="button" className="link small" onClick={() => setDraft((list) => list.map((e) => (e.id === entry.id ? toSimple(e) : e)))}>Simple: type the hours instead</button>
+                  <div className="mode-switch">
+                    <button type="button" className="circle-btn" aria-label="Simple: type the hours instead" onClick={() => setDraft((list) => list.map((e) => (e.id === entry.id ? toSimple(e) : e)))}>
+                      <ChevronUp />Simple
+                    </button>
+                    <span className="muted small">Type the hours instead of using start and end time.</span>
+                  </div>
                 </div>
               ) : (
-                <button type="button" className="link small" onClick={() => setDraft((list) => list.map((e) => (e.id === entry.id ? toDetailed(e) : e)))}>Detailed: start and end time, lunch</button>
+                <div className="mode-switch">
+                  <button type="button" className="circle-btn" aria-label="Detailed: start and end time, lunch" onClick={() => setDraft((list) => list.map((e) => (e.id === entry.id ? toDetailed(e) : e)))}>
+                    <ChevronDown />Detailed
+                  </button>
+                  <span className="muted small">Add start and end time, and lunch.</span>
+                </div>
               )}
 
               <div className="preview">
@@ -220,7 +230,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                     <span>
                       {pay.dailyPay > 0 ? `Flat ${money(pay.dailyPay)}` : `${money(pay.rate)}/h`}
                       {pay.tierHours.x15 + pay.tierHours.x2 + pay.tierHours.x3 > 0 &&
-                        ` · OT ${[["×1.5", pay.tierHours.x15], ["×2", pay.tierHours.x2], ["×3", pay.tierHours.x3]].filter(([, h]) => Number(h) > 0).map(([l, h]) => `${h}h ${l}`).join(", ")}`}
+                        ` · OT ${[["×1.5", pay.tierHours.x15], ["×2", pay.tierHours.x2], ["×3", pay.tierHours.x3]].filter(([, h]) => Number(h) > 0).map(([l, h]) => `${h} hrs ${l}`).join(", ")}`}
                     </span>
                     <strong>{money(pay.total)}</strong>
                   </>
