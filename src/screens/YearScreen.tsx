@@ -1,3 +1,4 @@
+import { PayerTax } from "../components/MonthParts";
 import { useMemo, useState } from "react";
 import { annualTaxEstimate, computeMonth, valueOn } from "../engine";
 import { MONTHS, money, todayISO } from "../format";
@@ -20,6 +21,13 @@ export function YearScreen() {
   const paye = total((m) => m.paye);
   const rules = valueOn(data.history.tax, `${year}-12-31`);
   const est = annualTaxEstimate(gross, nis, paye, rules);
+  const byPayer = new Map<string, { payer: string; paye: number; nis: number; surcharge: number }>();
+  for (const m of months) for (const p of m.payers) {
+    const t = byPayer.get(p.payer) ?? { payer: p.payer, paye: 0, nis: 0, surcharge: 0 };
+    t.paye += p.paye; t.nis += p.nis; t.surcharge += p.surcharge;
+    byPayer.set(p.payer, t);
+  }
+  const yearPayers = [...byPayer.values()];
   const max = Math.max(1, ...months.map((m) => m.gross));
   const progress = Math.min(1, gross / rules.annualThreshold);
 
@@ -40,6 +48,7 @@ export function YearScreen() {
           <div><dt><i className="dot dot-nis" />NIS</dt><dd className="c-nis">{money(nis)}</dd></div>
           <div><dt><i className="dot dot-sur" />Surcharge</dt><dd className="c-sur">{money(total((m) => m.surcharge))}</dd></div>
         </dl>
+        <PayerTax payers={yearPayers} />
       </section>
 
       <section className="card">

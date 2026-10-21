@@ -577,3 +577,8 @@ button.icon.gear, .bar.page button.icon { transition: box-shadow .15s, transform
 .slip-lines .block { display: block; }
 .slip-lines th { font-size: 0.7rem; color: var(--muted); text-align: left; font-weight: 600; text-transform: uppercase; }
 .slip-lines th.num { text-align: right; }
+
+.payer-tax { list-style: none; margin: 10px 0 0; padding: 8px 0 0; border-top: 1px solid var(--line); display: grid; gap: 4px; font-size: 0.72rem; color: var(--muted); }
+.payer-tax li { display: flex; flex-direction: column; gap: 1px; }
+.payer-tax b { color: var(--text); font-weight: 600; }
+.payer-tax i { font-style: normal; }

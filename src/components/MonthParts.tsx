@@ -5,6 +5,22 @@ import { useStore } from "../store";
 import type { MonthResult } from "../engine";
 import type { Entry } from "../model";
 
+/** Small print under a total: each place's own PAYE, NIS and health surcharge. Only shown when payslips are taxed separately. */
+export function PayerTax({ payers }: { payers: Array<{ payer: string; paye: number; nis: number; surcharge: number }> }) {
+  const { data } = useStore();
+  if (payers.length < 2) return null;
+  return (
+    <ul className="payer-tax" aria-label="Tax for each payslip">
+      {payers.map((p) => (
+        <li key={p.payer}>
+          <b>{p.payer === "all" ? "All sites" : (data.payerNames[p.payer] ?? p.payer)}</b>
+          <span>PAYE <i className="c-paye">{money(p.paye)}</i> · NIS {money(p.nis)} · Health surcharge {money(p.surcharge)}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function MonthSummary({ result, label }: { result: MonthResult<Entry>; label: string }) {
   const { data } = useStore();
   return (
@@ -19,6 +35,7 @@ export function MonthSummary({ result, label }: { result: MonthResult<Entry>; la
         <div><dt><i className="dot dot-nis" />NIS</dt><dd className="c-nis">{money(result.nis)}</dd></div>
         <div><dt><i className="dot dot-sur" />Surcharge</dt><dd className="c-sur">{money(result.surcharge)}</dd></div>
       </dl>
+      <PayerTax payers={result.payers} />
       {result.payers.length > 1 && (
         <ul className="payers">
           {result.payers.map((p) => (

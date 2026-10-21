@@ -1,5 +1,6 @@
 import { useNav } from "../nav";
-import { userNameOf } from "../model";
+import { isCombined, setTaxModeFrom, userNameOf } from "../model";
+import { todayISO } from "../format";
 import { useStore } from "../store";
 import { useTheme, type ThemePref } from "../theme";
 import { PageHeader } from "../components/TopBar";
@@ -10,6 +11,8 @@ export function SettingsHub() {
   const { data, persistent, update } = useStore();
 
   const [theme, setTheme] = useTheme();
+  const thisMonth = todayISO().slice(0, 7);
+  const combinedNow = isCombined(data, thisMonth);
   const sites = new Set(data.history.sites.flatMap((v) => Object.keys(v.value))).size;
   return (
     <>
@@ -30,6 +33,20 @@ export function SettingsHub() {
           ))}
         </div>
         <p className="muted small">System follows your phone's light or dark setting.</p>
+      </section>
+
+      <h2 className="section-title">How tax is worked out</h2>
+      <section className="card">
+        <div className="segmented" role="group" aria-label="Tax method">
+          <button aria-pressed={!combinedNow} className={!combinedNow ? "on" : ""} onClick={() => update((d) => setTaxModeFrom(d, thisMonth, false))}>Split</button>
+          <button aria-pressed={combinedNow} className={combinedNow ? "on" : ""} onClick={() => update((d) => setTaxModeFrom(d, thisMonth, true))}>Combined</button>
+        </div>
+        <p className="muted small">
+          {combinedNow
+            ? "Combined: one gross, one PAYE, one NIS and one health surcharge on everything."
+            : "Split: Point Lisas / other and Atlantic each pay their own PAYE, NIS and health surcharge. The totals add them together, with each place shown in small print."}
+          {" "}Applies from {thisMonth} onwards. <button className="link" onClick={() => open({ page: "payslips" })}>Choose another month</button>
+        </p>
       </section>
 
       <h2 className="section-title">Your work</h2>

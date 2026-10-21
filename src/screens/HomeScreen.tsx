@@ -6,7 +6,7 @@ import { isOther, othersByDate } from "../model";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
 import { PlusIcon } from "../components/Icons";
-import { CalendarGrid } from "../components/MonthParts";
+import { CalendarGrid, PayerTax } from "../components/MonthParts";
 
 const DAY_MS = 86_400_000;
 
@@ -112,6 +112,7 @@ export function HomeScreen() {
           <div><span>Days</span><strong>{worked.size}</strong></div>
           <div><span>Hours</span><strong>{hoursText(hours)} h</strong></div>
         </div>
+        <PayerTax payers={thisMonth.payers} />
       </section>
 
       <div className="actions">
