@@ -17,6 +17,8 @@ export interface Loc {
   focus?: string;
   /** How many history entries deep we are (0 = the home screen). */
   n: number;
+  /** The bottom history entry: Back from Home lands here, which asks to press Back again before leaving. */
+  base?: boolean;
 }
 
 const ROOT: Loc = { tab: "home", n: 0 };
@@ -40,6 +42,8 @@ interface Nav {
   /** Switch tab; going back to Home returns to the first history entry. */
   selectTab: (tab: Tab) => void;
   back: () => void;
+  /** True for a moment after Back is pressed on Home: the next press leaves the app. */
+  exitHint: boolean;
 }
 
 const Ctx = createContext<Nav | null>(null);
@@ -55,12 +59,34 @@ export function NavProvider({ children }: { children: ReactNode }) {
   const locRef = useRef(loc);
   locRef.current = loc;
   const guard = useRef<Guard | null>(null);
+  const [exitHint, setExitHint] = useState(false);
+  const lastExitPress = useRef(0);
   const setGuard = useCallback((g: Guard | null) => { guard.current = g; }, []);
 
   useEffect(() => {
-    if (!(window.history.state as Loc | null)?.tab) window.history.replaceState(ROOT, "");
+    // Like an Android app: Back goes up one level, and from Home the first press only asks, the second leaves.
+    const st = window.history.state as Loc | null;
+    if (!st?.tab) {
+      window.history.replaceState({ ...ROOT, base: true }, "");
+      window.history.pushState(ROOT, "");
+    } else if (st.n === 0 && !st.base) {
+      window.history.replaceState({ ...ROOT, base: true }, "");
+      window.history.pushState(ROOT, "");
+    }
     const onPop = () => {
       const next = read();
+      if (next.base) {
+        if (Date.now() - lastExitPress.current < 2500) {
+          window.history.back();
+          return;
+        }
+        lastExitPress.current = Date.now();
+        window.history.pushState(ROOT, "");
+        setLoc(ROOT);
+        setExitHint(true);
+        window.setTimeout(() => setExitHint(false), 2500);
+        return;
+      }
       const g = guard.current;
       if (g && g.blocks(next, locRef.current)) {
         // Undo the Back press by putting the current screen back on top, then let the screen react.
@@ -100,6 +126,6 @@ export function NavProvider({ children }: { children: ReactNode }) {
   );
 
   const back = useCallback(() => window.history.back(), []);
-  const value = useMemo(() => ({ loc, setGuard, open, selectTab, back }), [loc, setGuard, open, selectTab, back]);
+  const value = useMemo(() => ({ loc, setGuard, open, selectTab, back, exitHint }), [loc, setGuard, open, selectTab, back, exitHint]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

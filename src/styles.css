@@ -584,3 +584,5 @@ button.icon.gear, .bar.page button.icon { transition: box-shadow .15s, transform
 .payer-tax i { font-style: normal; }
 input[hidden] { display: none !important; }
 .import-preview { margin-top: 12px; display: grid; gap: 10px; }
+
+.exit-hint { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: rgba(20,24,31,.92); color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 0.9rem; z-index: 60; box-shadow: 0 6px 18px rgba(0,0,0,.3); }

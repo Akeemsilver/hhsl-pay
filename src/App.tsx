@@ -24,7 +24,7 @@ const TABS: Array<{ id: Tab; label: string; Icon: () => JSX.Element }> = [
 ];
 
 function Shell() {
-  const { loc, selectTab, back } = useNav();
+  const { loc, selectTab, back, exitHint } = useNav();
   const { data } = useStore();
   if (!userNameOf(data) && !loc.page) return <div className="app"><main><WelcomeScreen /></main></div>;
   return (
@@ -42,6 +42,7 @@ function Shell() {
         {!loc.page && loc.tab === "year" && <YearScreen />}
         {!loc.page && loc.tab === "charts" && <ChartsScreen />}
       </main>
+      {exitHint && <div className="exit-hint" role="status">Press Back again to exit</div>}
       {!loc.page && (
         <nav className="tabs" aria-label="Main">
           {TABS.map(({ id, label, Icon }) => (

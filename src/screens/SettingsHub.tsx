@@ -1,5 +1,7 @@
 import { useNav } from "../nav";
-import { isCombined, setTaxModeFrom, userNameOf } from "../model";
+import { useState } from "react";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { newData, isCombined, setTaxModeFrom, userNameOf } from "../model";
 import { todayISO } from "../format";
 import { useStore } from "../store";
 import { useTheme, type ThemePref } from "../theme";
@@ -7,8 +9,9 @@ import { PageHeader } from "../components/TopBar";
 import { CalendarIcon, ChevronRight, FileIcon, MapPinIcon, SaveIcon, ShieldIcon, UsersIcon } from "../components/Icons";
 
 export function SettingsHub() {
-  const { open } = useNav();
-  const { data, persistent, update } = useStore();
+  const { open, selectTab } = useNav();
+  const { data, persistent, update, replace } = useStore();
+  const [ask, setAsk] = useState<"settings" | "all" | null>(null);
 
   const [theme, setTheme] = useTheme();
   const thisMonth = todayISO().slice(0, 7);
@@ -98,6 +101,43 @@ export function SettingsHub() {
           </button>
         </li>
       </ul>
+      <h2 className="section-title">Reset to default</h2>
+      <section className="card">
+        <p className="muted small">Put the app's settings back the way they were when you first installed it. Your logged days, site rates and name are kept.</p>
+        <button className="wide" onClick={() => setAsk("settings")}>Reset settings to default</button>
+        <p className="muted small">Or start completely fresh. This erases your days, rates, name and everything else on this phone.</p>
+        <button className="danger wide" onClick={() => setAsk("all")}>Erase everything</button>
+      </section>
+      {ask && (
+        <ConfirmDialog
+          title={ask === "settings" ? "Reset settings?" : "Erase everything?"}
+          message={ask === "settings"
+            ? "Appearance, tax tables, the Split / Combined choice, public holiday edits and timesheet job rules go back to default. Your days, site rates and name stay."
+            : "All your days, rates, settings and your name are deleted from this phone. This cannot be undone. Back up first if you might need them."}
+          confirmLabel={ask === "settings" ? "Reset" : "Erase everything"}
+          cancelLabel="Keep"
+          onCancel={() => setAsk(null)}
+          onConfirm={() => {
+            if (ask === "settings") {
+              setTheme("system");
+              update((d) => {
+                const fresh = newData();
+                return {
+                  ...d,
+                  history: { ...d.history, tax: fresh.history.tax },
+                  taxMode: undefined, holidays: undefined,
+                  timesheet: d.timesheet ? { ...d.timesheet, siteLabel: "ERT Offsite", rules: [] } : undefined,
+                };
+              });
+            } else {
+              replace(newData());
+              setTheme("system");
+              selectTab("home");
+            }
+            setAsk(null);
+          }}
+        />
+      )}
       <p className="muted small pad">
         Everything is saved on this phone only. There is no account and no server. {persistent ? "The browser has agreed to keep your data." : "Back up regularly so a cleared browser or lost phone does not lose your entries."}
       </p>
