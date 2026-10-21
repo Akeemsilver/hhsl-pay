@@ -31,8 +31,8 @@ export function CalendarScreen() {
       <TopBar
         title="Calendar"
         action={<>
-          <button className="icon gear" aria-label="View timesheet" onClick={() => open({ sub: "view" })}><EyeIcon /></button>
-          <button className="icon gear" aria-label="Download timesheet or payslip" onClick={() => open({ sub: "export" })}><DownloadIcon /></button>
+          <button className="icon gear" aria-label="View timesheet" title="View timesheet" onClick={() => open({ sub: "view" })}><EyeIcon /></button>
+          <button className="icon gear" aria-label="Download timesheet or payslip" title="Download timesheet or payslip" onClick={() => open({ sub: "export" })}><DownloadIcon /></button>
         </>}
       />
       <div className="monthbar">

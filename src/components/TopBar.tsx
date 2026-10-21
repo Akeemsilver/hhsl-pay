@@ -22,11 +22,11 @@ export function TopBar({ title, subtitle, action }: { title: ReactNode; subtitle
       <div className="top-actions">
         {action}
         {sites.length > 1 && (
-          <button className={`icon gear ${site ? "active" : ""}`} aria-label="Filter by location" aria-pressed={!!site} onClick={() => open({ sub: "filter" })}>
+          <button className={`icon gear ${site ? "active" : ""}`} aria-label="Filter by location" title="Filter by location" aria-pressed={!!site} onClick={() => open({ sub: "filter" })}>
             <FilterIcon />
           </button>
         )}
-        <button className="icon gear" aria-label="Settings" onClick={() => open({ page: "settings" })}>
+        <button className="icon gear" aria-label="Settings" title="Settings" onClick={() => open({ page: "settings" })}>
           <GearIcon />
         </button>
       </div>
