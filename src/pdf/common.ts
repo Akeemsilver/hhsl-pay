@@ -20,5 +20,5 @@ export const BRAND = "#0f766e";
 export const GROSS = "#1c5cab";
 export const NET = "#006b00";
 export const PAYE = "#b42318";
-export const NIS = "#4a3aa7";
-export const SURCHARGE = "#8a5a00";
+export const NIS = "#111111";
+export const SURCHARGE = "#111111";

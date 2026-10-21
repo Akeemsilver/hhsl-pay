@@ -24,10 +24,10 @@
   --net-text: #006b00;
   --paye: #e34948;
   --paye-text: #b42318;
-  --nis: #6250d6;
-  --nis-text: #4a3aa7;
-  --sur: #eda100;
-  --sur-text: #8a5a00;
+  --nis: #1a1a1a;
+  --nis-text: var(--text);
+  --sur: #1a1a1a;
+  --sur-text: var(--text);
   color-scheme: light dark;
 }
 @media (prefers-color-scheme: dark) {
@@ -57,10 +57,10 @@
     --net-text: #5ee09a;
     --paye: #e66767;
     --paye-text: #ff8a80;
-    --nis: #9085e9;
-    --nis-text: #b3a9f5;
-    --sur: #c98500;
-    --sur-text: #f0b84a;
+    --nis: #d9d9d9;
+    --nis-text: var(--text);
+    --sur: #d9d9d9;
+    --sur-text: var(--text);
     color-scheme: dark;
   }
 }
@@ -90,10 +90,10 @@
     --net-text: #5ee09a;
     --paye: #e66767;
     --paye-text: #ff8a80;
-    --nis: #9085e9;
-    --nis-text: #b3a9f5;
-    --sur: #c98500;
-    --sur-text: #f0b84a;
+    --nis: #d9d9d9;
+    --nis-text: var(--text);
+    --sur: #d9d9d9;
+    --sur-text: var(--text);
   color-scheme: dark;
 }
 :root[data-theme="light"] { color-scheme: light; }
@@ -483,7 +483,7 @@ button.circle-btn {
 }
 button.circle-btn:active { transform: scale(0.96); }
 
-/* Money colours, the same everywhere: gross blue, net green, PAYE red, NIS violet, surcharge amber */
+/* Money colours, the same everywhere: gross blue, net green, PAYE red, NIS and surcharge plain black */
 .c-gross { color: var(--gross-text); }
 .c-net { color: var(--net-text); }
 .c-paye { color: var(--paye-text); }
@@ -505,7 +505,7 @@ th.c-gross, th.c-paye, th.c-net { font-weight: 700; }
 td.c-gross, td.c-net, td.c-paye { font-weight: 600; }
 
 /* Home hero: a plain card so the money colours read clearly */
-.hero { background: var(--card); color: var(--text); border: 1px solid var(--line); border-left: 6px solid var(--gross); }
+.hero { background: var(--card); color: var(--text); border: 1px solid var(--line); box-shadow: 0 1px 2px rgba(16,24,40,.06), 0 6px 16px rgba(16,24,40,.10), 0 14px 28px rgba(16,24,40,.06); }
 .hero-top { opacity: 1; color: var(--muted); }
 .hero-value { color: var(--gross-text); }
 .hero-stats span { opacity: 1; color: var(--muted); }
