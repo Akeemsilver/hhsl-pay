@@ -1,3 +1,4 @@
+import { DEFAULT_PAYROLL_EMAIL } from "../timesheet";
 import { isCombined, setTaxModeForMonth, timesheetSettingsOf } from "../model";
 import { useMemo, useState } from "react";
 import { deliver } from "../backup";
@@ -12,6 +13,10 @@ import { buildTimesheet } from "../timesheet";
 import { makeTimesheetXlsx, XLSX_MIME } from "../timesheetExport";
 import { TemplateError, extractLogo, timesheetFileName } from "../timesheetFile";
 import { BottomSheet } from "./BottomSheet";
+import { PayrollDialog } from "./PayrollDialog";
+import { MailIcon } from "./Icons";
+import { download } from "../backup";
+import { mailtoLink, payrollEmail } from "../payroll";
 
 
 function SlipPreview({ slip }: { slip: Payslip }) {
@@ -53,6 +58,7 @@ export function ExportSheet({ month }: { month: string }) {
   const { back, open } = useNav();
   const { template } = useTemplate();
   const [tab, setTab] = useState<"timesheet" | "payslip">("timesheet");
+  const [payrollOpen, setPayrollOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
   const settings = timesheetSettingsOf(data);
@@ -88,6 +94,25 @@ export function ExportSheet({ month }: { month: string }) {
     const bytes = await timesheetPdf({ ...sheetInput, logo });
     return deliver(timesheetFileName(name, month).replace(/\.xlsx$/, ".pdf"), bytes, "application/pdf");
   }, "Timesheet PDF");
+  const email = payrollEmail({
+    to: settings.payrollEmail || DEFAULT_PAYROLL_EMAIL, name, monthName, siteLabel: settings.siteLabel || "ERT Offsite",
+    days: rows.length, hours: total.t + total.t15 + total.t2 + total.t3, fileName: timesheetFileName(name, month),
+  });
+  const sendToPayroll = async () => {
+    setPayrollOpen(false);
+    setBusy("payroll");
+    setMessage(null);
+    try {
+      const made = await makeTimesheetXlsx(template!.bytes, settings, month, data.entries, data.history);
+      download(made.fileName, made.bytes, XLSX_MIME);
+      setMessage({ text: `Step 2 of 2: ${made.fileName} is in your Downloads. Attach it to the email that opens, then send.`, ok: true });
+      setTimeout(() => { window.location.href = mailtoLink(email); }, 700);
+    } catch (e) {
+      setMessage({ text: e instanceof TemplateError ? e.message : "Could not create the file.", ok: false });
+    } finally {
+      setBusy(null);
+    }
+  };
   const downloadSlip = () => run("slip", async () => {
     const bytes = await payslipPdf(slips);
     return deliver(payslipFileName(name, month), bytes, "application/pdf");
@@ -121,6 +146,11 @@ export function ExportSheet({ month }: { month: string }) {
               <p className="muted small">It fills your HHSL time sheet form for {monthName}. View it first, then download.</p>
               {warnings.length > 0 && <ul className="ts-warn">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>}
             </>
+          )}
+          {rows.length > 0 && (
+            <button className="payroll-btn" disabled={!!busy || !template} onClick={() => setPayrollOpen(true)}>
+              <MailIcon /> Send to payroll
+            </button>
           )}
           {rows.length > 0 && (
             <button className="link small" disabled={!!busy} onClick={downloadSheetPdf}>{busy === "sheet-pdf" ? "Preparing…" : "Also download as PDF"}</button>
@@ -177,6 +207,7 @@ export function ExportSheet({ month }: { month: string }) {
           </>
         )}
       </div>
+      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={sendToPayroll} />}
     </BottomSheet>
   );
 }

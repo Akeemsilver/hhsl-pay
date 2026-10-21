@@ -599,3 +599,12 @@ button.icon.gear, .bar.page button.icon[aria-label="Back"] { width: 36px; min-wi
 button.icon.gear svg, .bar.page button.icon[aria-label="Back"] svg { width: 18px; height: 18px; }
 .top-actions { gap: 6px; }
 .bar .spacer { width: 36px; }
+
+.payroll-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin: 6px 0; background: #1f4e6b; color: #fff; border-color: #1f4e6b; font-weight: 600; }
+.payroll-btn:disabled { opacity: .5; }
+.confirm.payroll { max-width: 380px; max-height: 88vh; overflow: auto; }
+.confirm.payroll .row { grid-template-columns: 1fr 1fr; }
+.mail-preview { margin: 10px 0; padding: 10px 12px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); font-size: 0.82rem; }
+.mail-preview > div { display: flex; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--line); }
+.mail-preview > div span { color: var(--muted); min-width: 52px; }
+.mail-preview pre { margin: 8px 0 0; white-space: pre-wrap; font: inherit; }

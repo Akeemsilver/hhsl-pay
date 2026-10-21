@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { emptyTimesheetSettings, type TimesheetRule } from "../timesheet";
+import { DEFAULT_PAYROLL_EMAIL, emptyTimesheetSettings, type TimesheetRule } from "../timesheet";
 import { useTemplate } from "../hooks";
 import { DEFAULT_ROLES, userNameOf } from "../model";
 import { useStore } from "../store";
@@ -44,6 +44,9 @@ export function TimesheetPage() {
         </label>
         <label>Site line
           <input value={settings.siteLabel} onChange={(e) => setSettings({ siteLabel: e.target.value })} />
+        </label>
+        <label>Payroll email (for “Send to payroll”)
+          <input type="email" inputMode="email" autoCapitalize="none" value={settings.payrollEmail ?? DEFAULT_PAYROLL_EMAIL} onChange={(e) => setSettings({ payrollEmail: e.target.value })} />
         </label>
       </section>
 

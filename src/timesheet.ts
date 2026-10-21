@@ -17,7 +17,11 @@ export interface TimesheetSettings {
   /** The SITE line in the header, e.g. "ERT Offsite". */
   siteLabel: string;
   rules: TimesheetRule[];
+  /** Where "Send to payroll" addresses the email. */
+  payrollEmail?: string;
 }
+
+export const DEFAULT_PAYROLL_EMAIL = "payrollassistant@hhslsafety.com";
 
 export const emptyTimesheetSettings = (): TimesheetSettings => ({ name: "", siteLabel: "ERT Offsite", rules: [] });
 

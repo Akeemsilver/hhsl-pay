@@ -27,6 +27,7 @@ export const TableIcon = () => (<Icon><rect x="3" y="4" width="18" height="16" r
 export const PieIcon = () => (<Icon><path d="M21 12A9 9 0 1 1 12 3v9z" /><path d="M15 3.5A9 9 0 0 1 20.5 9H15z" /></Icon>);
 export const EyeIcon = () => (<Icon><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></Icon>);
 export const FilterIcon = () => (<Icon><path d="M3 5h18l-7 8v6l-4 2v-8L3 5z" /></Icon>);
+export const MailIcon = () => (<Icon size={18}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></Icon>);
 export const DownloadIcon = () => (<Icon><path d="M12 3v12" /><path d="M7 11l5 5 5-5" /><path d="M5 21h14" /></Icon>);
 export const ClockIcon = () => (<Icon><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></Icon>);
 export const ShieldIcon = () => (<Icon><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z" /></Icon>);

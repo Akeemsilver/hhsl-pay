@@ -126,6 +126,12 @@ export async function deliver(fileName: string, content: string | Uint8Array, ty
       if ((e as DOMException)?.name === "AbortError") throw e;
     }
   }
+  return download(fileName, content, type);
+}
+
+/** Save the file to the phone's Downloads without opening the share sheet. */
+export function download(fileName: string, content: string | Uint8Array, type = "application/json"): "downloaded" {
+  const file = new File([content as BlobPart], fileName, { type });
   const url = URL.createObjectURL(file);
   const a = document.createElement("a");
   a.href = url;
