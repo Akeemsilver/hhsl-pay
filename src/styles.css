@@ -136,7 +136,9 @@ p { margin: 0 0 10px; }
 button.icon.gear {
   width: 44px; border-radius: 50%; color: var(--text);
   background: var(--card); border: 1px solid var(--line);
+  box-shadow: 0 2px 3px rgba(16,24,40,.12), 0 8px 18px rgba(16,24,40,.18), 0 16px 30px rgba(16,24,40,.10);
 }
+button.icon.gear:active { transform: translateY(1px); box-shadow: 0 1px 2px rgba(16,24,40,.2); }
 
 .monthbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .monthname { font-size: 1.15rem; font-weight: 700; text-align: center; }
@@ -567,3 +569,8 @@ td.c-gross, td.c-net, td.c-paye { font-weight: 600; }
 .welcome h1 { font-size: 2rem; margin: 0; }
 .welcome form { display: grid; gap: 12px; }
 .welcome .link { background: none; border: 0; color: var(--accent); text-decoration: underline; padding: 8px; }
+
+button.icon.gear, .bar.page button.icon { transition: box-shadow .15s, transform .15s; }
+.bar.page button.icon[aria-label="Back"] { border-radius: 50%; background: var(--card); border: 1px solid var(--line); box-shadow: 0 2px 3px rgba(16,24,40,.12), 0 8px 18px rgba(16,24,40,.18), 0 16px 30px rgba(16,24,40,.10); }
+:root[data-theme="dark"] button.icon.gear, :root[data-theme="dark"] .bar.page button.icon[aria-label="Back"] { box-shadow: 0 2px 4px rgba(0,0,0,.5), 0 8px 18px rgba(0,0,0,.55); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) button.icon.gear, :root:not([data-theme="light"]) .bar.page button.icon[aria-label="Back"] { box-shadow: 0 2px 4px rgba(0,0,0,.5), 0 8px 18px rgba(0,0,0,.55); } }

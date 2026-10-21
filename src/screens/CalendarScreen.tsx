@@ -5,7 +5,7 @@ import { useMonth } from "../hooks";
 import { useNav } from "../nav";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
-import { BackIcon, DownloadIcon, ForwardIcon } from "../components/Icons";
+import { BackIcon, DownloadIcon, EyeIcon, ForwardIcon } from "../components/Icons";
 import { ExportSheet } from "../components/ExportSheet";
 import { TimesheetViewer } from "../components/TimesheetViewer";
 import { DayPanel } from "../components/DayPanel";
@@ -30,7 +30,10 @@ export function CalendarScreen() {
     <>
       <TopBar
         title="Calendar"
-        action={<button className="icon gear" aria-label="Download timesheet or payslip" onClick={() => open({ sub: "export" })}><DownloadIcon /></button>}
+        action={<>
+          <button className="icon gear" aria-label="View timesheet" onClick={() => open({ sub: "view" })}><EyeIcon /></button>
+          <button className="icon gear" aria-label="Download timesheet or payslip" onClick={() => open({ sub: "export" })}><DownloadIcon /></button>
+        </>}
       />
       <div className="monthbar">
         <button className="icon" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Previous month"><BackIcon /></button>
