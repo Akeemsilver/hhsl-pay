@@ -42,7 +42,7 @@ function SlipPreview({ slip }: { slip: Payslip }) {
           {slip.sites.map((b) => (
             <div className="slip-site" key={b.label}>
               <div className="slip-site-head"><strong>{b.label}</strong><span className="c-gross">{money(b.amount)}</span></div>
-              <div className="muted small">{b.rates.map((r) => money(r)).join(" / ")}{b.flat ? " per day" : " per hour"} · {b.days} day{b.days === 1 ? "" : "s"} · {hoursText(b.hours)} h</div>
+              <div className="muted small">{b.rates.map((r) => money(r)).join(" / ")}{b.flat ? " per day" : " per hour"} · {b.days} day{b.days === 1 ? "" : "s"} · worked {hoursText(b.hours)} h · weighted {hoursText(b.weighted)} h</div>
               <div className="slip-tiers">
                 <span>x1<b>{hoursText(b.x1)}</b></span><span>x1.5<b>{hoursText(b.x15)}</b></span><span>x2<b>{hoursText(b.x2)}</b></span><span>x3<b>{hoursText(b.x3)}</b></span>
               </div>

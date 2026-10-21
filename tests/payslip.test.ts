@@ -93,13 +93,14 @@ describe("site breakdown", () => {
     const entries = [e("1", "2026-07-01", "Alpha"), e("2", "2026-07-02", "Alpha", { role: "Client medic" }), e("4", "2026-07-06", "Beta")];
     const [slip] = buildPayslips("2026-07", data(entries), "Test").filter((p) => p.sites.length);
     const all = buildPayslips("2026-07", data(entries), "Test").flatMap((p) => p.sites);
-    expect(all.map((b) => b.label).sort()).toEqual(["Alpha", "Alpha (Client medic)", "Beta"]);
+    expect(all.map((b) => b.label).sort()).toEqual(["Alpha", "Beta"]);
     const beta = all.find((b) => b.label === "Beta")!;
     expect(beta.x1).toBe(8);
     expect(beta.x15).toBe(4);
     expect(beta.hours).toBe(12);
     expect(beta.rates).toEqual([40]);
-    expect(all.find((b) => b.label === "Alpha (Client medic)")!.rates).toEqual([70]);
+    expect(all.find((b) => b.label === "Alpha")!.rates).toEqual([50, 70]);
+    expect(beta.weighted).toBe(14);
     void slip;
   });
 });

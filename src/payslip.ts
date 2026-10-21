@@ -10,15 +10,16 @@ export interface SiteBreakdown {
   days: number;
   hours: number;
   x1: number; x15: number; x2: number; x3: number;
+  /** Hours counted at the normal rate: x1 + 1.5 x x1.5 + 2 x x2 + 3 x x3. */
+  weighted: number;
   amount: number;
 }
 
 export function siteBreakdown(entries: Array<{ entry: Entry; pay: ReturnType<typeof computeDay> }>): SiteBreakdown[] {
   const map = new Map<string, SiteBreakdown & { dates: Set<string> }>();
   for (const { entry, pay } of entries) {
-    const who = entry.role ? `${entry.site} (${entry.role})` : entry.lead ? `${entry.site} (team lead)` : entry.site;
-    const label = entry.holiday ? `${who}, public holiday / TAR` : who;
-    const b = map.get(label) ?? { label, rates: [], flat: false, days: 0, hours: 0, x1: 0, x15: 0, x2: 0, x3: 0, amount: 0, dates: new Set<string>() };
+    const label = entry.site;
+    const b = map.get(label) ?? { label, rates: [], flat: false, days: 0, hours: 0, x1: 0, x15: 0, x2: 0, x3: 0, weighted: 0, amount: 0, dates: new Set<string>() };
     const flat = pay.dailyPay > 0;
     const rate = round2(flat ? pay.dailyPay : pay.rate);
     b.flat ||= flat;
@@ -26,12 +27,13 @@ export function siteBreakdown(entries: Array<{ entry: Entry; pay: ReturnType<typ
     b.dates.add(entry.date);
     b.hours += entry.hours;
     b.x1 += pay.tierHours.x1; b.x15 += pay.tierHours.x15; b.x2 += pay.tierHours.x2; b.x3 += pay.tierHours.x3;
+    b.weighted += pay.tierHours.x1 + 1.5 * pay.tierHours.x15 + 2 * pay.tierHours.x2 + 3 * pay.tierHours.x3;
     b.amount += pay.total;
     map.set(label, b);
   }
   return [...map.values()].map(({ dates, ...b }) => ({
     ...b, days: dates.size, rates: b.rates.sort((x, y) => x - y),
-    hours: round2(b.hours), x1: round2(b.x1), x15: round2(b.x15), x2: round2(b.x2), x3: round2(b.x3), amount: round2(b.amount),
+    hours: round2(b.hours), x1: round2(b.x1), x15: round2(b.x15), x2: round2(b.x2), x3: round2(b.x3), weighted: round2(b.weighted), amount: round2(b.amount),
   })).sort((a, b) => a.label.localeCompare(b.label));
 }
 
