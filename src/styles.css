@@ -582,3 +582,5 @@ button.icon.gear, .bar.page button.icon { transition: box-shadow .15s, transform
 .payer-tax li { display: flex; flex-direction: column; gap: 1px; }
 .payer-tax b { color: var(--text); font-weight: 600; }
 .payer-tax i { font-style: normal; }
+input[hidden] { display: none !important; }
+.import-preview { margin-top: 12px; display: grid; gap: 10px; }
