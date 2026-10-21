@@ -6,7 +6,9 @@ import { TopBar } from "../components/TopBar";
 import { BackIcon, ForwardIcon } from "../components/Icons";
 import { ChartCard, HBars, MonthColumns, SplitBar, TipRow, fullMoney } from "../components/charts";
 
-const SERIES = ["var(--s1)", "var(--s2)", "var(--s3)", "var(--s4)"];
+const C = { gross: "var(--gross)", net: "var(--net)", paye: "var(--paye)", nis: "var(--nis)" };
+// Payslips are parts of the gross, so they are shades of the gross blue, then spare colours.
+const PAYSLIP_SHADES = ["var(--gross)", "var(--gross-2)", "var(--s3)", "var(--s4)"];
 const SHORT = MONTHS.map((m) => m.slice(0, 3));
 const MAX_SITES = 8;
 
@@ -37,7 +39,7 @@ export function ChartsScreen() {
     for (const m of months) for (const p of m.payers) totals.set(p.payer, (totals.get(p.payer) ?? 0) + p.gross);
     return [...totals.entries()]
       .sort((a, b) => b[1] - a[1])
-      .map(([payer, value], i) => ({ name: data.payerNames[payer] ?? payer, value, color: SERIES[i] ?? "var(--muted)" }));
+      .map(([payer, value], i) => ({ name: data.payerNames[payer] ?? payer, value, color: PAYSLIP_SHADES[i] ?? "var(--muted)" }));
   }, [months, data.payerNames]);
 
   const gross = months.map((m) => m.gross);
@@ -68,33 +70,33 @@ export function ChartsScreen() {
         <HBars
           rows={bySite}
           format={(n) => `$${Math.round(n).toLocaleString("en-US")}`}
-          tipFor={(r) => (<><TipRow color="var(--s1)" label={r.name} value={fullMoney(r.value)} /><div className="tip-title">{siteTotal > 0 ? ((r.value / siteTotal) * 100).toFixed(1) : 0}% of site income</div></>)}
+          tipFor={(r) => (<><TipRow color={C.gross} label={r.name} value={fullMoney(r.value)} /><div className="tip-title">{siteTotal > 0 ? ((r.value / siteTotal) * 100).toFixed(1) : 0}% of site income</div></>)}
         />
       </ChartCard>
 
       <ChartCard
         title="Gross and net by month"
-        legend={[{ name: "Gross", color: SERIES[0]! }, { name: "Net", color: SERIES[1]! }]}
+        legend={[{ name: "Gross", color: C.gross }, { name: "Net", color: C.net }]}
         table={{ head: ["Month", "Gross", "Net"], rows: monthRows(gross, net), foot: ["Total", fullMoney(sum(gross)), fullMoney(sum(net))] }}
       >
         <MonthColumns
           title="Gross and net income by month"
           labels={SHORT}
           tipTitle={(i) => `${MONTHS[i]} ${year}`}
-          series={[{ name: "Gross", color: SERIES[0]!, values: gross }, { name: "Net", color: SERIES[1]!, values: net }]}
+          series={[{ name: "Gross", color: C.gross, values: gross }, { name: "Net", color: C.net, values: net }]}
         />
       </ChartCard>
 
       <ChartCard
         title="PAYE and NIS by month"
-        legend={[{ name: "PAYE", color: SERIES[0]! }, { name: "NIS", color: SERIES[1]! }]}
+        legend={[{ name: "PAYE", color: C.paye }, { name: "NIS", color: C.nis }]}
         table={{ head: ["Month", "PAYE", "NIS"], rows: monthRows(paye, nis), foot: ["Total", fullMoney(sum(paye)), fullMoney(sum(nis))] }}
       >
         <MonthColumns
           title="PAYE and NIS by month"
           labels={SHORT}
           tipTitle={(i) => `${MONTHS[i]} ${year}`}
-          series={[{ name: "PAYE", color: SERIES[0]!, values: paye }, { name: "NIS", color: SERIES[1]!, values: nis }]}
+          series={[{ name: "PAYE", color: C.paye, values: paye }, { name: "NIS", color: C.nis, values: nis }]}
         />
       </ChartCard>
 

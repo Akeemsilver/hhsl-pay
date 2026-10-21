@@ -42,7 +42,7 @@ export function DayPanel({ date }: { date: string }) {
                 {e.holiday && <span className="badge">Holiday / TAR</span>}
               </div>
               <span className="muted small">
-                {[times, !other && e.hours > 0 ? `${hoursText(e.hours)} hrs paid` : "", other && e.amount ? `amount noted ${money(e.amount)}` : ""].filter(Boolean).join(" · ") || "no times"}
+                {[times, !other && e.hours > 0 ? `${hoursText(e.hours)} h paid` : "", other && e.amount ? `amount noted ${money(e.amount)}` : ""].filter(Boolean).join(" · ") || "no times"}
               </span>
             </div>
             {pay && <span className="amount">{money(pay.total)}</span>}

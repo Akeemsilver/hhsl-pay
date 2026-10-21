@@ -33,12 +33,12 @@ export function YearScreen() {
       </div>
 
       <section className="card summary">
-        <div className="big"><span className="label">Gross for the year</span><span className="value">{money(gross)}</span></div>
+        <div className="big"><span className="label"><i className="dot dot-gross" />Gross for the year</span><span className="value">{money(gross)}</span></div>
         <dl>
-          <div><dt>Net</dt><dd>{money(total((m) => m.net))}</dd></div>
-          <div><dt>PAYE paid</dt><dd>{money(paye)}</dd></div>
-          <div><dt>NIS</dt><dd>{money(nis)}</dd></div>
-          <div><dt>Surcharge</dt><dd>{money(total((m) => m.surcharge))}</dd></div>
+          <div><dt><i className="dot dot-net" />Net</dt><dd className="c-net">{money(total((m) => m.net))}</dd></div>
+          <div><dt><i className="dot dot-paye" />PAYE paid</dt><dd className="c-paye">{money(paye)}</dd></div>
+          <div><dt><i className="dot dot-nis" />NIS</dt><dd className="c-nis">{money(nis)}</dd></div>
+          <div><dt><i className="dot dot-sur" />Surcharge</dt><dd className="c-sur">{money(total((m) => m.surcharge))}</dd></div>
         </dl>
       </section>
 
@@ -54,7 +54,7 @@ export function YearScreen() {
         </p>
         {gross > 0 && (
           <p>
-            Estimated tax due <strong>{money(est.taxDue)}</strong> · PAYE paid <strong>{money(paye)}</strong> ·{" "}
+            Estimated tax due <strong>{money(est.taxDue)}</strong> · PAYE paid <strong className="c-paye">{money(paye)}</strong> ·{" "}
             {est.refund >= 0 ? <>possible refund <strong className="good">{money(est.refund)}</strong></> : <>possibly owing <strong className="bad">{money(-est.refund)}</strong></>}
           </p>
         )}
@@ -68,7 +68,7 @@ export function YearScreen() {
             const h = (m.gross / max) * 100;
             return (
               <g key={m.month}>
-                <rect x={i * 30 + 4} y={110 - h} width="22" height={Math.max(h, m.gross > 0 ? 1 : 0)} rx="3" className="bar-rect" />
+                <rect x={i * 30 + 4} y={110 - h} width="22" height={Math.max(h, m.gross > 0 ? 1 : 0)} rx="3" className="bar-rect gross" />
                 <text x={i * 30 + 15} y="128" textAnchor="middle" className="axis">{MONTHS[i]?.slice(0, 1)}</text>
               </g>
             );
@@ -79,15 +79,15 @@ export function YearScreen() {
       <section className="card">
         <h2>Month by month</h2>
         <table>
-          <thead><tr><th>Month</th><th>Gross</th><th>PAYE</th><th>Net</th></tr></thead>
+          <thead><tr><th>Month</th><th className="c-gross">Gross</th><th className="c-paye">PAYE</th><th className="c-net">Net</th></tr></thead>
           <tbody>
             {months.map((m, i) => (
               <tr key={m.month} className={m.gross === 0 ? "muted" : ""}>
-                <td>{MONTHS[i]?.slice(0, 3)}</td><td>{money(m.gross)}</td><td>{money(m.paye)}</td><td>{money(m.net)}</td>
+                <td>{MONTHS[i]?.slice(0, 3)}</td><td className="c-gross">{money(m.gross)}</td><td className="c-paye">{money(m.paye)}</td><td className="c-net">{money(m.net)}</td>
               </tr>
             ))}
           </tbody>
-          <tfoot><tr><td>Total</td><td>{money(gross)}</td><td>{money(paye)}</td><td>{money(total((m) => m.net))}</td></tr></tfoot>
+          <tfoot><tr><td>Total</td><td className="c-gross">{money(gross)}</td><td className="c-paye">{money(paye)}</td><td className="c-net">{money(total((m) => m.net))}</td></tr></tfoot>
         </table>
       </section>
     </>

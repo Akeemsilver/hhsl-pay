@@ -127,7 +127,7 @@ export function HBars({ rows, format, tipFor }: {
         {rows.map((r) => (
           <div className="hbar" role="listitem" key={r.name} aria-label={`${r.name} ${format(r.value)}`} {...bind(tipFor(r))}>
             <span className="name">{r.name}</span>
-            <span className="track"><span className="fill" style={{ width: `${(r.value / max) * 100}%`, background: "var(--s1)" }} /></span>
+            <span className="track"><span className="fill" style={{ width: `${(r.value / max) * 100}%`, background: "var(--gross)" }} /></span>
             <span className="val">{format(r.value)}</span>
           </div>
         ))}

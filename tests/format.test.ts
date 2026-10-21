@@ -4,10 +4,10 @@ import { isOther, othersByDate, type Entry } from "../src/model";
 
 describe("other-job times", () => {
   it("works out the duration between optional times", () => {
-    expect(durationText("08:00", "10:30")).toBe("2 hrs 30 min");
+    expect(durationText("08:00", "10:30")).toBe("2 h 30 min");
     expect(durationText("09:15", "09:45")).toBe("30 min");
-    expect(durationText("22:00", "01:00")).toBe("3 hrs");
-    expect(durationText("08:00", "09:00")).toBe("1 hr");
+    expect(durationText("22:00", "01:00")).toBe("3 h");
+    expect(durationText("08:00", "09:00")).toBe("1 h");
     expect(durationText("08:00", undefined)).toBe("");
     expect(durationText(undefined, undefined)).toBe("");
     expect(durationText("08:00", "08:00")).toBe("");

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { valueOn } from "../engine";
 import { MONTHS, daysOfMonth, shiftMonth, todayISO } from "../format";
 import { useMonth } from "../hooks";
@@ -6,7 +6,8 @@ import { useNav } from "../nav";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
 import { BackIcon, DownloadIcon, ForwardIcon } from "../components/Icons";
-import { TimesheetSheet } from "../components/TimesheetSheet";
+import { ExportSheet } from "../components/ExportSheet";
+import { TimesheetViewer } from "../components/TimesheetViewer";
 import { DayPanel } from "../components/DayPanel";
 import { CalendarGrid, CorrectionBox, DayList, MonthSummary } from "../components/MonthParts";
 
@@ -15,9 +16,9 @@ export function CalendarScreen() {
   const { loc, open } = useNav();
   const [month, setMonth] = useState(todayISO().slice(0, 7));
   const [view, setView] = useState<"calendar" | "list">("calendar");
-  const [selected, setSelected] = useState<string | null>(todayISO);
-  // Switching month selects today when it is in that month, otherwise nothing.
-  useEffect(() => setSelected(todayISO().startsWith(month) ? todayISO() : null), [month]);
+  // The tapped date, if it is in the month on screen; otherwise today when it is in that month, otherwise nothing.
+  const [picked, setPicked] = useState<string | null>(null);
+  const selected = picked && picked.startsWith(month) ? picked : todayISO().startsWith(month) ? todayISO() : null;
   const result = useMonth(month);
   const days = daysOfMonth(month);
   const today = todayISO();
@@ -29,7 +30,7 @@ export function CalendarScreen() {
     <>
       <TopBar
         title="Calendar"
-        action={<button className="icon gear" aria-label="Download timesheet" onClick={() => open({ sub: "timesheet" })}><DownloadIcon /></button>}
+        action={<button className="icon gear" aria-label="Download timesheet or payslip" onClick={() => open({ sub: "export" })}><DownloadIcon /></button>}
       />
       <div className="monthbar">
         <button className="icon" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Previous month"><BackIcon /></button>
@@ -51,14 +52,15 @@ export function CalendarScreen() {
 
       {view === "calendar" ? (
         <>
-          <CalendarGrid month={month} days={days} result={result} today={today} selected={selected} onPick={setSelected} payerOrder={payerOrder} />
+          <CalendarGrid month={month} days={days} result={result} today={today} selected={selected} onPick={setPicked} payerOrder={payerOrder} />
           {selected ? <DayPanel date={selected} /> : <p className="muted pad">Tap a date to see its jobs and add one.</p>}
         </>
       ) : (
         <DayList days={days} result={result} today={today} onPick={(d) => open({ day: d })} />
       )}
 
-      {loc.sub === "timesheet" && !loc.day && !loc.page && <TimesheetSheet month={month} />}
+      {loc.sub === "export" && !loc.day && !loc.page && <ExportSheet month={month} />}
+      {loc.sub === "view" && !loc.day && !loc.page && <TimesheetViewer month={month} />}
 
       <MonthSummary result={result} label={month} />
       <CorrectionBox month={month} result={result} />

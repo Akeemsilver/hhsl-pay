@@ -118,3 +118,15 @@ export async function fillTimesheet(template: ArrayBuffer | Uint8Array, input: T
   zip.file("xl/worksheets/sheet1.xml", xml);
   return zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
 }
+
+/** The company logo inside a saved template, for the PDF version. */
+export async function extractLogo(template: ArrayBuffer | Uint8Array): Promise<Uint8Array | null> {
+  try {
+    const { default: JSZip } = await import("jszip");
+    const zip = await JSZip.loadAsync(template);
+    const file = Object.values(zip.files).find((f) => /^xl\/media\/.+\.png$/i.test(f.name));
+    return file ? await file.async("uint8array") : null;
+  } catch {
+    return null;
+  }
+}

@@ -100,17 +100,17 @@ export function HomeScreen() {
 
       <section className="hero" aria-label="This month">
         <div className="hero-top">
-          <span>{MONTHS[thisMonthIndex]} so far</span>
+          <span><i className="dot dot-gross" />Gross · {MONTHS[thisMonthIndex]} so far</span>
           {lastMonth.gross > 0 && (
             <span className="delta">{diff >= 0 ? "▲" : "▼"} {money(Math.abs(diff))} vs {MONTHS[Number(prevMonth.slice(5)) - 1]?.slice(0, 3)}</span>
           )}
         </div>
         <div className="hero-value">{money(thisMonth.gross)}</div>
         <div className="hero-stats">
-          <div><span>Net</span><strong>{money(thisMonth.net)}</strong></div>
+          <div><span><i className="dot dot-net" />Net</span><strong className="c-net">{money(thisMonth.net)}</strong></div>
+          <div><span><i className="dot dot-paye" />PAYE</span><strong className="c-paye">{money(thisMonth.paye)}</strong></div>
           <div><span>Days</span><strong>{worked.size}</strong></div>
-          <div><span>Hours</span><strong>{hoursText(hours)}</strong></div>
-          <div><span>PAYE</span><strong>{money(thisMonth.paye)}</strong></div>
+          <div><span>Hours</span><strong>{hoursText(hours)} h</strong></div>
         </div>
       </section>
 
@@ -133,9 +133,9 @@ export function HomeScreen() {
           <button className="link" onClick={() => selectTab("year")}>Details</button>
         </div>
         <div className="kpis">
-          <div><span>Gross</span><strong>{money(ytdGross)}</strong></div>
-          <div><span>Net</span><strong>{money(ytdNet)}</strong></div>
-          <div><span>PAYE paid</span><strong>{money(ytdPaye)}</strong></div>
+          <div><span><i className="dot dot-gross" />Gross</span><strong className="c-gross">{money(ytdGross)}</strong></div>
+          <div><span><i className="dot dot-net" />Net</span><strong className="c-net">{money(ytdNet)}</strong></div>
+          <div><span><i className="dot dot-paye" />PAYE paid</span><strong className="c-paye">{money(ytdPaye)}</strong></div>
         </div>
         <div className="meter" role="img" aria-label={`${Math.round(progress * 100)}% of the ${money(rules.annualThreshold)} threshold`}>
           <div style={{ width: `${progress * 100}%` }} />
@@ -157,7 +157,7 @@ export function HomeScreen() {
             return (
               <g key={r.month}>
                 {r.gross > 0 && <text x={x + 20} y={96 - h} textAnchor="middle" className="axis">{r.gross >= 1000 ? `${(r.gross / 1000).toFixed(1)}k` : Math.round(r.gross)}</text>}
-                <rect x={x} y={102 - h} width="40" height={Math.max(h, r.gross > 0 ? 1 : 0)} rx="4" className={`bar-rect ${r.month === month ? "now" : ""}`} />
+                <rect x={x} y={102 - h} width="40" height={Math.max(h, r.gross > 0 ? 1 : 0)} rx="4" className={`bar-rect gross ${r.month === month ? "now" : ""}`} />
                 <text x={x + 20} y="120" textAnchor="middle" className="axis">{MONTHS[Number(r.month.slice(5)) - 1]?.slice(0, 3)}</text>
               </g>
             );
@@ -176,7 +176,7 @@ export function HomeScreen() {
                 <button onClick={() => open({ day: e.date })}>
                   <span className="when">{shortDate(e.date)}</span>
                   <span className="what">
-                    {isOther(e) ? `Other · ${e.description || "no description"}` : <>{e.site}{e.hours > 0 && ` · ${hoursText(e.hours)} hrs`}{e.holiday && " · holiday"}</>}
+                    {isOther(e) ? `Other · ${e.description || "no description"}` : <>{e.site}{e.hours > 0 && ` · ${hoursText(e.hours)} h`}{e.holiday && " · holiday"}</>}
                   </span>
                   <span className="amount">{isOther(e) ? "" : money(siteTotal(e))}</span>
                 </button>

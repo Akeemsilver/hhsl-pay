@@ -9,21 +9,21 @@ export function MonthSummary({ result, label }: { result: MonthResult<Entry>; la
   return (
     <section className="card summary" aria-label={`${label} summary`}>
       <div className="big">
-        <span className="label">Gross</span>
+        <span className="label"><i className="dot dot-gross" />Gross</span>
         <span className="value">{money(result.gross)}</span>
       </div>
       <dl>
-        <div><dt>Net</dt><dd>{money(result.net)}</dd></div>
-        <div><dt>PAYE</dt><dd>{money(result.paye)}</dd></div>
-        <div><dt>NIS</dt><dd>{money(result.nis)}</dd></div>
-        <div><dt>Surcharge</dt><dd>{money(result.surcharge)}</dd></div>
+        <div><dt><i className="dot dot-net" />Net</dt><dd className="c-net">{money(result.net)}</dd></div>
+        <div><dt><i className="dot dot-paye" />PAYE</dt><dd className="c-paye">{money(result.paye)}</dd></div>
+        <div><dt><i className="dot dot-nis" />NIS</dt><dd className="c-nis">{money(result.nis)}</dd></div>
+        <div><dt><i className="dot dot-sur" />Surcharge</dt><dd className="c-sur">{money(result.surcharge)}</dd></div>
       </dl>
       {result.payers.length > 1 && (
         <ul className="payers">
           {result.payers.map((p) => (
             <li key={p.payer}>
               <span>{data.payerNames[p.payer] ?? p.payer}{p.corrected && " ✎"}</span>
-              <span>{hoursText(p.hours)} hrs · {money(p.gross)} → {money(p.net)}</span>
+              <span>{hoursText(p.hours)} h · <span className="c-gross">{money(p.gross)}</span> → <span className="c-net">{money(p.net)}</span></span>
             </li>
           ))}
         </ul>
@@ -96,7 +96,7 @@ export function DayList({ days, result, today, onPick }: { days: string[]; resul
                 {priced.map(({ entry, pay }) => (
                   <span key={entry.id} className="chip">
                     {entry.site}
-                    {entry.hours > 0 && ` · ${hoursText(entry.hours)} hrs`}
+                    {entry.hours > 0 && ` · ${hoursText(entry.hours)} h`}
                     {entry.lead && " · lead"}
                     {entry.holiday && " · hol"}
                     {pay.total === 0 && " ⚠"}

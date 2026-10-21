@@ -37,12 +37,12 @@ export function hoursText(h: number): string {
   return Number.isInteger(h) ? String(h) : h.toFixed(2).replace(/0+$/, "");
 }
 
-/** "2 hrs 30 min" between two optional HH:MM times; an end before the start means it ran past midnight. */
+/** "2 h 30 min" between two optional HH:MM times; an end before the start means it ran past midnight. */
 export function durationText(start?: string, end?: string): string {
   const diff = minutesBetween(start, end);
   if (diff === null) return "";
   const h = Math.floor(diff / 60), m = diff % 60;
-  return [h ? `${h} ${h === 1 ? "hr" : "hrs"}` : "", m ? `${m} min` : ""].filter(Boolean).join(" ");
+  return [h ? `${h} h` : "", m ? `${m} min` : ""].filter(Boolean).join(" ");
 }
 
 /** "08:00–10:30", "from 08:00", "until 10:30", or "". */

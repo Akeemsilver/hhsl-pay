@@ -17,6 +17,17 @@
   --s2: #eb6834;
   --s3: #1baf7a;
   --s4: #eda100;
+  --gross: #2a78d6;
+  --gross-2: #86b6ef;
+  --gross-text: #1c5cab;
+  --net: #008300;
+  --net-text: #006b00;
+  --paye: #e34948;
+  --paye-text: #b42318;
+  --nis: #6250d6;
+  --nis-text: #4a3aa7;
+  --sur: #eda100;
+  --sur-text: #8a5a00;
   color-scheme: light dark;
 }
 @media (prefers-color-scheme: dark) {
@@ -39,6 +50,17 @@
     --s2: #d95926;
     --s3: #199e70;
     --s4: #c98500;
+    --gross: #3987e5;
+    --gross-2: #6da7ec;
+    --gross-text: #7fb3f2;
+    --net: #008300;
+    --net-text: #5ee09a;
+    --paye: #e66767;
+    --paye-text: #ff8a80;
+    --nis: #9085e9;
+    --nis-text: #b3a9f5;
+    --sur: #c98500;
+    --sur-text: #f0b84a;
     color-scheme: dark;
   }
 }
@@ -61,6 +83,17 @@
     --s2: #d95926;
     --s3: #199e70;
     --s4: #c98500;
+    --gross: #3987e5;
+    --gross-2: #6da7ec;
+    --gross-text: #7fb3f2;
+    --net: #008300;
+    --net-text: #5ee09a;
+    --paye: #e66767;
+    --paye-text: #ff8a80;
+    --nis: #9085e9;
+    --nis-text: #b3a9f5;
+    --sur: #c98500;
+    --sur-text: #f0b84a;
   color-scheme: dark;
 }
 :root[data-theme="light"] { color-scheme: light; }
@@ -385,7 +418,7 @@ button.pill { min-height: 32px; padding: 0 12px; border-radius: 999px; font-size
 .grabber { width: 40px; height: 5px; border-radius: 999px; background: var(--line); margin: 8px auto 2px; cursor: grab; touch-action: none; }
 .sheet { transition: transform 0.18s ease-out; overscroll-behavior: contain; }
 .sheet-footer {
-  position: sticky; bottom: calc(-16px - env(safe-area-inset-bottom)); display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px;
+  position: sticky; bottom: calc(-16px - env(safe-area-inset-bottom)); display: grid; grid-template-columns: auto 1fr; gap: 10px;
   margin: 12px -16px calc(-16px - env(safe-area-inset-bottom)); padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
   background: var(--bg); border-top: 1px solid var(--line);
 }
@@ -434,8 +467,8 @@ button.pill { min-height: 32px; padding: 0 12px; border-radius: 999px; font-size
 .hours-block .lbl { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
 .hours-big { display: grid; grid-template-columns: 48px 1fr 48px; gap: 10px; align-items: center; margin-bottom: 4px; }
 .hours-big button { min-height: 48px; font-size: 1.5rem; line-height: 1; padding: 0; }
-.hours-field { display: flex; align-items: center; justify-content: center; margin: 0; padding: 4px 8px; border-radius: 12px; background: var(--weekend); color: var(--text); }
-.hours-field input { width: 100%; margin: 0; min-height: 40px; padding: 0; text-align: center; border: 0; background: transparent; font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hours-field { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0; padding: 4px 8px; border-radius: 12px; background: var(--weekend); color: var(--text); }
+.hours-field input { width: 4.5ch; margin: 0; min-height: 40px; padding: 0; text-align: center; border: 0; background: transparent; font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .hours-tile { padding: 8px 12px 10px; margin: 0 0 6px; }
 .detail-box { margin: 4px 0 6px; padding: 10px; border: 1px dashed var(--line); border-radius: 12px; }
 button.link.small { min-height: 36px; font-size: 0.9rem; padding: 0 2px; }
@@ -449,3 +482,65 @@ button.circle-btn {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
 }
 button.circle-btn:active { transform: scale(0.96); }
+
+/* Money colours, the same everywhere: gross blue, net green, PAYE red, NIS violet, surcharge amber */
+.c-gross { color: var(--gross-text); }
+.c-net { color: var(--net-text); }
+.c-paye { color: var(--paye-text); }
+.c-nis { color: var(--nis-text); }
+.c-sur { color: var(--sur-text); }
+i.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
+i.dot-gross { background: var(--gross); }
+i.dot-net { background: var(--net); }
+i.dot-paye { background: var(--paye); }
+i.dot-nis { background: var(--nis); }
+i.dot-sur { background: var(--sur); }
+.summary .value { color: var(--gross-text); }
+.summary dt, .kpis span { display: flex; align-items: center; }
+.cal-cell .amt { color: var(--gross-text); }
+.day-job .amount, .recent .amount, .days .amount, .preview strong { color: var(--gross-text); }
+.bar-rect.gross { fill: var(--gross); opacity: 0.55; }
+.bar-rect.gross.now { opacity: 1; }
+th.c-gross, th.c-paye, th.c-net { font-weight: 700; }
+td.c-gross, td.c-net, td.c-paye { font-weight: 600; }
+
+/* Home hero: a plain card so the money colours read clearly */
+.hero { background: var(--card); color: var(--text); border: 1px solid var(--line); border-left: 6px solid var(--gross); }
+.hero-top { opacity: 1; color: var(--muted); }
+.hero-value { color: var(--gross-text); }
+.hero-stats span { opacity: 1; color: var(--muted); }
+.hero-stats strong { font-size: 0.95rem; }
+
+/* Payslip preview */
+.slip { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 12px; background: var(--card); }
+.slip-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px; }
+.slip-head strong { display: block; font-size: 1.1rem; }
+.slip-lines { width: 100%; margin-bottom: 6px; }
+.slip-lines td { padding: 4px 2px; font-size: 0.82rem; border-top: 1px solid var(--line); }
+.slip-lines td.num { text-align: right; white-space: nowrap; }
+.slip-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.9rem; border-top: 1px solid var(--line); }
+.slip-row.total { border-top: 2px solid var(--text); font-weight: 700; }
+.slip-net { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--net); background: color-mix(in srgb, var(--net) 10%, var(--card)); }
+.slip-net span { font-weight: 700; font-size: 0.85rem; color: var(--net-text); }
+.slip-net strong { font-size: 1.4rem; color: var(--net-text); }
+
+.hours-field span { font-size: 1.5rem; font-weight: 700; }
+
+/* Timesheet viewer */
+.viewer { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; background: var(--bg); }
+.viewer-bar { display: grid; grid-template-columns: auto 1fr auto auto; gap: 8px; align-items: center; padding: calc(8px + env(safe-area-inset-top)) 12px 8px; background: var(--card); border-bottom: 1px solid var(--line); }
+.viewer-bar h2 { margin: 0; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.viewer-bar .zoom { width: 48px; padding: 0; font-size: 1.4rem; }
+.viewer-note { margin: 0; padding: 10px 14px; color: var(--muted); font-size: 0.9rem; }
+.viewer-scroll { flex: 1; overflow: auto; background: color-mix(in srgb, var(--line) 60%, var(--bg)); padding: 4px; -webkit-overflow-scrolling: touch; }
+.viewer-foot { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: var(--card); border-top: 1px solid var(--line); }
+.paper { position: relative; transform-origin: 0 0; background: #ffffff; color: #000000; font-family: Calibri, Carlito, Arial, sans-serif; }
+.paper table { border-collapse: collapse; table-layout: fixed; width: 100%; }
+.paper td, .paper th { padding: 0 3px; overflow: hidden; line-height: 1.1; border: 1px solid #e3e3e3; }
+.paper th.colhead, .paper th.rowhead, .paper th.corner { background: #f3f3f3; color: #555555; font-size: 11px; font-weight: 400; text-align: center; border: 1px solid #c9c9c9; }
+.paper img { position: absolute; pointer-events: none; }
+.ts-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 8px; }
+.ts-summary div { display: flex; flex-direction: column; padding: 10px; border-radius: 12px; background: var(--weekend); }
+.ts-summary strong { font-size: 1.4rem; }
+
+.sheet-footer button { white-space: nowrap; }
