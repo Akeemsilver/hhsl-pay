@@ -1,5 +1,6 @@
 import { WEEKDAYS, hoursText, money, timeRange } from "../format";
 import { correctionKey, othersByDate } from "../model";
+import { useSiteFilter } from "../filter";
 import { holidayMap } from "../holidays";
 import { useStore } from "../store";
 import type { MonthResult } from "../engine";
@@ -93,7 +94,8 @@ export function CorrectionBox({ month, result }: { month: string; result: MonthR
 export function DayList({ days, result, today, onPick }: { days: string[]; result: MonthResult<Entry>; today: string; onPick: (d: string) => void }) {
   const { data } = useStore();
   const hol = holidayMap(days.map((d) => Number(d.slice(0, 4))), data);
-  const others = othersByDate(data.entries, (days[0] ?? "").slice(0, 7));
+  const { site: fsite } = useSiteFilter();
+  const others = fsite ? new Map<string, Entry[]>() : othersByDate(data.entries, (days[0] ?? "").slice(0, 7));
   return (
     <ul className="days">
       {days.map((date) => {
@@ -143,7 +145,8 @@ export function CalendarGrid({ month, days, result, today, onPick, payerOrder, s
 }) {
   const { data } = useStore();
   const hol = holidayMap(days.map((d) => Number(d.slice(0, 4))), data);
-  const others = othersByDate(data.entries, month);
+  const { site: fsite } = useSiteFilter();
+  const others = fsite ? new Map<string, Entry[]>() : othersByDate(data.entries, month);
   const lead = new Date(`${month}-01T00:00:00Z`).getUTCDay();
   const siteOf = (name: string) => {
     for (const v of data.history.sites) {

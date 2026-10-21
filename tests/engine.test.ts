@@ -192,3 +192,26 @@ describe("computeMonth", () => {
     expect(computeDay({ date: "2026-07-01", site: "Beta", hours: 8, role: "Nope" }, demoSites).rate).toBe(40);
   });
 });
+
+describe("filtering a month to one location", () => {
+  it("keeps only that site's days and shares the payslip's tax by gross", async () => {
+    const { filterMonth } = await import("../src/engine");
+    const entries = [
+      { id: "1", date: "2026-07-01", site: "Alpha", hours: 12 },
+      { id: "2", date: "2026-07-02", site: "Beta", hours: 12 },
+    ];
+    const all = computeMonth("2026-07", entries, demoHistory);
+    const a = filterMonth(all, "Alpha", demoHistory);
+    expect(a.entries).toHaveLength(1);
+    const alphaGross = a.entries[0]!.pay.total;
+    expect(a.gross).toBeCloseTo(alphaGross);
+    const alphaPayer = demoHistory.sites[0]!.value.Alpha!.payer;
+    const betaPayer = demoHistory.sites[0]!.value.Beta!.payer;
+    if (alphaPayer === betaPayer) {
+      const b = filterMonth(all, "Beta", demoHistory);
+      expect(a.paye + b.paye).toBeCloseTo(all.paye);
+      expect(a.net + b.net).toBeCloseTo(all.net);
+    }
+    expect(a.net).toBeCloseTo(a.gross - a.paye - a.nis - a.surcharge);
+  });
+});

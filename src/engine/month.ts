@@ -98,3 +98,24 @@ export function computeMonth<E extends DayEntry>(
     surcharge: sum((p) => p.surcharge),
   };
 }
+
+/**
+ * Limits a month to one location. Tax is worked out on the whole payslip, so each payslip's PAYE, NIS and
+ * surcharge are shared out by how much of its gross came from this location.
+ */
+export function filterMonth<E extends DayEntry>(r: MonthResult<E>, site: string, history: RuleHistory): MonthResult<E> {
+  const entries = r.entries.filter((e) => e.entry.site === site);
+  const combined = r.payers.length === 1 && r.payers[0]!.payer === COMBINED_PAYER;
+  const payerOf = (e: E) => combined ? COMBINED_PAYER : (findSite(valueOn(history.sites, e.date), e.site)?.payer ?? "main");
+  const payers: PayerMonth[] = [];
+  for (const p of r.payers) {
+    const mine = entries.filter((e) => payerOf(e.entry) === p.payer);
+    const gross = mine.reduce((t, e) => t + e.pay.total, 0);
+    if (mine.length === 0) continue;
+    const share = p.gross > 0 ? gross / p.gross : 0;
+    const paye = p.paye * share, nis = p.nis * share, surcharge = p.surcharge * share;
+    payers.push({ ...p, hours: mine.reduce((t, e) => t + e.entry.hours, 0), gross, paye, nis, surcharge, net: gross - paye - nis - surcharge });
+  }
+  const sum = (pick: (p: PayerMonth) => number) => payers.reduce((t, p) => t + pick(p), 0);
+  return { month: r.month, entries, payers, gross: sum((p) => p.gross), net: sum((p) => p.net), paye: sum((p) => p.paye), nis: sum((p) => p.nis), surcharge: sum((p) => p.surcharge) };
+}

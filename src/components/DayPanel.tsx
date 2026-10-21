@@ -3,6 +3,7 @@ import { computeDay, valueOn } from "../engine";
 import { WEEKDAYS, hoursText, money, timeRange } from "../format";
 import { isOther, type Entry } from "../model";
 import { useNav } from "../nav";
+import { useSiteFilter } from "../filter";
 import { useStore } from "../store";
 import { ConfirmDialog } from "./ConfirmDialog";
 
@@ -14,7 +15,8 @@ export function DayPanel({ date }: { date: string }) {
   const { open } = useNav();
   const [deleting, setDeleting] = useState<Entry | null>(null);
   const sites = valueOn(data.history.sites, date);
-  const jobs = data.entries.filter((e) => e.date === date);
+  const { site: filterSite } = useSiteFilter();
+  const jobs = data.entries.filter((e) => e.date === date && (!filterSite || e.site === filterSite));
   const wd = new Date(`${date}T00:00:00Z`).getUTCDay();
   const total = jobs.filter((e) => !isOther(e)).reduce((s, e) => s + computeDay(e, sites).total, 0);
   const noSites = Object.keys(sites).length === 0;

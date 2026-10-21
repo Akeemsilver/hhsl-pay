@@ -1,3 +1,5 @@
+import { useYear } from "../hooks";
+import { useSiteFilter } from "../filter";
 import { PayerTax } from "../components/MonthParts";
 import { useMemo, useState } from "react";
 import { annualTaxEstimate, computeMonth, valueOn } from "../engine";
@@ -11,10 +13,8 @@ export function YearScreen() {
   const { data } = useStore();
   const [year, setYear] = useState(Number(todayISO().slice(0, 4)));
 
-  const months = useMemo(
-    () => MONTHS.map((_, i) => computeMonth(`${year}-${String(i + 1).padStart(2, "0")}`, data.entries, data.history, overridesFor(data, `${year}-${String(i + 1).padStart(2, "0")}`), isCombined(data, `${year}-${String(i + 1).padStart(2, "0")}`))),
-    [year, data],
-  );
+  const months = useYear(year);
+  const { site: filterSite } = useSiteFilter();
   const total = (pick: (m: (typeof months)[number]) => number) => months.reduce((s, m) => s + pick(m), 0);
   const gross = total((m) => m.gross);
   const nis = total((m) => m.nis);
@@ -51,6 +51,7 @@ export function YearScreen() {
         <PayerTax payers={yearPayers} />
       </section>
 
+      {!filterSite && (
       <section className="card">
         <h2>Year-end tax estimate</h2>
         <div className="meter" role="img" aria-label={`${Math.round(progress * 100)}% of the ${money(rules.annualThreshold)} threshold`}>
@@ -69,6 +70,7 @@ export function YearScreen() {
         )}
         <p className="muted small">An estimate only. Your employer and the tax office decide the real figures.</p>
       </section>
+      )}
 
       <section className="card">
         <h2>Gross by month</h2>

@@ -1,5 +1,6 @@
 import { valueOn } from "../engine";
 import { MONTHS, WEEKDAYS, daysOfMonth, hoursText, money, shiftMonth, todayISO } from "../format";
+import { useSiteFilter } from "../filter";
 import { useMonth, useYear } from "../hooks";
 import { useNav } from "../nav";
 import { isOther, othersByDate } from "../model";
@@ -33,6 +34,7 @@ export function HomeScreen() {
   const year = Number(today.slice(0, 4));
   const prevMonth = shiftMonth(month, -1);
 
+  const { site: filterSite } = useSiteFilter();
   const thisMonth = useMonth(month);
   const lastMonth = useMonth(prevMonth);
   const months = useYear(year);
@@ -44,7 +46,7 @@ export function HomeScreen() {
 
   const worked = new Set([
     ...thisMonth.entries.filter((e) => e.pay.total > 0).map((e) => e.entry.date),
-    ...othersByDate(data.entries, month).keys(),
+    ...(filterSite ? [] : [...othersByDate(data.entries, month).keys()]),
   ]);
   const hours = thisMonth.entries.reduce((s, e) => s + e.entry.hours, 0);
   const diff = thisMonth.gross - lastMonth.gross;
@@ -69,7 +71,7 @@ export function HomeScreen() {
   const max = Math.max(1, ...recent.map((r) => r.gross));
 
   const latest = data.entries
-    .filter((e) => e.date <= today)
+    .filter((e) => e.date <= today && (!filterSite || e.site === filterSite))
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 5);
   const siteTotal = (e: (typeof latest)[number]) =>

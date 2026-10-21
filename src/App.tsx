@@ -1,3 +1,4 @@
+import { FilterProvider } from "./filter";
 import { NavProvider, useNav, type Tab } from "./nav";
 import { HomeScreen } from "./screens/HomeScreen";
 import { CalendarScreen } from "./screens/CalendarScreen";
@@ -61,7 +62,9 @@ function Shell() {
 export function App() {
   return (
     <NavProvider>
-      <Shell />
+      <FilterProvider>
+        <Shell />
+      </FilterProvider>
     </NavProvider>
   );
 }
