@@ -1,36 +1,50 @@
-import { useState } from "react";
-import { MonthScreen } from "./screens/MonthScreen";
+import { NavProvider, useNav, type Tab } from "./nav";
+import { HomeScreen } from "./screens/HomeScreen";
+import { CalendarScreen } from "./screens/CalendarScreen";
 import { YearScreen } from "./screens/YearScreen";
+import { SettingsHub } from "./screens/SettingsHub";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { BackupScreen } from "./screens/BackupScreen";
+import { DayEditor } from "./screens/DayEditor";
+import { CalendarIcon, ChartIcon, HomeIcon } from "./components/Icons";
 
-type Tab = "month" | "year" | "settings" | "backup";
-
-const TABS: Array<{ id: Tab; label: string; icon: string }> = [
-  { id: "month", label: "Month", icon: "📅" },
-  { id: "year", label: "Year", icon: "📊" },
-  { id: "settings", label: "Rates", icon: "⚙️" },
-  { id: "backup", label: "Backup", icon: "💾" },
+const TABS: Array<{ id: Tab; label: string; Icon: () => JSX.Element }> = [
+  { id: "home", label: "Home", Icon: HomeIcon },
+  { id: "calendar", label: "Calendar", Icon: CalendarIcon },
+  { id: "year", label: "Year", Icon: ChartIcon },
 ];
 
-export function App() {
-  const [tab, setTab] = useState<Tab>("month");
+function Shell() {
+  const { loc, selectTab, back } = useNav();
   return (
     <div className="app">
       <main>
-        {tab === "month" && <MonthScreen goTo={setTab} />}
-        {tab === "year" && <YearScreen />}
-        {tab === "settings" && <SettingsScreen />}
-        {tab === "backup" && <BackupScreen />}
+        {loc.page === "settings" && <SettingsHub />}
+        {loc.page === "rates" && <SettingsScreen />}
+        {loc.page === "backup" && <BackupScreen />}
+        {!loc.page && loc.tab === "home" && <HomeScreen />}
+        {!loc.page && loc.tab === "calendar" && <CalendarScreen />}
+        {!loc.page && loc.tab === "year" && <YearScreen />}
       </main>
-      <nav className="tabs" aria-label="Main">
-        {TABS.map((t) => (
-          <button key={t.id} className={tab === t.id ? "active" : ""} onClick={() => setTab(t.id)} aria-current={tab === t.id}>
-            <span aria-hidden="true">{t.icon}</span>
-            {t.label}
-          </button>
-        ))}
-      </nav>
+      {!loc.page && (
+        <nav className="tabs" aria-label="Main">
+          {TABS.map(({ id, label, Icon }) => (
+            <button key={id} className={loc.tab === id ? "active" : ""} onClick={() => selectTab(id)} aria-current={loc.tab === id ? "page" : undefined}>
+              <Icon />
+              {label}
+            </button>
+          ))}
+        </nav>
+      )}
+      {loc.day && <DayEditor date={loc.day} onClose={back} />}
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <NavProvider>
+      <Shell />
+    </NavProvider>
   );
 }

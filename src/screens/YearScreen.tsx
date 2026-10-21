@@ -3,6 +3,8 @@ import { annualTaxEstimate, computeMonth, valueOn } from "../engine";
 import { MONTHS, money, todayISO } from "../format";
 import { overridesFor } from "../model";
 import { useStore } from "../store";
+import { TopBar } from "../components/TopBar";
+import { BackIcon, ForwardIcon } from "../components/Icons";
 
 export function YearScreen() {
   const { data } = useStore();
@@ -23,11 +25,12 @@ export function YearScreen() {
 
   return (
     <>
-      <header className="bar">
-        <button className="icon" onClick={() => setYear(year - 1)} aria-label="Previous year">‹</button>
-        <h1>{year}</h1>
-        <button className="icon" onClick={() => setYear(year + 1)} aria-label="Next year">›</button>
-      </header>
+      <TopBar title="Year" />
+      <div className="monthbar">
+        <button className="icon" onClick={() => setYear(year - 1)} aria-label="Previous year"><BackIcon /></button>
+        <div className="monthname">{year}</div>
+        <button className="icon" onClick={() => setYear(year + 1)} aria-label="Next year"><ForwardIcon /></button>
+      </div>
 
       <section className="card summary">
         <div className="big"><span className="label">Gross for the year</span><span className="value">{money(gross)}</span></div>

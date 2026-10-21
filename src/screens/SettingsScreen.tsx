@@ -3,6 +3,7 @@ import type { Dated, SiteRates, SiteTable, TaxRules, TierCaps } from "../engine"
 import { emptySite, FIRST_VERSION_DATE } from "../model";
 import { todayISO } from "../format";
 import { useStore } from "../store";
+import { PageHeader } from "../components/TopBar";
 
 type Num = number | undefined;
 
@@ -181,7 +182,7 @@ export function SettingsScreen() {
 
   return (
     <>
-      <header className="bar"><h1>Rates &amp; tax</h1></header>
+      <PageHeader title="Rates & tax" />
       <p className="muted pad">Everything here stays on this phone. When you get a raise, add new rates from its start date. Earlier days keep their old rates.</p>
 
       <section className="card">

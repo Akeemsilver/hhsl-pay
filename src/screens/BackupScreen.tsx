@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { BadBackup, PasswordRequired, backupFileName, deliver, isEncrypted, parse, serialize } from "../backup";
 import { newData } from "../model";
 import { useStore } from "../store";
+import { PageHeader } from "../components/TopBar";
 
 export function BackupScreen() {
   const { data, update, replace, persistent } = useStore();
@@ -53,7 +54,7 @@ export function BackupScreen() {
 
   return (
     <>
-      <header className="bar"><h1>Backup &amp; restore</h1></header>
+      <PageHeader title="Backup & restore" />
       <p className="muted pad">Your entries are saved only on this phone. There is no account and no server, so a backup file is the only way to move to a new phone or recover from a lost one.</p>
 
       {message && <p className={`notice ${message.ok ? "" : "warn"}`} role="status">{message.text}</p>}
