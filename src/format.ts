@@ -52,3 +52,15 @@ export function timeRange(start?: string, end?: string): string {
   if (end) return `until ${end}`;
   return "";
 }
+
+/**
+ * Reads hours as they are typed: "11.5", "9,5", ".5", "11." and "" are fine (the last two count as 0 and 11 for now).
+ * Returns null for anything that is not a number up to 24 with at most two decimals.
+ */
+export function parseHoursInput(text: string): number | null {
+  const t = text.trim().replace(",", ".");
+  if (t === "" || t === ".") return 0;
+  if (!/^\d{1,2}(\.\d{0,2})?$|^\.\d{1,2}$/.test(t)) return null;
+  const n = Number(t);
+  return n > 24 ? null : n;
+}

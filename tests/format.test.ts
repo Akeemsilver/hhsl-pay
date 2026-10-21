@@ -49,3 +49,14 @@ describe("roles", () => {
       .toEqual(["Client medic", "Offshore", "Paramedic", "Instructor"]);
   });
 });
+
+import { parseHoursInput } from "../src/format";
+
+describe("typing hours", () => {
+  it.each([
+    ["11.5", 11.5], ["10.5", 10.5], ["9.5", 9.5], ["9,5", 9.5], [".5", 0.5], ["11.", 11], ["11.25", 11.25],
+    ["8", 8], ["24", 24], ["0", 0], ["", 0], [".", 0], [" 8 ", 8],
+  ])("reads %j as %s", (text, hours) => expect(parseHoursInput(text)).toBe(hours));
+
+  it.each(["25", "30", "abc", "1.234", "-1", "1..5", "11.5h"])("rejects %j", (text) => expect(parseHoursInput(text)).toBeNull());
+});

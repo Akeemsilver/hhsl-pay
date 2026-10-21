@@ -6,6 +6,7 @@ import { useNav } from "../nav";
 import { useStore } from "../store";
 import { BottomSheet } from "../components/BottomSheet";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { HoursField } from "../components/HoursField";
 import { TimeField, quickTimes } from "../components/TimeField";
 import { ChevronDown, ChevronUp } from "../components/Icons";
 
@@ -176,11 +177,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                     <div className="hours-big">
                       <button type="button" aria-label="Half an hour less" onClick={() => bump(-0.5)}>−</button>
                       <label className="hours-field">
-                        <input
-                          type="number" inputMode="decimal" min="0" max="24" step="0.25" aria-label="Hours paid"
-                          value={entry.hours}
-                          onChange={(e) => patch(entry.id, { hours: Math.min(24, Math.max(0, Number(e.target.value))) })}
-                        />
+                        <HoursField value={entry.hours} onChange={(hours) => patch(entry.id, { hours })} />
                       </label>
                       <button type="button" aria-label="Half an hour more" onClick={() => bump(0.5)}>+</button>
                     </div>
