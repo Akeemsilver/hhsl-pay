@@ -14,13 +14,15 @@ export interface SiteBreakdown {
   /** Hours counted at the normal rate: x1 + 1.5 x x1.5 + 2 x x2 + 3 x x3. */
   weighted: number;
   amount: number;
+  /** Earned at this site from January up to and including this month. */
+  ytdAmount: number;
 }
 
 export function siteBreakdown(entries: Array<{ entry: Entry; pay: ReturnType<typeof computeDay> }>): SiteBreakdown[] {
   const map = new Map<string, SiteBreakdown & { dates: Set<string> }>();
   for (const { entry, pay } of entries) {
     const label = entry.site;
-    const b = map.get(label) ?? { label, rates: [], flat: false, days: 0, hours: 0, x1: 0, x15: 0, x2: 0, x3: 0, weighted: 0, amount: 0, dates: new Set<string>() };
+    const b = map.get(label) ?? { label, rates: [], flat: false, days: 0, hours: 0, x1: 0, x15: 0, x2: 0, x3: 0, weighted: 0, amount: 0, ytdAmount: 0, dates: new Set<string>() };
     const flat = pay.dailyPay > 0;
     const rate = round2(flat ? pay.dailyPay : pay.rate);
     b.flat ||= flat;
@@ -34,7 +36,7 @@ export function siteBreakdown(entries: Array<{ entry: Entry; pay: ReturnType<typ
   }
   return [...map.values()].map(({ dates, ...b }) => ({
     ...b, days: dates.size, rates: b.rates.sort((x, y) => x - y),
-    hours: round2(b.hours), x1: round2(b.x1), x15: round2(b.x15), x2: round2(b.x2), x3: round2(b.x3), weighted: round2(b.weighted), amount: round2(b.amount),
+    hours: round2(b.hours), x1: round2(b.x1), x15: round2(b.x15), x2: round2(b.x2), x3: round2(b.x3), weighted: round2(b.weighted), amount: round2(b.amount), ytdAmount: 0,
   })).sort((a, b) => a.label.localeCompare(b.label));
 }
 
@@ -131,7 +133,10 @@ export function buildPayslips(month: string, data: AppData, employee: string): P
     }
     return {
       month, payer: p.payer, payerName: p.payer === COMBINED_PAYER ? "All sites" : (data.payerNames[p.payer] ?? p.payer), employee,
-      lines, sites: siteBreakdown(mine), gross: p.gross, paye: p.paye, nis: p.nis, surcharge: p.surcharge, net: p.net,
+      lines, sites: siteBreakdown(mine).map((b) => ({
+        ...b,
+        ytdAmount: round2(months.reduce((t, m) => t + m.entries.filter((x) => x.entry.site === b.label).reduce((u, x) => u + x.pay.total, 0), 0)),
+      })), gross: p.gross, paye: p.paye, nis: p.nis, surcharge: p.surcharge, net: p.net,
       hours: mine.reduce((s, e) => s + e.entry.hours, 0),
       days: new Set(mine.filter((e) => e.pay.total > 0).map((e) => e.entry.date)).size,
       dates: [...new Set(mine.filter((e) => e.pay.total > 0).map((e) => e.entry.date))],
