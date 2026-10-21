@@ -156,7 +156,7 @@ button.icon.gear:active { transform: translateY(1px); box-shadow: 0 1px 2px rgba
   color: var(--accent-text); border-radius: 18px; padding: 16px; margin-bottom: 12px;
 }
 .hero-top { display: flex; justify-content: space-between; gap: 8px; font-size: 0.9rem; opacity: 0.92; }
-.hero-value { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; margin: 2px 0 10px; }
+.hero-value { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.03em; margin: 0 0 8px; }
 .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .hero-stats span { display: block; font-size: 0.72rem; opacity: 0.85; }
 .hero-stats strong { font-size: 0.92rem; }
@@ -247,7 +247,7 @@ input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent);
 
 .summary .big { display: flex; flex-direction: column; margin-bottom: 8px; }
 .summary .label { color: var(--muted); font-size: 0.85rem; }
-.summary .value { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; }
+.summary .value { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
 .summary dl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 0; }
 .summary dt { font-size: 0.75rem; color: var(--muted); }
 .summary dd { margin: 0; font-weight: 600; font-size: 0.9rem; }

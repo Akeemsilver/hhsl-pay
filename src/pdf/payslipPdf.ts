@@ -80,7 +80,7 @@ function drawSlip(doc: Doc, s: Payslip, preparedOn: string) {
     const baseline = y + rowH / 2 + font / 3;
     const label = l.description.length > 50 ? `${l.description.slice(0, 49)}...` : l.description;
     text(doc, label, M + 8, baseline, { size: font });
-    if (l.unit) text(doc, `${l.qty} ${l.unit}`, 360, baseline, { size: font, align: "right" });
+    if (l.unit) text(doc, `${l.qty} ${l.unit === "days" && l.qty === 1 ? "day" : l.unit}`, 360, baseline, { size: font, align: "right" });
     text(doc, usd(l.rate), 450, baseline, { size: font, align: "right" });
     text(doc, usd(l.amount), RIGHT - 8, baseline, { size: font, align: "right" });
     y += rowH;

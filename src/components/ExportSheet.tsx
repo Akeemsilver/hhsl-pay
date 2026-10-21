@@ -26,7 +26,7 @@ function SlipPreview({ slip }: { slip: Payslip }) {
           {slip.lines.map((l) => (
             <tr key={l.description + l.rate}>
               <td>{l.description}</td>
-              <td className="num">{l.unit ? `${hoursText(l.qty)} ${l.unit}` : ""}</td>
+              <td className="num">{l.unit ? `${hoursText(l.qty)} ${l.unit === "days" && l.qty === 1 ? "day" : l.unit}` : ""}</td>
               <td className="num">{money(l.amount)}</td>
             </tr>
           ))}
