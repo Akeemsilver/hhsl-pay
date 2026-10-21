@@ -13,14 +13,9 @@ export function payrollEmail(input: { to: string; name: string; monthName: strin
     body: [
       "Hello,",
       "",
-      `Please find my time sheet for ${input.monthName} attached (${input.fileName}).`,
+      `Attached is my ${input.monthName} time sheet.`,
       "",
-      `Name: ${name}`,
-      `Site: ${input.siteLabel}`,
-      `Days worked: ${input.days}`,
-      `Hours on the form: ${Math.round(input.hours * 100) / 100} h`,
-      "",
-      "Kind regards,",
+      "Thanks,",
       name,
     ].join("\n"),
   };
