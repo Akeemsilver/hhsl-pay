@@ -1,5 +1,5 @@
 import { isWeekend } from "./dates";
-import type { DayEntry, DayPay, SiteRates, SiteTable } from "./types";
+import type { DayEntry, DayPay, RoleRates, SiteRates, SiteTable } from "./types";
 
 export function findSite(sites: SiteTable, name: string): SiteRates | undefined {
   const wanted = name.trim().toLowerCase();
@@ -11,6 +11,15 @@ export function findSite(sites: SiteTable, name: string): SiteRates | undefined 
 
 const cap = (n: number | undefined) => (n && n > 0 ? n : 0);
 
+export function findRole(site: SiteRates, name: string | undefined): RoleRates | undefined {
+  if (!name || !site.roles) return undefined;
+  const wanted = name.trim().toLowerCase();
+  for (const [key, role] of Object.entries(site.roles)) {
+    if (key.trim().toLowerCase() === wanted) return role;
+  }
+  return undefined;
+}
+
 export function computeDay(entry: DayEntry, sites: SiteTable): DayPay {
   const site = findSite(sites, entry.site);
   const empty: DayPay = { rate: 0, tierHours: { x1: 0, x15: 0, x2: 0, x3: 0 }, dailyPay: 0, total: 0 };
@@ -18,13 +27,14 @@ export function computeDay(entry: DayEntry, sites: SiteTable): DayPay {
 
   // Flat daily-pay sites (yard, offshore) pay for the day even when no hours are logged.
   const hours = entry.hours > 0 ? entry.hours : 0;
-  const lead = !!entry.lead;
+  const role = findRole(site, entry.role);
+  const lead = !!entry.lead && !role;
 
   let rate = 0;
   if (cap(site.showRateAboveHrs) > 0) {
     rate = hours > cap(site.showRateAboveHrs) ? (site.rateAboveHrs ?? 0) : 0;
   } else {
-    rate = (lead ? site.leadRate : site.baseRate) ?? 0;
+    rate = (role?.rate ?? (lead ? site.leadRate : site.baseRate)) ?? 0;
   }
 
   const caps = entry.holiday
@@ -45,7 +55,9 @@ export function computeDay(entry: DayEntry, sites: SiteTable): DayPay {
   const x3 = Math.min(Math.max(0, hours - c1 - c15 - c2), c3);
 
   let dailyPay = 0;
-  if (entry.holiday && cap(site.dailyHoliday) > 0) dailyPay = cap(site.dailyHoliday);
+  const holidayDaily = cap(role?.dailyHoliday) || cap(site.dailyHoliday);
+  if (entry.holiday && holidayDaily > 0) dailyPay = holidayDaily;
+  else if (cap(role?.dailyPay) > 0) dailyPay = cap(role?.dailyPay);
   else if (lead && cap(site.dailyLead) > 0) dailyPay = cap(site.dailyLead);
   else if (cap(site.dailyStd) > 0) dailyPay = cap(site.dailyStd);
 

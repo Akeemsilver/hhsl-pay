@@ -2,7 +2,7 @@ import { useNav } from "../nav";
 import { useStore } from "../store";
 import { useTheme, type ThemePref } from "../theme";
 import { PageHeader } from "../components/TopBar";
-import { ChevronRight, SaveIcon, SlidersIcon } from "../components/Icons";
+import { ChevronRight, FileIcon, MapPinIcon, SaveIcon, ShieldIcon, UsersIcon } from "../components/Icons";
 
 export function SettingsHub() {
   const { open } = useNav();
@@ -23,15 +23,40 @@ export function SettingsHub() {
         <p className="muted small">System follows your phone's light or dark setting.</p>
       </section>
 
-      <h2 className="section-title">Your data</h2>
+      <h2 className="section-title">Your work</h2>
       <ul className="menu">
         <li>
-          <button onClick={() => open({ page: "rates" })}>
-            <SlidersIcon />
-            <span><strong>Rates &amp; tax</strong><small>{sites} site{sites === 1 ? "" : "s"}, payslips, raises and tax rules</small></span>
+          <button onClick={() => open({ page: "sites" })}>
+            <MapPinIcon />
+            <span><strong>Site locations &amp; rates</strong><small>{sites} site{sites === 1 ? "" : "s"}, roles and pay rates</small></span>
             <ChevronRight />
           </button>
         </li>
+        <li>
+          <button onClick={() => open({ page: "tax" })}>
+            <ShieldIcon />
+            <span><strong>NIS &amp; tax</strong><small>NIS table, PAYE, and when the rules change</small></span>
+            <ChevronRight />
+          </button>
+        </li>
+        <li>
+          <button onClick={() => open({ page: "payslips" })}>
+            <UsersIcon />
+            <span><strong>Payslips</strong><small>{Object.keys(data.payerNames).length} payslip{Object.keys(data.payerNames).length === 1 ? "" : "s"}</small></span>
+            <ChevronRight />
+          </button>
+        </li>
+        <li>
+          <button onClick={() => open({ page: "timesheet" })}>
+            <FileIcon />
+            <span><strong>Timesheet</strong><small>{data.timesheet?.rules.length ? `${data.timesheet.rules.length} job rule${data.timesheet.rules.length === 1 ? "" : "s"}` : "Name, jobs to include, template"}</small></span>
+            <ChevronRight />
+          </button>
+        </li>
+      </ul>
+
+      <h2 className="section-title">Your data</h2>
+      <ul className="menu">
         <li>
           <button onClick={() => open({ page: "backup" })}>
             <SaveIcon />

@@ -84,7 +84,7 @@ export function HomeScreen() {
           <strong>Start here: add your sites and rates.</strong>
           <p>Open the settings gear at the top right, or restore a backup, to load your sites.</p>
           <div className="row">
-            <button className="primary" onClick={() => open({ page: "rates" })}>Set up rates</button>
+            <button className="primary" onClick={() => open({ page: "sites" })}>Set up rates</button>
             <button onClick={() => open({ page: "backup" })}>Restore a backup</button>
           </div>
         </div>

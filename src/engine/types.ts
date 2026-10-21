@@ -9,6 +9,13 @@ export interface TierCaps {
   x3?: number;
 }
 
+/** A position at a site (for example client medic) that is paid differently from the site's standard rate. */
+export interface RoleRates {
+  rate?: number;
+  dailyPay?: number;
+  dailyHoliday?: number;
+}
+
 export interface SiteRates {
   /** Which payslip this site's income lands on; each payer gets its own PAYE/NIS calculation. */
   payer: string;
@@ -23,6 +30,8 @@ export interface SiteRates {
   dailyStd?: number;
   dailyLead?: number;
   dailyHoliday?: number;
+  /** Extra positions with their own pay. Overtime caps are shared with the site. */
+  roles?: Record<string, RoleRates>;
 }
 
 export type SiteTable = Record<string, SiteRates>;
@@ -59,6 +68,8 @@ export interface DayEntry {
   site: string;
   hours: number;
   lead?: boolean;
+  /** A custom role defined on the site, such as "Client medic". Unset means the standard rate (or lead when `lead`). */
+  role?: string;
   holiday?: boolean;
   /** Overrides the weekday check, for entries where the sheet flagged a weekend by hand. */
   weekend?: boolean;

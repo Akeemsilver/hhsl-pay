@@ -159,4 +159,36 @@ describe("computeMonth", () => {
     expect(month.payers.map((p) => p.payer)).toEqual(["alpha"]);
     expect(month.gross).toBe(500);
   });
+
+  it("pays a custom role at its own rate and keeps the site's overtime caps", () => {
+    const sites = {
+      ...demoSites,
+      Beta: { ...demoSites.Beta!, roles: { "Client medic": { rate: 70 } } },
+    };
+    // Beta weekday caps: 8 at x1, 4 at x1.5
+    const medic = computeDay({ date: "2026-07-01", site: "Beta", hours: 12, role: "client medic" }, sites);
+    expect(medic.rate).toBe(70);
+    expect(medic.total).toBeCloseTo(8 * 70 + 4 * 70 * 1.5);
+    const standard = computeDay({ date: "2026-07-01", site: "Beta", hours: 12 }, sites);
+    expect(standard.rate).toBe(40);
+  });
+
+  it("a role can carry its own flat daily pay, and wins over the lead flag", () => {
+    const flat = {
+      Flat: {
+        payer: "main", baseRate: 40, leadRate: 45, weekday: {}, weekend: {}, holiday: {},
+        dailyStd: 500, dailyLead: 700,
+        roles: { Medic: { rate: 70, dailyPay: 900, dailyHoliday: 1800 } },
+      },
+    };
+    expect(computeDay({ date: "2026-07-01", site: "Flat", hours: 8 }, flat).total).toBe(500);
+    expect(computeDay({ date: "2026-07-01", site: "Flat", hours: 8, lead: true }, flat).total).toBe(700);
+    expect(computeDay({ date: "2026-07-01", site: "Flat", hours: 8, role: "Medic" }, flat).total).toBe(900);
+    expect(computeDay({ date: "2026-07-01", site: "Flat", hours: 8, role: "Medic", holiday: true }, flat).total).toBe(1800);
+    expect(computeDay({ date: "2026-07-01", site: "Flat", hours: 8, role: "Medic", lead: true }, flat).total).toBe(900);
+  });
+
+  it("ignores an unknown role", () => {
+    expect(computeDay({ date: "2026-07-01", site: "Beta", hours: 8, role: "Nope" }, demoSites).rate).toBe(40);
+  });
 });

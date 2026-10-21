@@ -5,12 +5,13 @@ import { useMonth } from "../hooks";
 import { useNav } from "../nav";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
-import { BackIcon, ForwardIcon } from "../components/Icons";
+import { BackIcon, DownloadIcon, ForwardIcon } from "../components/Icons";
+import { TimesheetSheet } from "../components/TimesheetSheet";
 import { CalendarGrid, CorrectionBox, DayList, MonthSummary } from "../components/MonthParts";
 
 export function CalendarScreen() {
   const { data } = useStore();
-  const { open } = useNav();
+  const { loc, open } = useNav();
   const [month, setMonth] = useState(todayISO().slice(0, 7));
   const [view, setView] = useState<"calendar" | "list">("calendar");
   const result = useMonth(month);
@@ -22,7 +23,10 @@ export function CalendarScreen() {
 
   return (
     <>
-      <TopBar title="Calendar" />
+      <TopBar
+        title="Calendar"
+        action={<button className="icon gear" aria-label="Download timesheet" onClick={() => open({ sub: "timesheet" })}><DownloadIcon /></button>}
+      />
       <div className="monthbar">
         <button className="icon" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Previous month"><BackIcon /></button>
         <div className="monthname">
@@ -44,6 +48,8 @@ export function CalendarScreen() {
       {view === "calendar"
         ? <CalendarGrid month={month} days={days} result={result} today={today} onPick={(d) => open({ day: d })} payerOrder={payerOrder} />
         : <DayList days={days} result={result} today={today} onPick={(d) => open({ day: d })} />}
+
+      {loc.sub === "timesheet" && !loc.day && !loc.page && <TimesheetSheet month={month} />}
 
       <MonthSummary result={result} label={month} />
       <CorrectionBox month={month} result={result} />

@@ -115,8 +115,8 @@ export function backupFileName(kind: BackupKind, encrypted: boolean): string {
 }
 
 /** Share through the phone's share sheet when possible, otherwise download. */
-export async function deliver(fileName: string, text: string): Promise<"shared" | "downloaded"> {
-  const file = new File([text], fileName, { type: "application/json" });
+export async function deliver(fileName: string, content: string | Uint8Array, type = "application/json"): Promise<"shared" | "downloaded"> {
+  const file = new File([content as BlobPart], fileName, { type });
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
   if (nav.canShare?.({ files: [file] })) {
     try {

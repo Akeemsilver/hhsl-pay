@@ -4,7 +4,10 @@ import { CalendarScreen } from "./screens/CalendarScreen";
 import { YearScreen } from "./screens/YearScreen";
 import { ChartsScreen } from "./screens/ChartsScreen";
 import { SettingsHub } from "./screens/SettingsHub";
-import { SettingsScreen } from "./screens/SettingsScreen";
+import { SitesPage } from "./screens/SitesPage";
+import { TaxPage } from "./screens/TaxPage";
+import { PayslipsPage } from "./screens/PayslipsPage";
+import { TimesheetPage } from "./screens/TimesheetPage";
 import { BackupScreen } from "./screens/BackupScreen";
 import { DayEditor } from "./screens/DayEditor";
 import { CalendarIcon, HomeIcon, PieIcon, TableIcon } from "./components/Icons";
@@ -22,7 +25,10 @@ function Shell() {
     <div className="app">
       <main>
         {loc.page === "settings" && <SettingsHub />}
-        {loc.page === "rates" && <SettingsScreen />}
+        {loc.page === "sites" && <SitesPage />}
+        {loc.page === "tax" && <TaxPage />}
+        {loc.page === "payslips" && <PayslipsPage />}
+        {loc.page === "timesheet" && <TimesheetPage />}
         {loc.page === "backup" && <BackupScreen />}
         {!loc.page && loc.tab === "home" && <HomeScreen />}
         {!loc.page && loc.tab === "calendar" && <CalendarScreen />}

@@ -1,3 +1,4 @@
+import type { TimesheetSettings } from "./timesheet";
 import { paidHoursFrom, type DayEntry, type PayerOverride, type RuleHistory, type SiteRates, type TaxRules } from "./engine";
 
 export interface Entry extends DayEntry {
@@ -15,6 +16,8 @@ export interface Entry extends DayEntry {
   lunchMinutes?: number;
   /** Amount paid, kept as a note. It is never added to pay totals. */
   amount?: number;
+  /** Job ticket number, printed on the payroll timesheet for jobs that go on it. */
+  ticket?: string;
 }
 
 export const isOther = (e: Entry): boolean => e.kind === "other";
@@ -37,6 +40,8 @@ export interface AppData {
   payerNames: Record<string, string>;
   /** Actual payslip figures where they differ from the calculation, keyed "YYYY-MM|payer". */
   corrections?: Record<string, PayerOverride>;
+  /** Name, header text and which jobs go on the payroll timesheet. */
+  timesheet?: TimesheetSettings;
   lastBackupAt?: string;
 }
 

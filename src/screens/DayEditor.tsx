@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { computeDay, minutesBetween, paidHoursFrom, valueOn } from "../engine";
+import { computeDay, findSite, paidHoursFrom, valueOn, type SiteRates } from "../engine";
 import { WEEKDAYS, durationText, hoursText, money } from "../format";
 import { isOther, newId, withComputedHours, type Entry } from "../model";
 import { useNav } from "../nav";
 import { useStore } from "../store";
+import { matchRule } from "../timesheet";
 import { BottomSheet } from "../components/BottomSheet";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { TimeField, quickTimes } from "../components/TimeField";
+
+const hasLead = (site: SiteRates | undefined) => !!site && ((site.leadRate ?? 0) > 0 || (site.dailyLead ?? 0) > 0);
 
 const QUICK_JOBS = ["Airport pickup", "Delivery", "Drop-off", "Yard run"];
 
@@ -42,6 +45,20 @@ export function DayEditor({ date, onClose }: { date: string; onClose: () => void
     update((d) => ({ ...d, entries: [...d.entries.filter((e) => e.date !== date), ...draft] }));
     leave();
   };
+
+  const timesheetRules = data.timesheet?.rules ?? [];
+
+  /** Changing the site drops a role or lead flag that the new site does not have. */
+  const changeSite = (entry: Entry, name: string) => {
+    const next = findSite(sites, name);
+    patch(entry.id, {
+      site: name,
+      role: entry.role && next?.roles && Object.keys(next.roles).some((r) => r.toLowerCase() === entry.role!.toLowerCase()) ? entry.role : undefined,
+      lead: entry.lead && hasLead(next) ? entry.lead : false,
+    });
+  };
+  const setRole = (entry: Entry, value: string) =>
+    patch(entry.id, value === "" ? { role: undefined, lead: false } : value === "__lead" ? { role: undefined, lead: true } : { role: value, lead: false });
 
   const patch = (id: string, changes: Partial<Entry>) =>
     setDraft((list) => list.map((e) => (e.id === id ? withComputedHours({ ...e, ...changes }) : e)));
@@ -110,11 +127,30 @@ export function DayEditor({ date, onClose }: { date: string; onClose: () => void
             <div className="entry" key={entry.id}>
               <label>
                 Site
-                <select value={entry.site} onChange={(e) => patch(entry.id, { site: e.target.value })}>
+                <select value={entry.site} onChange={(e) => changeSite(entry, e.target.value)}>
                   {!known && <option value={entry.site}>{entry.site || "Choose…"} (not in rates)</option>}
                   {siteNames.map((n) => <option key={n}>{n}</option>)}
                 </select>
               </label>
+              {(() => {
+                const rates = findSite(sites, entry.site);
+                const roleNames = Object.keys(rates?.roles ?? {});
+                const value = entry.role ?? (entry.lead ? "__lead" : "");
+                const showLead = hasLead(rates) || value === "__lead";
+                const orphan = entry.role && !roleNames.some((r) => r.toLowerCase() === entry.role!.toLowerCase());
+                if (!showLead && roleNames.length === 0 && !orphan) return null;
+                return (
+                  <label className="field-short">
+                    Role
+                    <select value={value} onChange={(e) => setRole(entry, e.target.value)}>
+                      <option value="">Standard</option>
+                      {showLead && <option value="__lead">Lead / instructor</option>}
+                      {roleNames.map((r) => <option key={r} value={r}>{r}</option>)}
+                      {orphan && <option value={entry.role}>{entry.role} (not in rates)</option>}
+                    </select>
+                  </label>
+                );
+              })()}
               <div className="grid2">
                 <TimeField label="Start time" value={entry.startTime} quick={quick} onChange={(v) => patch(entry.id, { startTime: v })} />
                 <TimeField label="End time" value={entry.endTime} quick={quick} onChange={(v) => patch(entry.id, { endTime: v })} />
@@ -153,9 +189,13 @@ export function DayEditor({ date, onClose }: { date: string; onClose: () => void
                 </label>
               )}
               <div className="checks">
-                <label><input type="checkbox" checked={!!entry.lead} onChange={(e) => patch(entry.id, { lead: e.target.checked })} /> Lead / instructor / medic</label>
                 <label><input type="checkbox" checked={!!entry.holiday} onChange={(e) => patch(entry.id, { holiday: e.target.checked })} /> Public holiday</label>
               </div>
+              {matchRule(entry, timesheetRules) && (
+                <label>Job ticket number (optional)
+                  <input value={entry.ticket ?? ""} placeholder="Printed on the timesheet" onChange={(e) => patch(entry.id, { ticket: e.target.value || undefined })} />
+                </label>
+              )}
               <div className="preview">
                 <span>
                   Paid for {hoursText(entry.hours)} h · {pay.dailyPay > 0 ? `flat ${money(pay.dailyPay)}` : `${money(pay.rate)}/h`}

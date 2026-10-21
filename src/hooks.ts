@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { computeMonth, type MonthResult } from "./engine";
 import { isOther, overridesFor, type Entry } from "./model";
 import { useStore } from "./store";
+import { clearTemplate, loadTemplate, saveTemplate, type StoredTemplate } from "./storage";
 
 export function useMonth(month: string): MonthResult<Entry> {
   const { data } = useStore();
@@ -19,4 +20,18 @@ export function useYear(year: number): Array<MonthResult<Entry>> {
       }),
     [year, data],
   );
+}
+
+/** The imported time sheet template (undefined until loaded, null when there is none). */
+export function useTemplate() {
+  const [template, setTemplate] = useState<StoredTemplate | null | undefined>(undefined);
+  useEffect(() => { void loadTemplate().then(setTemplate); }, []);
+  const save = useCallback(async (file: File) => {
+    const stored = { name: file.name, bytes: await file.arrayBuffer() };
+    const ok = await saveTemplate(stored);
+    if (ok) setTemplate(stored);
+    return ok;
+  }, []);
+  const clear = useCallback(async () => { await clearTemplate(); setTemplate(null); }, []);
+  return { template, save, clear };
 }

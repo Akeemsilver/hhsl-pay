@@ -3,7 +3,7 @@ import { useNav } from "../nav";
 import { BackIcon, GearIcon } from "./Icons";
 
 /** Header for the main tabs: title on the left, settings gear on the right. */
-export function TopBar({ title, subtitle }: { title: ReactNode; subtitle?: ReactNode }) {
+export function TopBar({ title, subtitle, action }: { title: ReactNode; subtitle?: ReactNode; action?: ReactNode }) {
   const { open } = useNav();
   return (
     <header className="bar top">
@@ -11,9 +11,12 @@ export function TopBar({ title, subtitle }: { title: ReactNode; subtitle?: React
         <h1>{title}</h1>
         {subtitle && <p className="muted small">{subtitle}</p>}
       </div>
-      <button className="icon gear" aria-label="Settings" onClick={() => open({ page: "settings" })}>
-        <GearIcon />
-      </button>
+      <div className="top-actions">
+        {action}
+        <button className="icon gear" aria-label="Settings" onClick={() => open({ page: "settings" })}>
+          <GearIcon />
+        </button>
+      </div>
     </header>
   );
 }
