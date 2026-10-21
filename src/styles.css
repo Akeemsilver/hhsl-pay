@@ -345,3 +345,38 @@ legend { font-size: 0.85rem; color: var(--muted); padding: 0 4px; }
 .tip-row span:last-child { color: var(--muted); }
 .table-view { margin-top: 10px; }
 .table-view summary { cursor: pointer; min-height: 36px; display: flex; align-items: center; color: var(--accent); font-weight: 600; font-size: 0.9rem; }
+
+/* Other jobs */
+.entry.other { border-left: 4px solid var(--s3); }
+.entry-kind { display: block; margin-bottom: 8px; }
+.quick { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 12px; }
+button.pill { min-height: 32px; padding: 0 12px; border-radius: 999px; font-size: 0.85rem; }
+.add-buttons { margin-top: 4px; gap: 10px; }
+.chip.other { background: color-mix(in srgb, var(--s3) 20%, transparent); }
+.cal-cell.worked.other { background: color-mix(in srgb, var(--s3) 20%, var(--card)); }
+.cal-cell { position: relative; }
+.cal-cell .dot { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--s3); }
+
+/* Time fields and picker */
+.field { margin-bottom: 10px; }
+.field .lbl, .lunch-length .lbl, .hours-tile .lbl { display: block; font-size: 0.85rem; color: var(--muted); }
+.time-btn { width: 100%; margin-top: 4px; justify-content: flex-start; text-align: left; font-variant-numeric: tabular-nums; background: var(--weekend); }
+.time-btn.empty { color: var(--muted); }
+.checks.lunch { margin-top: 0; }
+.lunch-length { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
+.lunch-length .lbl { margin-right: auto; }
+.lunch-length button, .quick-times button { min-height: 40px; }
+.lunch-length button.on, .quick-times button.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+.hours-tile { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; margin: 0 0 10px; border-radius: 12px; background: var(--weekend); }
+.hours-tile strong { font-size: 1.5rem; }
+.sheet-backdrop.top { z-index: 30; }
+.time-sheet { padding-top: 16px; }
+.time-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.time-head .badge { margin-left: 8px; font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: var(--line); color: var(--muted); }
+.time-big { text-align: right; display: flex; flex-direction: column; line-height: 1.1; }
+.time-big span { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.time-big small { color: var(--muted); }
+.quick-times { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin-bottom: 8px; }
+.dials { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0 4px; }
+.typed { margin-top: 8px; }
+.time-actions { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 8px; margin-top: 12px; }

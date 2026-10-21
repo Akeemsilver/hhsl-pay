@@ -50,7 +50,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     latest.current = d;
     setData(d);
     window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(flush, 250);
+    timer.current = window.setTimeout(flush, 100);
   }, [flush]);
 
   const update = useCallback((fn: (d: AppData) => AppData) => {

@@ -1,3 +1,5 @@
+import { minutesBetween } from "./engine";
+
 export function money(n: number): string {
   const abs = Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return `${n < 0 ? "-" : ""}$${abs}`;
@@ -33,4 +35,20 @@ export function daysOfMonth(month: string): string[] {
 
 export function hoursText(h: number): string {
   return Number.isInteger(h) ? String(h) : h.toFixed(2).replace(/0+$/, "");
+}
+
+/** "2h 30m" between two optional HH:MM times; an end before the start means it ran past midnight. */
+export function durationText(start?: string, end?: string): string {
+  const diff = minutesBetween(start, end);
+  if (diff === null) return "";
+  const h = Math.floor(diff / 60), m = diff % 60;
+  return [h ? `${h}h` : "", m ? `${m}m` : ""].filter(Boolean).join(" ");
+}
+
+/** "08:00–10:30", "from 08:00", "until 10:30", or "". */
+export function timeRange(start?: string, end?: string): string {
+  if (start && end) return `${start}–${end}`;
+  if (start) return `from ${start}`;
+  if (end) return `until ${end}`;
+  return "";
 }

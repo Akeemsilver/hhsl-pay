@@ -1,5 +1,5 @@
-import { WEEKDAYS, hoursText, money } from "../format";
-import { correctionKey } from "../model";
+import { WEEKDAYS, hoursText, money, timeRange } from "../format";
+import { correctionKey, othersByDate } from "../model";
 import { useStore } from "../store";
 import type { MonthResult } from "../engine";
 import type { Entry } from "../model";
@@ -73,23 +73,26 @@ export function CorrectionBox({ month, result }: { month: string; result: MonthR
 }
 
 export function DayList({ days, result, today, onPick }: { days: string[]; result: MonthResult<Entry>; today: string; onPick: (d: string) => void }) {
+  const { data } = useStore();
+  const others = othersByDate(data.entries, (days[0] ?? "").slice(0, 7));
   return (
     <ul className="days">
       {days.map((date) => {
         const wd = new Date(`${date}T00:00:00Z`).getUTCDay();
         const priced = result.entries.filter((e) => e.entry.date === date);
+        const extra = others.get(date) ?? [];
         const total = priced.reduce((s, e) => s + e.pay.total, 0);
         return (
           <li key={date}>
             <button
               className={`day ${wd === 0 || wd === 6 ? "weekend" : ""} ${date === today ? "today" : ""}`}
               onClick={() => onPick(date)}
-              aria-label={`${WEEKDAYS[wd]} ${Number(date.slice(8))}, ${priced.length ? money(total) : "no entry"}`}
+              aria-label={`${WEEKDAYS[wd]} ${Number(date.slice(8))}, ${priced.length ? money(total) : "no shift"}${extra.length ? `, ${extra.length} other job${extra.length > 1 ? "s" : ""}` : ""}`}
             >
               <span className="dow">{WEEKDAYS[wd]}</span>
               <span className="dom">{Number(date.slice(8))}</span>
               <span className="entries">
-                {priced.length === 0 && <span className="muted">—</span>}
+                {priced.length === 0 && extra.length === 0 && <span className="muted">—</span>}
                 {priced.map(({ entry, pay }) => (
                   <span key={entry.id} className="chip">
                     {entry.site}
@@ -97,6 +100,12 @@ export function DayList({ days, result, today, onPick }: { days: string[]; resul
                     {entry.lead && " · lead"}
                     {entry.holiday && " · hol"}
                     {pay.total === 0 && " ⚠"}
+                  </span>
+                ))}
+                {extra.map((o) => (
+                  <span key={o.id} className="chip other">
+                    Other · {o.description || "no description"}
+                    {timeRange(o.startTime, o.endTime) && ` · ${timeRange(o.startTime, o.endTime)}`}
                   </span>
                 ))}
               </span>
@@ -109,11 +118,12 @@ export function DayList({ days, result, today, onPick }: { days: string[]; resul
   );
 }
 
-/** Month grid, Sunday first. Each cell shows the day's total and the site(s) worked. */
+/** Month grid, Sunday first. Each cell shows the day's total and the site(s) worked, plus other jobs. */
 export function CalendarGrid({ month, days, result, today, onPick, payerOrder }: {
   month: string; days: string[]; result: MonthResult<Entry>; today: string; onPick: (d: string) => void; payerOrder: string[];
 }) {
   const { data } = useStore();
+  const others = othersByDate(data.entries, month);
   const lead = new Date(`${month}-01T00:00:00Z`).getUTCDay();
   const siteOf = (name: string) => {
     for (const v of data.history.sites) {
@@ -132,15 +142,17 @@ export function CalendarGrid({ month, days, result, today, onPick, payerOrder }:
         {days.map((date) => {
           const wd = new Date(`${date}T00:00:00Z`).getUTCDay();
           const priced = result.entries.filter((e) => e.entry.date === date);
+          const extra = others.get(date) ?? [];
           const total = priced.reduce((s, e) => s + e.pay.total, 0);
           const first = priced[0];
           const tone = first ? Math.max(0, payerOrder.indexOf(siteOf(first.entry.site)?.payer ?? "")) % 4 : 0;
+          const state = first ? `worked tone${tone}` : extra.length ? "worked other" : "";
           return (
             <button
               key={date}
-              className={`cal-cell ${wd === 0 || wd === 6 ? "weekend" : ""} ${date === today ? "today" : ""} ${priced.length ? `worked tone${tone}` : ""}`}
+              className={`cal-cell ${wd === 0 || wd === 6 ? "weekend" : ""} ${date === today ? "today" : ""} ${state}`}
               onClick={() => onPick(date)}
-              aria-label={`${WEEKDAYS[wd]} ${Number(date.slice(8))}, ${priced.length ? money(total) : "no entry"}`}
+              aria-label={`${WEEKDAYS[wd]} ${Number(date.slice(8))}, ${priced.length ? money(total) : "no shift"}${extra.length ? `, ${extra.length} other job${extra.length > 1 ? "s" : ""}` : ""}`}
             >
               <span className="n">{Number(date.slice(8))}</span>
               {first && (
@@ -149,6 +161,13 @@ export function CalendarGrid({ month, days, result, today, onPick, payerOrder }:
                   <span className="cal-site">{first.entry.site.slice(0, 5)}{priced.length > 1 ? ` +${priced.length - 1}` : ""}</span>
                 </>
               )}
+              {!first && extra[0] && (
+                <>
+                  <span className="amt">Other{extra.length > 1 ? ` ×${extra.length}` : ""}</span>
+                  <span className="cal-site">{(extra[0].description || "job").slice(0, 6)}</span>
+                </>
+              )}
+              {first && extra.length > 0 && <span className="dot" title="Other job" aria-hidden="true" />}
             </button>
           );
         })}

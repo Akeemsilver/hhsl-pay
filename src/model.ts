@@ -1,7 +1,32 @@
-import type { DayEntry, PayerOverride, RuleHistory, SiteRates, TaxRules } from "./engine";
+import { paidHoursFrom, type DayEntry, type PayerOverride, type RuleHistory, type SiteRates, type TaxRules } from "./engine";
 
 export interface Entry extends DayEntry {
   id: string;
+  /** "other" = a job with no site (airport pickup, delivery, drop-off). Logged only, never paid by the app. */
+  kind?: "site" | "other";
+  /** What the other job was. */
+  description?: string;
+  /** "HH:MM" start and end. Optional for an other job; for a shift they work out the paid hours. */
+  startTime?: string;
+  endTime?: string;
+  /** Lunch was paid, so no time is taken off. When false or unset, lunchMinutes comes off. */
+  lunchPaid?: boolean;
+  /** Minutes of unpaid lunch, 30 or 60 (60 when unset). */
+  lunchMinutes?: number;
+  /** Amount paid, kept as a note. It is never added to pay totals. */
+  amount?: number;
+}
+
+export const isOther = (e: Entry): boolean => e.kind === "other";
+
+/** Other jobs in a month, grouped by date. */
+export function othersByDate(entries: Entry[], month: string): Map<string, Entry[]> {
+  const out = new Map<string, Entry[]>();
+  for (const e of entries) {
+    if (!isOther(e) || !e.date.startsWith(month)) continue;
+    out.set(e.date, [...(out.get(e.date) ?? []), e]);
+  }
+  return out;
 }
 
 export interface AppData {
@@ -82,4 +107,10 @@ export function newData(): AppData {
 
 export function newId(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+}
+
+/** Re-works the paid hours from the entry's times and lunch; untimed entries keep their typed hours. */
+export function withComputedHours(e: Entry): Entry {
+  const h = paidHoursFrom(e);
+  return h === undefined ? e : { ...e, hours: h };
 }

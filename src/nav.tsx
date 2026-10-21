@@ -9,6 +9,8 @@ export interface Loc {
   page?: Page;
   /** ISO date of the open day sheet. */
   day?: string;
+  /** A sheet opened on top of the day sheet, such as the time picker. */
+  sub?: string;
   /** How many history entries deep we are (0 = the home screen). */
   n: number;
 }
@@ -23,7 +25,7 @@ function read(): Loc {
 interface Nav {
   loc: Loc;
   /** Open a settings page or a day sheet on top of the current screen. */
-  open: (next: { page?: Page; day?: string }) => void;
+  open: (next: { page?: Page; day?: string; sub?: string }) => void;
   /** Switch tab; going back to Home returns to the first history entry. */
   selectTab: (tab: Tab) => void;
   back: () => void;
@@ -48,7 +50,7 @@ export function NavProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const open = useCallback(
-    (next: { page?: Page; day?: string }) => {
+    (next: { page?: Page; day?: string; sub?: string }) => {
       const l: Loc = { ...loc, ...next, n: loc.n + 1 };
       window.history.pushState(l, "");
       setLoc(l);

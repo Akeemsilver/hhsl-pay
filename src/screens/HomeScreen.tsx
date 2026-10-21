@@ -2,6 +2,7 @@ import { valueOn } from "../engine";
 import { MONTHS, WEEKDAYS, daysOfMonth, hoursText, money, shiftMonth, todayISO } from "../format";
 import { useMonth, useYear } from "../hooks";
 import { useNav } from "../nav";
+import { isOther, othersByDate } from "../model";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
 import { PlusIcon } from "../components/Icons";
@@ -41,7 +42,10 @@ export function HomeScreen() {
   const lastBackup = data.lastBackupAt ? Date.parse(data.lastBackupAt) : 0;
   const backupDue = data.entries.length > 0 && Date.now() - lastBackup > 30 * DAY_MS;
 
-  const worked = new Set(thisMonth.entries.filter((e) => e.pay.total > 0).map((e) => e.entry.date));
+  const worked = new Set([
+    ...thisMonth.entries.filter((e) => e.pay.total > 0).map((e) => e.entry.date),
+    ...othersByDate(data.entries, month).keys(),
+  ]);
   const hours = thisMonth.entries.reduce((s, e) => s + e.entry.hours, 0);
   const diff = thisMonth.gross - lastMonth.gross;
 
@@ -171,8 +175,10 @@ export function HomeScreen() {
               <li key={e.id}>
                 <button onClick={() => open({ day: e.date })}>
                   <span className="when">{shortDate(e.date)}</span>
-                  <span className="what">{e.site}{e.hours > 0 && ` · ${hoursText(e.hours)}h`}{e.holiday && " · holiday"}</span>
-                  <span className="amount">{money(siteTotal(e))}</span>
+                  <span className="what">
+                    {isOther(e) ? `Other · ${e.description || "no description"}` : <>{e.site}{e.hours > 0 && ` · ${hoursText(e.hours)}h`}{e.holiday && " · holiday"}</>}
+                  </span>
+                  <span className="amount">{isOther(e) ? "" : money(siteTotal(e))}</span>
                 </button>
               </li>
             ))}
