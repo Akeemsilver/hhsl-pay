@@ -77,6 +77,10 @@ describe("tax", () => {
     expect(monthTax(0, 4, demoTax).net).toBe(0);
   });
 
+  it("never reports negative tax due just above the threshold", () => {
+    expect(annualTaxEstimate(91000, 4000, 700, demoTax)).toEqual({ taxDue: 0, refund: 700 });
+  });
+
   it("estimates year-end tax and refund", () => {
     expect(annualTaxEstimate(80000, 3000, 500, demoTax)).toEqual({ taxDue: 0, refund: 500 });
     const est = annualTaxEstimate(100000, 3000, 1500, demoTax);
@@ -134,5 +138,25 @@ describe("computeMonth", () => {
     expect(month.gross).toBeCloseTo(600 + 320);
     // below the allowance, so no PAYE on either payslip
     expect(month.paye).toBe(0);
+  });
+
+  it("uses the payslip's actual PAYE and gross when given, and recalculates net", () => {
+    const entries = [{ date: "2026-07-01", site: "Alpha", hours: 12 }];
+    const calc = computeMonth("2026-07", entries, demoHistory).payers[0]!;
+    const fixed = computeMonth("2026-07", entries, demoHistory, { alpha: { paye: 25 } }).payers[0]!;
+    expect(calc.corrected).toBe(false);
+    expect(fixed.corrected).toBe(true);
+    expect(fixed.paye).toBe(25);
+    expect(fixed.net).toBeCloseTo(fixed.gross - 25 - fixed.nis - fixed.surcharge);
+
+    const regross = computeMonth("2026-07", entries, demoHistory, { alpha: { gross: 1000 } }).payers[0]!;
+    expect(regross.gross).toBe(1000);
+    expect(regross.nis).toBeCloseTo(14.6 * 4);
+  });
+
+  it("shows a payer that only has a correction", () => {
+    const month = computeMonth("2026-07", [], demoHistory, { alpha: { gross: 500, paye: 0 } });
+    expect(month.payers.map((p) => p.payer)).toEqual(["alpha"]);
+    expect(month.gross).toBe(500);
   });
 });

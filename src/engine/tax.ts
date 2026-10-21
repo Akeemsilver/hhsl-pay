@@ -35,7 +35,7 @@ export function annualTaxEstimate(
 ): { taxDue: number; refund: number } {
   const taxDue =
     annualGross > rules.annualThreshold
-      ? (annualGross - rules.annualThreshold - annualNis * rules.nisRelief) * rules.rate
+      ? Math.max(0, (annualGross - rules.annualThreshold - annualNis * rules.nisRelief) * rules.rate)
       : 0;
   return { taxDue, refund: payeDeducted - taxDue };
 }

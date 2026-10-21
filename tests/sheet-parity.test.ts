@@ -43,7 +43,23 @@ describe.skipIf(!have)("parity with the spreadsheet", () => {
     tax: [{ effectiveFrom: "2000-01-01", value: tax }],
   };
 
+  const overridesOf = (name: string) => {
+    const c = fixtures[name].corr ?? {};
+    const out: Record<string, { gross?: number; paye?: number }> = {};
+    for (const payer of ["main", "atlantic"]) {
+      const o = c[payer];
+      if (o && (o.gross != null || o.paye != null)) out[payer] = { gross: o.gross ?? undefined, paye: o.paye ?? undefined };
+    }
+    return out;
+  };
+
   const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const allEntries = (name: string, i: number) => {
+    const key = `2026-${String(i + 1).padStart(2, "0")}`;
+    return fixtures[name].days
+      .filter((d: any) => d.date.startsWith(key) && d.site != null)
+      .map((d: any) => ({ date: d.date, site: d.site, hours: d.hours ?? 0, lead: d.lead, holiday: d.holiday }));
+  };
 
   monthNames.forEach((name, i) => {
     const key = `2026-${String(i + 1).padStart(2, "0")}`;
@@ -79,5 +95,20 @@ describe.skipIf(!have)("parity with the spreadsheet", () => {
     const t = monthTax(fx.gross64, mondaysInMonth(2026, 7), tax);
     expect(t.paye).toBeCloseTo(fx.paye64, 2);
     expect(t.nis).toBeCloseTo(fx.nis64, 2);
+  });
+
+  it("year totals, including payslip corrections, match the Summary sheet", () => {
+    const entries = monthNames.flatMap((n, i) => allEntries(n, i));
+    let gross = 0, net = 0, paye = 0, nis = 0;
+    monthNames.forEach((name, i) => {
+      const key = `2026-${String(i + 1).padStart(2, "0")}`;
+      const r = computeMonth(key, entries, history, overridesOf(name));
+      gross += r.gross; net += r.net; paye += r.paye; nis += r.nis;
+    });
+    const a = fixtures["_annual"];
+    expect(gross).toBeCloseTo(a.gross, 2);
+    expect(paye).toBeCloseTo(a.paye, 2);
+    expect(net).toBeCloseTo(a.net, 2);
+    expect(nis).toBeCloseTo(a.nis, 2);
   });
 });
