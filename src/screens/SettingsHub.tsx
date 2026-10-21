@@ -11,7 +11,7 @@ import { CalendarIcon, ChevronRight, FileIcon, MapPinIcon, SaveIcon, ShieldIcon,
 export function SettingsHub() {
   const { open, selectTab } = useNav();
   const { data, persistent, update, replace } = useStore();
-  const [ask, setAsk] = useState<"settings" | "all" | null>(null);
+  const [ask, setAsk] = useState<"settings" | "days" | "all" | null>(null);
 
   const [theme, setTheme] = useTheme();
   const thisMonth = todayISO().slice(0, 7);
@@ -105,20 +105,26 @@ export function SettingsHub() {
       <section className="card">
         <p className="muted small">Put the app's settings back the way they were when you first installed it. Your logged days, site rates and name are kept.</p>
         <button className="wide" onClick={() => setAsk("settings")}>Reset settings to default</button>
+        <p className="muted small">Clear the days and jobs you logged ({data.entries.length}, including other jobs and any payslip corrections) but keep your rates, settings and name. Good for starting a new year or testing.</p>
+        <button className="wide" disabled={data.entries.length === 0} onClick={() => setAsk("days")}>Reset days and jobs</button>
         <p className="muted small">Or start completely fresh. This erases your days, rates, name and everything else on this phone.</p>
         <button className="danger wide" onClick={() => setAsk("all")}>Erase everything</button>
       </section>
       {ask && (
         <ConfirmDialog
-          title={ask === "settings" ? "Reset settings?" : "Erase everything?"}
-          message={ask === "settings"
+          title={ask === "settings" ? "Reset settings?" : ask === "days" ? "Reset days and jobs?" : "Erase everything?"}
+          message={ask === "days"
+            ? `All ${data.entries.length} logged days and jobs, other jobs, and payslip corrections are deleted. Your rates, settings and name stay. This cannot be undone, so back up first if you need them.`
+            : ask === "settings"
             ? "Appearance, tax tables, the Split / Combined choice, public holiday edits and timesheet job rules go back to default. Your days, site rates and name stay."
             : "All your days, rates, settings and your name are deleted from this phone. This cannot be undone. Back up first if you might need them."}
-          confirmLabel={ask === "settings" ? "Reset" : "Erase everything"}
+          confirmLabel={ask === "settings" ? "Reset" : ask === "days" ? "Delete all days" : "Erase everything"}
           cancelLabel="Keep"
           onCancel={() => setAsk(null)}
           onConfirm={() => {
-            if (ask === "settings") {
+            if (ask === "days") {
+              update((d) => ({ ...d, entries: [], corrections: undefined }));
+            } else if (ask === "settings") {
               setTheme("system");
               update((d) => {
                 const fresh = newData();
