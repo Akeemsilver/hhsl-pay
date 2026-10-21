@@ -1,5 +1,6 @@
 import { WEEKDAYS, hoursText, money, timeRange } from "../format";
 import { correctionKey, othersByDate } from "../model";
+import { holidayMap } from "../holidays";
 import { useStore } from "../store";
 import type { MonthResult } from "../engine";
 import type { Entry } from "../model";
@@ -74,6 +75,7 @@ export function CorrectionBox({ month, result }: { month: string; result: MonthR
 
 export function DayList({ days, result, today, onPick }: { days: string[]; result: MonthResult<Entry>; today: string; onPick: (d: string) => void }) {
   const { data } = useStore();
+  const hol = holidayMap(days.map((d) => Number(d.slice(0, 4))), data);
   const others = othersByDate(data.entries, (days[0] ?? "").slice(0, 7));
   return (
     <ul className="days">
@@ -85,9 +87,9 @@ export function DayList({ days, result, today, onPick }: { days: string[]; resul
         return (
           <li key={date}>
             <button
-              className={`day ${wd === 0 || wd === 6 ? "weekend" : ""} ${date === today ? "today" : ""}`}
+              className={`day ${wd === 0 || wd === 6 ? "weekend" : ""} ${hol.has(date) ? "holiday" : ""} ${date === today ? "today" : ""}`}
               onClick={() => onPick(date)}
-              aria-label={`${WEEKDAYS[wd]} ${Number(date.slice(8))}, ${priced.length ? money(total) : "no job"}${extra.length ? `, ${extra.length} other job${extra.length > 1 ? "s" : ""}` : ""}`}
+              aria-label={`${WEEKDAYS[wd]} ${Number(date.slice(8))}${hol.has(date) ? ` (${hol.get(date)})` : ""}, ${priced.length ? money(total) : "no job"}${extra.length ? `, ${extra.length} other job${extra.length > 1 ? "s" : ""}` : ""}`}
             >
               <span className="dow">{WEEKDAYS[wd]}</span>
               <span className="dom">{Number(date.slice(8))}</span>
@@ -123,6 +125,7 @@ export function CalendarGrid({ month, days, result, today, onPick, payerOrder, s
   month: string; days: string[]; result: MonthResult<Entry>; today: string; onPick: (d: string) => void; payerOrder: string[]; selected?: string | null;
 }) {
   const { data } = useStore();
+  const hol = holidayMap(days.map((d) => Number(d.slice(0, 4))), data);
   const others = othersByDate(data.entries, month);
   const lead = new Date(`${month}-01T00:00:00Z`).getUTCDay();
   const siteOf = (name: string) => {
@@ -135,7 +138,7 @@ export function CalendarGrid({ month, days, result, today, onPick, payerOrder, s
   return (
     <section className="card calendar" aria-label="Calendar">
       <div className="cal-head" aria-hidden="true">
-        {WEEKDAYS.map((w) => <span key={w}>{w.slice(0, 2)}</span>)}
+        {WEEKDAYS.map((w) => <span key={w} className={w === "Sun" || w === "Sat" ? "red" : ""}>{w.slice(0, 2)}</span>)}
       </div>
       <div className="cal-grid">
         {Array.from({ length: lead }, (_, i) => <span key={`b${i}`} className="cal-blank" />)}
@@ -155,10 +158,10 @@ export function CalendarGrid({ month, days, result, today, onPick, payerOrder, s
           return (
             <button
               key={date}
-              className={`cal-cell ${wd === 0 || wd === 6 ? "weekend" : ""} ${date === today ? "today" : ""} ${selected === date ? "selected" : ""} ${state}`}
+              className={`cal-cell ${wd === 0 || wd === 6 ? "weekend" : ""} ${hol.has(date) ? "holiday" : ""} ${date === today ? "today" : ""} ${selected === date ? "selected" : ""} ${state}`}
               onClick={() => onPick(date)}
               aria-pressed={selected === undefined ? undefined : selected === date}
-              aria-label={`${WEEKDAYS[wd]} ${Number(date.slice(8))}, ${priced.length ? money(total) : "no job"}${extra.length ? `, ${extra.length} other job${extra.length > 1 ? "s" : ""}` : ""}`}
+              aria-label={`${WEEKDAYS[wd]} ${Number(date.slice(8))}${hol.has(date) ? ` (${hol.get(date)})` : ""}, ${priced.length ? money(total) : "no job"}${extra.length ? `, ${extra.length} other job${extra.length > 1 ? "s" : ""}` : ""}`}
             >
               <span className="n">{Number(date.slice(8))}</span>
               {first && (

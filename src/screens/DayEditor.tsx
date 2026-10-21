@@ -3,6 +3,7 @@ import { computeDay, findSite, valueOn } from "../engine";
 import { WEEKDAYS, durationText, hoursText, money } from "../format";
 import { isDetailed, isOther, newId, rolesFor, toDetailed, toSimple, withComputedHours, type Entry } from "../model";
 import { useNav } from "../nav";
+import { holidayMap } from "../holidays";
 import { useStore } from "../store";
 import { BottomSheet } from "../components/BottomSheet";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -63,6 +64,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
     patch(entry.id, { site: name, role: keep ? entry.role : undefined });
   };
 
+  const holidayName = holidayMap([Number(date.slice(0, 4))], data).get(date);
   const patch = (id: string, changes: Partial<Entry>) =>
     setDraft((list) => list.map((e) => (e.id === id ? withComputedHours({ ...e, ...changes }) : e)));
   const remove = (id: string) => setDraft((list) => list.filter((e) => e.id !== id));
@@ -71,6 +73,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
   const newJob = (): Entry => {
     const last = [...data.entries].reverse().find((e) => !isOther(e));
     const fresh: Entry = { id: newId(), date, site: siteNames[0] ?? "", hours: last?.hours ?? 12 };
+    if (holidayName) fresh.holiday = true;
     if (last && isDetailed(last)) {
       Object.assign(fresh, { detailed: true, startTime: last.startTime, endTime: last.endTime, lunchPaid: last.lunchPaid, lunchMinutes: last.lunchMinutes });
     } else {
@@ -87,6 +90,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
       <BottomSheet label={`Entries for ${date}`} onRequestClose={requestClose}>
         <header className="bar">
           <h2>{WEEKDAYS[wd]} {date}</h2>
+          {holidayName && <p className="hol-name">{holidayName}</p>}
           <button ref={closeRef} className="icon" onClick={requestClose} aria-label="Close">✕</button>
         </header>
 

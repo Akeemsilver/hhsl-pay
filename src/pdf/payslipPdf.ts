@@ -143,6 +143,74 @@ function drawSlip(doc: Doc, s: Payslip, preparedOn: string) {
   }
 }
 
+function rateText(b: Payslip["sites"][number]): string {
+  const r = b.rates.map((x) => usd(x));
+  return `${r.join(" / ")}${b.flat ? " /day" : " /h"}`;
+}
+
+/** The page below each payslip: hours at each pay multiple, the rate and the money, site by site. */
+function drawBreakdown(doc: Doc, s: Payslip) {
+  const { name } = periodText(s.month);
+  doc.setFillColor(...rgb(BRAND));
+  doc.rect(0, 0, PAGE_W, 10, "F");
+  text(doc, "HOURS & RATES BY SITE", M, 62, { size: 20, bold: true });
+  text(doc, `${s.employee || "Not set"}  ·  ${s.payerName}  ·  ${name}`, M, 82, { size: 10.5, color: MUTED });
+  hr(doc, 96, LINE, 1);
+
+  // columns: right edges
+  const xs = { site: M, rate: M + 208, days: M + 240, x1: M + 276, x15: M + 314, x2: M + 350, x3: M + 384, tot: M + 430, amt: RIGHT };
+  const head = (y: number) => {
+    doc.setFillColor(...rgb(BAND));
+    doc.rect(M, y, RIGHT - M, 22, "F");
+    const h = (t: string, x: number, align: "left" | "right" = "right") => text(doc, t, x, y + 15, { size: 8, bold: true, color: MUTED, align });
+    h("SITE", xs.site + 6, "left"); h("RATE", xs.rate); h("DAYS", xs.days); h("x1", xs.x1); h("x1.5", xs.x15); h("x2", xs.x2); h("x3", xs.x3); h("TOTAL", xs.tot); h("MONEY", xs.amt - 6);
+    return y + 22;
+  };
+  let y = head(110);
+  const total = { days: 0, hours: 0, x1: 0, x15: 0, x2: 0, x3: 0, amount: 0 };
+  const n = (v: number) => (v ? `${Math.round(v * 100) / 100}` : "-");
+  const nh = (v: number) => (v ? `${n(v)} h` : "-");
+  for (const b of s.sites) {
+    if (y > PAGE_H - 140) { doc.addPage(); y = head(60); }
+    const label = doc.splitTextToSize(b.label, 128) as string[];
+    const rowH = Math.max(26, 12 * label.length + 12);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); doc.setTextColor(...rgb(INK));
+    doc.text(label, xs.site + 6, y + 16);
+    text(doc, rateText(b), xs.rate + 4, y + 16, { size: 8, align: "right" });
+    text(doc, String(b.days), xs.days, y + 16, { size: 9.5, align: "right" });
+    text(doc, n(b.x1), xs.x1, y + 16, { size: 9.5, align: "right" });
+    text(doc, n(b.x15), xs.x15, y + 16, { size: 9.5, align: "right" });
+    text(doc, n(b.x2), xs.x2, y + 16, { size: 9.5, align: "right" });
+    text(doc, n(b.x3), xs.x3, y + 16, { size: 9.5, align: "right" });
+    text(doc, nh(b.hours), xs.tot, y + 16, { size: 9.5, bold: true, align: "right" });
+    text(doc, usd(b.amount), xs.amt - 6, y + 16, { size: 9.5, bold: true, color: GROSS, align: "right" });
+    y += rowH;
+    hr(doc, y, LINE, 0.5);
+    total.days += b.days; total.hours += b.hours; total.x1 += b.x1; total.x15 += b.x15; total.x2 += b.x2; total.x3 += b.x3; total.amount += b.amount;
+  }
+  y += 4;
+  hr(doc, y + 2, INK, 1);
+  text(doc, "TOTAL", xs.site + 6, y + 20, { size: 10, bold: true });
+  text(doc, String(total.days), xs.days, y + 20, { size: 10, bold: true, align: "right" });
+  text(doc, n(total.x1), xs.x1, y + 20, { size: 10, bold: true, align: "right" });
+  text(doc, n(total.x15), xs.x15, y + 20, { size: 10, bold: true, align: "right" });
+  text(doc, n(total.x2), xs.x2, y + 20, { size: 10, bold: true, align: "right" });
+  text(doc, n(total.x3), xs.x3, y + 20, { size: 10, bold: true, align: "right" });
+  text(doc, nh(total.hours), xs.tot, y + 20, { size: 10, bold: true, align: "right" });
+  text(doc, usd(total.amount), xs.amt - 6, y + 20, { size: 10, bold: true, color: GROSS, align: "right" });
+  y += 44;
+  const note = doc.splitTextToSize(
+    "x1 is the number of hours paid at the normal rate; x1.5, x2 and x3 are hours paid at one and a half, two and three times the rate. TOTAL is the hours paid for the site. On a flat day-rate site the rate shown is the day rate. MONEY is what you earned at the site before tax and deductions.",
+    RIGHT - M,
+  ) as string[];
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(...rgb(MUTED));
+  doc.text(note, M, y);
+  if (s.corrected || Math.abs(total.amount - s.gross) > 0.005) {
+    y += note.length * 10 + 8;
+    text(doc, `Gross pay on the payslip is ${usd(s.gross)}${Math.abs(total.amount - s.gross) > 0.005 ? " (includes an adjustment to match your real payslip)" : ""}.`, M, y, { size: 8, color: MUTED });
+  }
+}
+
 function drawSummary(doc: Doc, slips: Payslip[]) {
   const { name } = periodText(slips[0]!.month);
   doc.setFillColor(...rgb(BRAND));
@@ -195,6 +263,7 @@ export async function payslipPdf(slips: Payslip[], preparedOn = new Date()): Pro
   slips.forEach((s, i) => {
     if (i > 0) doc.addPage();
     drawSlip(doc, s, on);
+    if (s.sites.length) { doc.addPage(); drawBreakdown(doc, s); }
   });
   if (slips.length > 1) {
     doc.addPage();

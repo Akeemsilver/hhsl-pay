@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { emptyTimesheetSettings, type TimesheetRule } from "../timesheet";
 import { useTemplate } from "../hooks";
-import { DEFAULT_ROLES } from "../model";
+import { DEFAULT_ROLES, userNameOf } from "../model";
 import { useStore } from "../store";
 import { PageHeader } from "../components/TopBar";
 
@@ -39,8 +39,8 @@ export function TimesheetPage() {
 
       <section className="card">
         <h2>Header</h2>
-        <label>Your name (block letters)
-          <input value={settings.name} autoCapitalize="characters" onChange={(e) => setSettings({ name: e.target.value })} />
+        <label>Your name (printed in block letters)
+          <input value={userNameOf(data)} autoCapitalize="characters" onChange={(e) => update((d) => ({ ...d, userName: e.target.value }))} />
         </label>
         <label>Site line
           <input value={settings.siteLabel} onChange={(e) => setSettings({ siteLabel: e.target.value })} />
@@ -49,7 +49,7 @@ export function TimesheetPage() {
 
       <section className="card">
         <h2>Jobs that go on the timesheet</h2>
-        <p className="muted small">Only these jobs are listed when you download. Everything else stays off the form.</p>
+        <p className="muted small">Only these jobs are listed when you download. Client medic jobs at any site are always included automatically (named “Site Medic”, e.g. “PLNL Medic”). Everything else stays off the form.</p>
         {settings.rules.length === 0 ? <p className="muted">None yet. Add your first below.</p> : (
           <ul className="rule-list">
             {settings.rules.map((r, i) => (

@@ -544,3 +544,26 @@ td.c-gross, td.c-net, td.c-paye { font-weight: 600; }
 .ts-summary strong { font-size: 1.4rem; }
 
 .sheet-footer button { white-space: nowrap; }
+
+/* Weekends and public holidays: red date numbers, red SU / SA headings */
+:root { --wkend-red: #c62828; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wkend-red: #ff6b6b; } }
+:root[data-theme="dark"] { --wkend-red: #ff6b6b; }
+.cal-head .red { color: var(--wkend-red); font-weight: 700; }
+.cal-cell.weekend .n, .cal-cell.holiday .n,
+.cal-cell.weekend.worked .n, .cal-cell.holiday.worked .n,
+.cal-cell.weekend.today .n, .cal-cell.holiday.today .n { color: var(--wkend-red); }
+.day.weekend .dom, .day.holiday .dom, .day.weekend .dow, .day.holiday .dow { color: var(--wkend-red); }
+.hol-name { font-size: 0.8rem; color: var(--wkend-red); font-weight: 600; }
+
+.slip-sites { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 8px; }
+.slip-sites h3 { font-size: 0.8rem; margin: 0 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.slip-site { padding: 6px 0; border-bottom: 1px solid var(--line); }
+.slip-site-head { display: flex; justify-content: space-between; gap: 8px; }
+.slip-tiers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 4px; font-size: 0.75rem; color: var(--muted); }
+.slip-tiers b { display: block; color: var(--text); font-size: 0.9rem; }
+
+.welcome { padding: 48px 20px 24px; max-width: 420px; margin: 0 auto; display: grid; gap: 14px; }
+.welcome h1 { font-size: 2rem; margin: 0; }
+.welcome form { display: grid; gap: 12px; }
+.welcome .link { background: none; border: 0; color: var(--accent); text-decoration: underline; padding: 8px; }

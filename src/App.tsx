@@ -8,6 +8,10 @@ import { SitesPage } from "./screens/SitesPage";
 import { TaxPage } from "./screens/TaxPage";
 import { PayslipsPage } from "./screens/PayslipsPage";
 import { TimesheetPage } from "./screens/TimesheetPage";
+import { HolidaysPage } from "./screens/HolidaysPage";
+import { WelcomeScreen } from "./screens/WelcomeScreen";
+import { userNameOf } from "./model";
+import { useStore } from "./store";
 import { BackupScreen } from "./screens/BackupScreen";
 import { DayEditor } from "./screens/DayEditor";
 import { CalendarIcon, HomeIcon, PieIcon, TableIcon } from "./components/Icons";
@@ -21,6 +25,8 @@ const TABS: Array<{ id: Tab; label: string; Icon: () => JSX.Element }> = [
 
 function Shell() {
   const { loc, selectTab, back } = useNav();
+  const { data } = useStore();
+  if (!userNameOf(data) && !loc.page) return <div className="app"><main><WelcomeScreen /></main></div>;
   return (
     <div className="app">
       <main>
@@ -29,6 +35,7 @@ function Shell() {
         {loc.page === "tax" && <TaxPage />}
         {loc.page === "payslips" && <PayslipsPage />}
         {loc.page === "timesheet" && <TimesheetPage />}
+        {loc.page === "holidays" && <HolidaysPage />}
         {loc.page === "backup" && <BackupScreen />}
         {!loc.page && loc.tab === "home" && <HomeScreen />}
         {!loc.page && loc.tab === "calendar" && <CalendarScreen />}

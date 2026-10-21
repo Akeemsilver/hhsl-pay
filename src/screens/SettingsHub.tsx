@@ -1,17 +1,26 @@
 import { useNav } from "../nav";
+import { userNameOf } from "../model";
 import { useStore } from "../store";
 import { useTheme, type ThemePref } from "../theme";
 import { PageHeader } from "../components/TopBar";
-import { ChevronRight, FileIcon, MapPinIcon, SaveIcon, ShieldIcon, UsersIcon } from "../components/Icons";
+import { CalendarIcon, ChevronRight, FileIcon, MapPinIcon, SaveIcon, ShieldIcon, UsersIcon } from "../components/Icons";
 
 export function SettingsHub() {
   const { open } = useNav();
-  const { data, persistent } = useStore();
+  const { data, persistent, update } = useStore();
+
   const [theme, setTheme] = useTheme();
   const sites = new Set(data.history.sites.flatMap((v) => Object.keys(v.value))).size;
   return (
     <>
       <PageHeader title="Settings" />
+
+      <h2 className="section-title">Your name</h2>
+      <section className="card">
+        <label>Name on payslips and timesheets
+          <input aria-label="Your name" value={data.userName ?? userNameOf(data)} onChange={(e) => update((d) => ({ ...d, userName: e.target.value }))} />
+        </label>
+      </section>
 
       <h2 className="section-title">Appearance</h2>
       <section className="card">
@@ -50,6 +59,13 @@ export function SettingsHub() {
           <button onClick={() => open({ page: "timesheet" })}>
             <FileIcon />
             <span><strong>Timesheet</strong><small>{data.timesheet?.rules.length ? `${data.timesheet.rules.length} job rule${data.timesheet.rules.length === 1 ? "" : "s"}` : "Name, jobs to include, template"}</small></span>
+            <ChevronRight />
+          </button>
+        </li>
+        <li>
+          <button onClick={() => open({ page: "holidays" })}>
+            <CalendarIcon />
+            <span><strong>Public holidays</strong><small>Shown in red on the calendar</small></span>
             <ChevronRight />
           </button>
         </li>

@@ -1,3 +1,4 @@
+import { timesheetSettingsOf, userNameOf } from "../model";
 import { useEffect, useRef, useState } from "react";
 import { deliver } from "../backup";
 import { MONTHS } from "../format";
@@ -30,13 +31,13 @@ export function TimesheetViewer({ month }: { month: string }) {
   const fitted = useRef(false);
   useLayer(back);
 
-  const name = data.timesheet?.name || "Employee";
+  const name = userNameOf(data) || "Employee";
   const monthName = `${MONTHS[Number(month.slice(5)) - 1]} ${month.slice(0, 4)}`;
 
   useEffect(() => {
     if (!template) return;
     let cancelled = false;
-    makeTimesheetXlsx(template.bytes, data.timesheet, month, data.entries, data.history)
+    makeTimesheetXlsx(template.bytes, timesheetSettingsOf(data), month, data.entries, data.history)
       .then(async (made) => {
         const view = await parseSheet(made.bytes);
         if (!cancelled) { setSheet(view); setFile({ bytes: made.bytes, fileName: made.fileName }); }

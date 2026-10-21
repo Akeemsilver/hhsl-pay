@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPayslips, earningsLines } from "../src/payslip";
+import { siteBreakdown, buildPayslips, earningsLines } from "../src/payslip";
 import { newData, type AppData, type Entry } from "../src/model";
 import { demoSites, demoTax } from "./support";
 
@@ -85,5 +85,21 @@ describe("payslips", () => {
     expect(buildPayslips("2026-03", data(entries), "Pat")).toEqual([]);
     const other: Entry = { id: "9", date: "2026-07-05", kind: "other", site: "", hours: 0, description: "Airport pickup" };
     expect(buildPayslips("2026-07", data([...entries, other]), "Pat").length).toBe(2);
+  });
+});
+
+describe("site breakdown", () => {
+  it("splits hours by multiple per site and adds up to the gross", () => {
+    const entries = [e("1", "2026-07-01", "Alpha"), e("2", "2026-07-02", "Alpha", { role: "Client medic" }), e("4", "2026-07-06", "Beta")];
+    const [slip] = buildPayslips("2026-07", data(entries), "Test").filter((p) => p.sites.length);
+    const all = buildPayslips("2026-07", data(entries), "Test").flatMap((p) => p.sites);
+    expect(all.map((b) => b.label).sort()).toEqual(["Alpha", "Alpha (Client medic)", "Beta"]);
+    const beta = all.find((b) => b.label === "Beta")!;
+    expect(beta.x1).toBe(8);
+    expect(beta.x15).toBe(4);
+    expect(beta.hours).toBe(12);
+    expect(beta.rates).toEqual([40]);
+    expect(all.find((b) => b.label === "Alpha (Client medic)")!.rates).toEqual([70]);
+    void slip;
   });
 });

@@ -35,13 +35,19 @@ export interface TimesheetBuild {
   warnings: string[];
 }
 
+export const CLIENT_MEDIC = "Client medic";
+
 const same = (a: string | undefined, b: string | undefined) => (a ?? "").trim().toLowerCase() === (b ?? "").trim().toLowerCase();
 
 export function matchRule(entry: Entry, rules: TimesheetRule[]): TimesheetRule | undefined {
   if (isOther(entry)) return undefined;
   // A specific role rule wins over an "any role" rule for the same site.
   const roleMatch = rules.find((r) => r.role && same(r.site, entry.site) && same(r.role, entry.role));
-  return roleMatch ?? rules.find((r) => !r.role && same(r.site, entry.site));
+  const siteMatch = roleMatch ?? rules.find((r) => !r.role && same(r.site, entry.site));
+  if (siteMatch) return siteMatch;
+  // Client medic jobs always go on the timesheet, at any site, even with no rule for that site.
+  if (same(entry.role, CLIENT_MEDIC)) return { site: entry.site, role: CLIENT_MEDIC, label: `${entry.site.trim()} Medic` };
+  return undefined;
 }
 
 const dayLabel = (iso: string) => `${Number(iso.slice(8))} ${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][Number(iso.slice(5, 7)) - 1]}`;

@@ -1,3 +1,4 @@
+import { timesheetSettingsOf } from "../model";
 import { useMemo, useState } from "react";
 import { deliver } from "../backup";
 import { MONTHS, hoursText, money } from "../format";
@@ -35,6 +36,20 @@ function SlipPreview({ slip }: { slip: Payslip }) {
       <div className="slip-row"><span><i className="dot dot-paye" />PAYE{slip.corrected ? " *" : ""}</span><span className="c-paye">-{money(slip.paye)}</span></div>
       <div className="slip-row"><span><i className="dot dot-nis" />NIS</span><span className="c-nis">-{money(slip.nis)}</span></div>
       <div className="slip-row"><span><i className="dot dot-sur" />Health surcharge</span><span className="c-sur">-{money(slip.surcharge)}</span></div>
+      {slip.sites.length > 0 && (
+        <div className="slip-sites">
+          <h3>Hours &amp; rates by site</h3>
+          {slip.sites.map((b) => (
+            <div className="slip-site" key={b.label}>
+              <div className="slip-site-head"><strong>{b.label}</strong><span className="c-gross">{money(b.amount)}</span></div>
+              <div className="muted small">{b.rates.map((r) => money(r)).join(" / ")}{b.flat ? " per day" : " per hour"} · {b.days} day{b.days === 1 ? "" : "s"} · {hoursText(b.hours)} h</div>
+              <div className="slip-tiers">
+                <span>x1<b>{hoursText(b.x1)}</b></span><span>x1.5<b>{hoursText(b.x15)}</b></span><span>x2<b>{hoursText(b.x2)}</b></span><span>x3<b>{hoursText(b.x3)}</b></span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="slip-net"><span>NET PAY</span><strong>{money(slip.net)}</strong></div>
     </section>
   );
@@ -48,9 +63,9 @@ export function ExportSheet({ month }: { month: string }) {
   const [tab, setTab] = useState<"timesheet" | "payslip">("timesheet");
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
-  const settings = data.timesheet;
-  const rules = settings?.rules ?? [];
-  const name = settings?.name ?? "";
+  const settings = timesheetSettingsOf(data);
+  const rules = settings.rules;
+  const name = settings.name;
   const { rows, warnings } = useMemo(() => buildTimesheet(month, data.entries, data.history, rules), [month, data, rules]);
   const slips = useMemo(() => buildPayslips(month, data, name), [month, data, name]);
   const total = rows.reduce((s, r) => ({ t: s.t + r.hours.t, t15: s.t15 + r.hours.t15, t2: s.t2 + r.hours.t2, t3: s.t3 + r.hours.t3 }), { t: 0, t15: 0, t2: 0, t3: 0 });

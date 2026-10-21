@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 export type Tab = "home" | "calendar" | "year" | "charts";
-export type Page = "settings" | "sites" | "tax" | "payslips" | "timesheet" | "backup";
+export type Page = "settings" | "sites" | "tax" | "payslips" | "timesheet" | "holidays" | "backup";
 
 /** Where the user is. Stored in the browser history so the phone's Back button works. */
 export interface Loc {

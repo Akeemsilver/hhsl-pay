@@ -54,6 +54,10 @@ export interface AppData {
   corrections?: Record<string, PayerOverride>;
   /** Name, header text and which jobs go on the payroll timesheet. */
   timesheet?: TimesheetSettings;
+  /** Edits to the built-in public holiday list. */
+  holidays?: { added: { date: string; name: string }[]; removed: string[] };
+  /** The name shown on payslips and timesheets. */
+  userName?: string;
   lastBackupAt?: string;
 }
 
@@ -145,4 +149,14 @@ export function toDetailed(e: Entry): Entry {
 /** Back to Simple: keep the hours as they are and drop the times. */
 export function toSimple(e: Entry): Entry {
   return { ...e, detailed: false, startTime: undefined, endTime: undefined };
+}
+
+export function userNameOf(data: Pick<AppData, "userName" | "timesheet">): string {
+  return (data.userName || data.timesheet?.name || "").trim();
+}
+
+/** Timesheet settings with the app-wide user name filled in. */
+export function timesheetSettingsOf(data: Pick<AppData, "userName" | "timesheet">): TimesheetSettings {
+  const t = data.timesheet ?? { name: "", siteLabel: "ERT Offsite", rules: [] };
+  return { ...t, name: userNameOf(data) };
 }
