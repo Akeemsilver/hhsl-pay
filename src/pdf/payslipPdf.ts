@@ -68,29 +68,27 @@ function drawSlip(doc: Doc, s: Payslip, preparedOn: string) {
   y += 14;
   doc.setFillColor(...rgb(BAND));
   doc.rect(M, y, RIGHT - M, 22, "F");
-  const cx = { days: 258, hours: 312, rate: 390, amount: 466, ytd: RIGHT - 8 };
+  const cx = { days: 300, hours: 372, rate: 462 };
   text(doc, "Site", M + 8, y + 15, { size: 9, bold: true, color: MUTED });
   text(doc, "Days", cx.days, y + 15, { size: 9, bold: true, color: MUTED, align: "right" });
   text(doc, "Hours", cx.hours, y + 15, { size: 9, bold: true, color: MUTED, align: "right" });
   text(doc, "Rate", cx.rate, y + 15, { size: 9, bold: true, color: MUTED, align: "right" });
-  text(doc, "Amount", cx.amount, y + 15, { size: 9, bold: true, color: MUTED, align: "right" });
-  text(doc, "Year to date", cx.ytd, y + 15, { size: 9, bold: true, color: MUTED, align: "right" });
+  text(doc, "Amount", RIGHT - 8, y + 15, { size: 9, bold: true, color: MUTED, align: "right" });
   y += 22;
   const rows = [...s.sites.map((b) => ({
     label: b.label, days: String(b.days), hours: b.weighted ? `${Math.round(b.weighted * 100) / 100} h` : "-",
-    rate: siteRateText(b, usd), amount: b.amount, ytd: b.ytdAmount,
-  })), ...adjustmentLines(s).map((l) => ({ label: l.description, days: "", hours: "", rate: "", amount: l.amount, ytd: undefined as number | undefined }))];
+    rate: siteRateText(b, usd), amount: b.amount,
+  })), ...adjustmentLines(s).map((l) => ({ label: l.description, days: "", hours: "", rate: "", amount: l.amount }))];
   const rowH = rows.length > 12 ? 16 : 21;
   const font = rows.length > 12 ? 9 : 10;
   rows.forEach((r, i) => {
     if (i % 2 === 1) { doc.setFillColor(250, 251, 252); doc.rect(M, y, RIGHT - M, rowH, "F"); }
     const baseline = y + rowH / 2 + font / 3;
-    text(doc, r.label.length > 28 ? `${r.label.slice(0, 27)}...` : r.label, M + 8, baseline, { size: font });
+    text(doc, r.label.length > 34 ? `${r.label.slice(0, 33)}...` : r.label, M + 8, baseline, { size: font });
     if (r.days) text(doc, r.days, cx.days, baseline, { size: font, align: "right" });
     if (r.hours) text(doc, r.hours, cx.hours, baseline, { size: font, align: "right" });
-    if (r.rate) text(doc, r.rate, cx.rate, baseline, { size: font - 2, align: "right" });
-    text(doc, usd(r.amount), cx.amount, baseline, { size: font, align: "right" });
-    if (r.ytd !== undefined) text(doc, usd(r.ytd), cx.ytd, baseline, { size: font, color: MUTED, align: "right" });
+    if (r.rate) text(doc, r.rate, cx.rate, baseline, { size: font - 1, align: "right" });
+    text(doc, usd(r.amount), RIGHT - 8, baseline, { size: font, align: "right" });
     y += rowH;
   });
   text(doc, "Hours are weighted: overtime counted as normal hours (x1.5, x2, x3). See the next page.", M + 8, y + 12, { size: 7.5, color: MUTED });
@@ -98,48 +96,56 @@ function drawSlip(doc: Doc, s: Payslip, preparedOn: string) {
   hr(doc, y, INK, 0.9);
   y += 18;
   text(doc, "Gross pay", M + 8, y, { size: 11, bold: true });
-  text(doc, usd(s.gross), 466, y, { size: 11, bold: true, color: GROSS, align: "right" });
-  text(doc, usd(s.ytd.gross), RIGHT - 8, y, { size: 11, bold: true, color: GROSS, align: "right" });
+  text(doc, usd(s.gross), RIGHT - 8, y, { size: 12, bold: true, color: GROSS, align: "right" });
   y += 26;
 
-  // Deductions, with the year to date beside each
+  // Deductions
   sectionTitle(doc, "DEDUCTIONS", y);
-  text(doc, "This month", 466, y, { size: 8.5, bold: true, color: MUTED, align: "right" });
-  text(doc, "Year to date", RIGHT - 8, y, { size: 8.5, bold: true, color: MUTED, align: "right" });
   y += 14;
-  const deductions: Array<[string, number, number, string]> = [
-    [s.corrected ? "PAYE (income tax) *" : "PAYE (income tax)", s.paye, s.ytd.paye, PAYE],
-    ["NIS (National Insurance)", s.nis, s.ytd.nis, NIS],
-    ["Health surcharge", s.surcharge, s.ytd.surcharge, SURCHARGE],
+  const deductions: Array<[string, number, string]> = [
+    [s.corrected ? "PAYE (income tax) *" : "PAYE (income tax)", s.paye, PAYE],
+    ["NIS (National Insurance)", s.nis, NIS],
+    ["Health surcharge", s.surcharge, SURCHARGE],
   ];
-  const neg = (v: number) => (v > 0 ? `-${usd(v)}` : usd(0));
-  deductions.forEach(([label, amount, ytd, color], i) => {
+  deductions.forEach(([label, amount, color], i) => {
     if (i % 2 === 0) { doc.setFillColor(250, 251, 252); doc.rect(M, y, RIGHT - M, 21, "F"); }
     doc.setFillColor(...rgb(color));
     doc.circle(M + 12, y + 10.5, 3, "F");
     text(doc, label, M + 22, y + 14.5, { size: 10 });
-    text(doc, neg(amount), 466, y + 14.5, { size: 10, bold: true, color, align: "right" });
-    text(doc, neg(ytd), RIGHT - 8, y + 14.5, { size: 10, color, align: "right" });
+    text(doc, amount > 0 ? `-${usd(amount)}` : usd(0), RIGHT - 8, y + 14.5, { size: 10, bold: true, color, align: "right" });
     y += 21;
   });
   hr(doc, y, INK, 0.9);
   y += 18;
   text(doc, "Total deductions", M + 8, y, { size: 11, bold: true });
-  text(doc, neg(s.paye + s.nis + s.surcharge), 466, y, { size: 11, bold: true, align: "right" });
-  text(doc, neg(s.ytd.paye + s.ytd.nis + s.ytd.surcharge), RIGHT - 8, y, { size: 11, bold: true, align: "right" });
+  text(doc, `-${usd(s.paye + s.nis + s.surcharge)}`, RIGHT - 8, y, { size: 11, bold: true, align: "right" });
   y += 22;
 
   // Net pay
   doc.setFillColor(232, 245, 236);
   doc.setDrawColor(...rgb(NET));
   doc.setLineWidth(1);
-  doc.roundedRect(M, y, RIGHT - M, 44, 6, 6, "FD");
+  doc.roundedRect(M, y, RIGHT - M, 46, 6, 6, "FD");
   text(doc, "NET PAY", M + 18, y + 19, { size: 9, bold: true, color: NET });
-  text(doc, "Gross pay less deductions", M + 18, y + 33, { size: 8.5, color: MUTED });
-  text(doc, usd(s.net), 466, y + 29, { size: 15, bold: true, color: NET, align: "right" });
-  text(doc, "YEAR TO DATE", RIGHT - 8, y + 18, { size: 7, bold: true, color: MUTED, align: "right" });
-  text(doc, usd(s.ytd.net), RIGHT - 8, y + 32, { size: 10.5, bold: true, color: NET, align: "right" });
-  y += 66;
+  text(doc, "Gross pay less deductions", M + 18, y + 34, { size: 9, color: MUTED });
+  text(doc, usd(s.net), RIGHT - 18, y + 30, { size: 17, bold: true, color: NET, align: "right" });
+  y += 70;
+
+  // Year to date
+  sectionTitle(doc, `YEAR TO DATE (JANUARY TO ${MONTHS[Number(s.month.slice(5)) - 1]!.toUpperCase()})`, y);
+  y += 14;
+  const ytd: Array<[string, number, string]> = [
+    ["Gross", s.ytd.gross, GROSS], ["PAYE", s.ytd.paye, PAYE], ["NIS", s.ytd.nis, NIS], ["Surcharge", s.ytd.surcharge, SURCHARGE], ["Net", s.ytd.net, NET],
+  ];
+  const w = (RIGHT - M) / ytd.length;
+  doc.setFillColor(...rgb(BAND));
+  doc.rect(M, y, RIGHT - M, 44, "F");
+  ytd.forEach(([label, value, color], i) => {
+    const cx = M + w * i + w / 2;
+    text(doc, label.toUpperCase(), cx, y + 15, { size: 7.5, bold: true, color: MUTED, align: "center" });
+    text(doc, usd(value), cx, y + 33, { size: 10.5, bold: true, color, align: "center" });
+  });
+  y += 56;
   if (s.corrected) {
     text(doc, "* Gross or PAYE was entered from your own payslip instead of being calculated.", M, y, { size: 8.5, color: MUTED });
   }
