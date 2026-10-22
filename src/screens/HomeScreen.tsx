@@ -85,7 +85,7 @@ export function HomeScreen() {
 
   return (
     <>
-      <TopBar title={`${greeting()}`} subtitle={longDate(today)} />
+      <TopBar title={`${greeting()}`} subtitle={longDate(today)} month={shown} />
 
       {install.state === "ready" && (
         <div className="notice install-card">

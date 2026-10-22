@@ -5,9 +5,7 @@ import { useMonth } from "../hooks";
 import { useNav } from "../nav";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
-import { BackIcon, DownloadIcon, EyeIcon, ForwardIcon } from "../components/Icons";
-import { ExportSheet } from "../components/ExportSheet";
-import { TimesheetViewer } from "../components/TimesheetViewer";
+import { BackIcon, ForwardIcon } from "../components/Icons";
 import { DayPanel } from "../components/DayPanel";
 import { CalendarGrid, CorrectionBox, DayList, MonthSummary } from "../components/MonthParts";
 
@@ -27,13 +25,7 @@ export function CalendarScreen() {
 
   return (
     <>
-      <TopBar
-        title="Calendar"
-        action={<>
-          <button className="icon gear" aria-label="View timesheet" title="View timesheet" onClick={() => open({ sub: "view" })}><EyeIcon /></button>
-          <button className="icon gear" aria-label="Download timesheet or payslip" title="Download timesheet or payslip" onClick={() => open({ sub: "export" })}><DownloadIcon /></button>
-        </>}
-      />
+      <TopBar title="Calendar" month={month} />
       <div className="monthbar">
         <button className="icon" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Previous month"><BackIcon /></button>
         <div className="monthname">
@@ -60,9 +52,6 @@ export function CalendarScreen() {
       ) : (
         <DayList days={days} result={result} today={today} onPick={(d) => open({ day: d })} onShift={(by) => setMonth(shiftMonth(month, by))} />
       )}
-
-      {loc.sub === "export" && !loc.day && !loc.page && <ExportSheet month={month} />}
-      {loc.sub === "view" && !loc.day && !loc.page && <TimesheetViewer month={month} />}
 
       <MonthSummary result={result} label={month} />
       <CorrectionBox month={month} result={result} />
