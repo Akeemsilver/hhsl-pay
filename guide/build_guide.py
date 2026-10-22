@@ -153,7 +153,7 @@ s.append(steps([
  ("Tap <b>Add job</b>. Pick the site, then type the start and end time, or switch to <b>Simple</b> and type the hours.", A("a-day"), 50),
  ("Tap a time to set it. Turn the three wheels (AM/PM, hour, minute) or type the time, then tap <b>Set</b>.", Bs("b-time"), 50),
  ("<b>Home</b> shows the month so far: gross, net, PAYE, days and paid hours, with each site underneath. Swipe the calendar left or right to change month. <b>Year</b> and <b>Charts</b> show the whole year.", None),
- ("<b>Time sheet:</b> tap the download icon at the top of any screen, choose <b>Send to payroll</b>, then <b>Download and share</b>, and pick Gmail or WhatsApp.", I("download-sheet")),
+ ("<b>Time sheet:</b> tap the download icon at the top of any screen, choose <b>Send to payroll</b>, then <b>Download and share</b>, and pick Gmail or WhatsApp.", Bs("b-download"), 50),
  ("<b>Payslips:</b> in the same screen, switch to <b>Payslip</b>. The eye icon lets you look at them first.", None)]))
 s.append(Spacer(1, 3))
 s.append(callout("Back up now and then", ["Your days live only on your phone. If it is lost or its browser data is cleared, they are gone. Go to <b>Settings, Backup &amp; restore</b> and save a backup file every month or so, somewhere safe such as " + lk("https://drive.google.com/", "Google Drive") + "."]))
