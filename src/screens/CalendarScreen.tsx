@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { valueOn } from "../engine";
-import { MONTHS, daysOfMonth, shiftMonth, todayISO } from "../format";
+import { daysOfMonth, shiftMonth, todayISO } from "../format";
 import { useMonth } from "../hooks";
 import { useMonthSlide } from "../slide";
+import { MonthPicker } from "../components/MonthPicker";
 import { useNav } from "../nav";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
@@ -30,12 +31,7 @@ export function CalendarScreen() {
       <TopBar title="Calendar" month={month} />
       <div className="monthbar">
         <button className="icon" onClick={() => slide.go(-1)} aria-label="Previous month"><BackIcon /></button>
-        <div className="monthname">
-          <select aria-label="Month" value={month.slice(5)} onChange={(e) => setMonth(`${year}-${e.target.value}`)}>
-            {MONTHS.map((m, i) => <option key={m} value={String(i + 1).padStart(2, "0")}>{m}</option>)}
-          </select>{" "}
-          <span>{year}</span>
-        </div>
+        <MonthPicker month={month} onChange={setMonth} />
         <button className="icon" onClick={() => slide.go(1)} aria-label="Next month"><ForwardIcon /></button>
       </div>
 

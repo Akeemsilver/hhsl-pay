@@ -732,3 +732,5 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .cal-slide, .slide-clip > .days { will-change: transform; }
 .days-clip { border-radius: 12px; box-shadow: var(--shadow); }
 .days-clip > .days { box-shadow: none; }
+.actions button.primary:disabled { opacity: 0.55; box-shadow: none; }
+.monthbar .monthname select { cursor: pointer; }

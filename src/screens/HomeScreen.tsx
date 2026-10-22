@@ -9,7 +9,8 @@ import { useNav } from "../nav";
 import { isOther, othersByDate } from "../model";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
-import { BackIcon, ForwardIcon, PlusIcon } from "../components/Icons";
+import { BackIcon, CalendarIcon, ForwardIcon } from "../components/Icons";
+import { MonthPicker } from "../components/MonthPicker";
 import { CalendarGrid, PayerTax } from "../components/MonthParts";
 
 const DAY_MS = 86_400_000;
@@ -140,14 +141,14 @@ export function HomeScreen() {
       </section>
 
       <div className="actions">
-        <button className="primary" onClick={() => open({ day: today })}><PlusIcon /> Log today</button>
+        <button className="primary" disabled={shown === month} onClick={() => setShown(month)}><CalendarIcon /> {shown === month ? "This month" : `Back to ${MONTHS[Number(month.slice(5)) - 1]?.slice(0, 3)}`}</button>
         <button onClick={() => selectTab("calendar")}>Open calendar</button>
       </div>
 
       <div className="home-cal">
         <div className="monthbar">
           <button className="icon" onClick={() => slide.go(-1)} aria-label="Previous month"><BackIcon /></button>
-          <h2 className="monthname">{MONTHS[Number(shown.slice(5)) - 1]}{shown.slice(0, 4) !== String(year) ? ` ${shown.slice(0, 4)}` : ""}</h2>
+          <MonthPicker month={shown} onChange={setShown} />
           <button className="icon" onClick={() => slide.go(1)} aria-label="Next month"><ForwardIcon /></button>
         </div>
         <CalendarGrid month={shown} days={daysOfMonth(shown)} result={shownResult} today={today} selected={loc.day ?? picked} onPick={(d) => { setPicked(d); open({ day: d }); }} slide={slide} />
@@ -194,7 +195,7 @@ export function HomeScreen() {
       <section className="card">
         <h2>Recent days</h2>
         {latest.length === 0 ? (
-          <p className="muted">Nothing logged yet. Tap “Log today” to add your first day.</p>
+          <p className="muted">Nothing logged yet. Tap today’s date on the calendar to add your first day.</p>
         ) : (
           <ul className="recent">
             {latest.map((e) => (
