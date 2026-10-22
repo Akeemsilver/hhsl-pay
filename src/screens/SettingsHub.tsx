@@ -1,4 +1,5 @@
 import { loadTemplate } from "../storage";
+import { ShareGuide } from "../components/ShareGuide";
 import { InstallHelp } from "../components/InstallHelp";
 import { appLink, siteCount } from "../kit";
 import { backupFileName, download, ratesKitOf, serialize, shareFile } from "../backup";
@@ -88,6 +89,7 @@ export function SettingsHub() {
         </div>
         {kitMessage && <p className="notice" role="status">{kitMessage}</p>}
         {sitesCount === 0 && <p className="muted small">Add your sites first, then the starter kit is ready to share.</p>}
+        <ShareGuide link={link} />
       </section>
 
       <h2 className="section-title">Your name</h2>

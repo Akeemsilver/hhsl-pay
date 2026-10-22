@@ -714,3 +714,8 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .bar.top button.icon.gear svg { width: 18px; height: 18px; }
 .bar.top h1 { font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 340px) { .bar.top h1 { font-size: 1.02rem; } .bar.top .top-actions { gap: 2px; } }
+.share-guide { display: grid; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.share-guide textarea { width: 100%; font: inherit; font-size: 0.9rem; line-height: 1.4; padding: 10px; border: 1px solid var(--edge); border-radius: 10px; background: var(--bg); color: var(--text); resize: none; }
+.share-guide details { border: 1px solid var(--edge); border-radius: 12px; padding: 4px 12px; background: var(--card); }
+.share-guide summary { font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+.share-guide ul.steps { list-style: disc; }
