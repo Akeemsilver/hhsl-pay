@@ -1,5 +1,5 @@
 import { WEEKDAYS, hoursText, money, timeRange } from "../format";
-import { correctionKey, othersByDate } from "../model";
+import { correctionKey, othersByDate, payerLabel } from "../model";
 import { useSiteFilter } from "../filter";
 import { holidayMap } from "../holidays";
 import { useStore } from "../store";
@@ -14,7 +14,7 @@ export function PayerTax({ payers }: { payers: Array<{ payer: string; paye: numb
     <ul className="payer-tax" aria-label="Tax for each payslip">
       {payers.map((p) => (
         <li key={p.payer}>
-          <b>{p.payer === "all" ? "All sites" : (data.payerNames[p.payer] ?? p.payer)}</b>
+          <b>{p.payer === "all" ? "All sites" : payerLabel(data.payerNames, p.payer)}</b>
           <span>PAYE <i className="c-paye">{money(p.paye)}</i> · NIS {money(p.nis)} · Health surcharge {money(p.surcharge)}</span>
         </li>
       ))}
@@ -41,7 +41,7 @@ export function MonthSummary({ result, label }: { result: MonthResult<Entry>; la
         <ul className="payers">
           {result.payers.map((p) => (
             <li key={p.payer}>
-              <span>{data.payerNames[p.payer] ?? p.payer}{p.corrected && " ✎"}</span>
+              <span>{payerLabel(data.payerNames, p.payer)}{p.corrected && " ✎"}</span>
               <span>{hoursText(p.hours)} h · <span className="c-gross">{money(p.gross)}</span> → <span className="c-net">{money(p.net)}</span></span>
             </li>
           ))}
@@ -73,7 +73,7 @@ export function CorrectionBox({ month, result }: { month: string; result: MonthR
         const o = data.corrections?.[correctionKey(month, p.payer)];
         return (
           <fieldset key={p.payer}>
-            <legend>{p.payer === "all" ? "All sites (combined)" : (data.payerNames[p.payer] ?? p.payer)}</legend>
+            <legend>{p.payer === "all" ? "All sites (combined)" : payerLabel(data.payerNames, p.payer)}</legend>
             <div className="grid2">
               <label>Actual gross
                 <input type="number" inputMode="decimal" step="any" placeholder={String(Math.round(p.gross * 100) / 100)}

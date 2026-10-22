@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { valueOn, type RoleRates, type SiteRates, type SiteTable, type TierCaps } from "../engine";
-import { DEFAULT_ROLES, emptySite, isOther, rolesFor } from "../model";
+import { DEFAULT_ROLES, emptySite, isOther, payerLabel, rolesFor } from "../model";
 import { useStore } from "../store";
 import { PageHeader } from "../components/TopBar";
 import { NumInput, TakeEffect, versionLabel, type Num } from "../components/settingsParts";
@@ -345,7 +345,7 @@ export function SitesPage() {
   const table = valueOn(versions, asOf < versions[0]!.effectiveFrom ? versions[0]!.effectiveFrom : asOf);
 
   const payers = { ...data.payerNames };
-  for (const v of versions) for (const s of Object.values(v.value)) payers[s.payer] ??= s.payer;
+  for (const v of versions) for (const s of Object.values(v.value)) payers[s.payer] ??= payerLabel(data.payerNames, s.payer);
   const groups = [...new Set(Object.values(table).map((s) => s.payer))];
   const jobs = data.entries.filter((e) => !isOther(e));
   const earliest = jobs.reduce<string | undefined>((m, e) => (!m || e.date < m ? e.date : m), undefined);

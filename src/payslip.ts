@@ -1,5 +1,6 @@
 import { computeDay, computeMonth, findSite, valueOn, type RuleHistory } from "./engine";
 import { monthOf } from "./engine";
+import { payerLabel } from "./model";
 import { COMBINED_PAYER } from "./engine";
 import { isCombined, otherHours, otherIncome, otherPayerId, overridesFor, isOther, type AppData, type Entry } from "./model";
 
@@ -141,7 +142,7 @@ export function buildPayslips(month: string, data: AppData, employee: string): P
       ytd.gross += mp.gross; ytd.net += mp.net; ytd.paye += mp.paye; ytd.nis += mp.nis; ytd.surcharge += mp.surcharge;
     }
     return {
-      month, payer: p.payer, payerName: p.payer === COMBINED_PAYER ? "All sites" : (data.payerNames[p.payer] ?? p.payer), employee,
+      month, payer: p.payer, payerName: p.payer === COMBINED_PAYER ? "All sites" : payerLabel(data.payerNames, p.payer), employee,
       lines, sites: [...siteBreakdown(mine), ...(extras.length ? [otherRow(extras)] : [])].map((b) => ({
         ...b,
         ytdAmount: round2(months.reduce((t, m) => t + m.entries.filter((x) => x.entry.site === b.label).reduce((u, x) => u + x.pay.total, 0), 0)),

@@ -32,3 +32,13 @@ describe("client medic on the timesheet", () => {
   });
 });
 
+
+describe("payslip group names", () => {
+  it("uses the given name, else a tidied id", async () => {
+    const { payerLabel } = await import("../src/model");
+    expect(payerLabel({ atlantic: "Atlantic LNG" }, "atlantic")).toBe("Atlantic LNG");
+    expect(payerLabel({}, "atlantic")).toBe("Atlantic");
+    expect(payerLabel({}, "trinidad-offshore")).toBe("Trinidad Offshore");
+    expect(payerLabel({ main: "  " }, "main")).toBe("Main");
+  });
+});

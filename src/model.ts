@@ -224,3 +224,10 @@ export function otherIncome(data: Pick<AppData, "entries" | "otherPayer" | "paye
     .filter((e) => isOther(e) && e.date.startsWith(month) && (e.amount ?? 0) > 0)
     .map((e) => ({ date: e.date, payer, amount: e.amount ?? 0, hours: otherHours(e) }));
 }
+
+/** The name to show for a payslip group: the name you gave it, else its id tidied up ("atlantic" shows as "Atlantic"). */
+export function payerLabel(names: Record<string, string>, id: string): string {
+  const given = names[id]?.trim();
+  if (given) return given;
+  return id.replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
