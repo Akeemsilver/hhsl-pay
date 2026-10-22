@@ -8,7 +8,7 @@ export function shareMessage(link: string, fileName: string): string {
     "",
     "2. Put it on your home screen. Android: tap Install app. iPhone: tap Share, then Add to Home Screen.",
     "",
-    `3. I am sending you a file called ${fileName}. Save it on your phone.`,
+    `3. I am sending you a file called ${fileName}. Save it on your phone. I am also sending a PDF guide with pictures that shows each step.`,
     "",
     "4. Open the app from its icon. Type your name, tap Choose starter kit file and pick that file.",
     "",

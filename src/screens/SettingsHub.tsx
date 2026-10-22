@@ -2,7 +2,7 @@ import { loadTemplate } from "../storage";
 import { ShareGuide } from "../components/ShareGuide";
 import { InstallHelp } from "../components/InstallHelp";
 import { appLink, siteCount } from "../kit";
-import { backupFileName, download, ratesKitOf, serialize, SHARE_TYPES, shareFile } from "../backup";
+import { backupFileName, deliver, download, ratesKitOf, serialize, SHARE_TYPES, shareFile } from "../backup";
 import { useNav } from "../nav";
 import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -17,6 +17,9 @@ import { CalendarIcon, ChevronRight, FileIcon, MapPinIcon, SaveIcon, ShieldIcon,
 /** The starter kit is saved as a .txt so the download and the share are the same file. */
 const kitFileName = () => backupFileName("rates", false).replace(/\.json$/, ".txt");
 
+/** The mobile guide (a PDF with no rates in it) is served with the app, so it can be shared from here. */
+const GUIDE_FILE = "HHSL-pay-app-mobile-guide.pdf";
+
 export function SettingsHub() {
   const { open, selectTab } = useNav();
   const { data, persistent, update, replace } = useStore();
@@ -30,6 +33,21 @@ export function SettingsHub() {
   const [copied, setCopied] = useState(false);
   const [askDownload, setAskDownload] = useState(false);
   const [askShare, setAskShare] = useState(false);
+  // The guide is fetched ahead of time too, so one tap opens the share menu.
+  const [guide, setGuide] = useState<Uint8Array | null>(null);
+  const [guideMessage, setGuideMessage] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    fetch(`${import.meta.env.BASE_URL}${GUIDE_FILE}`).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject())).then((b) => live && setGuide(new Uint8Array(b))).catch(() => {});
+    return () => { live = false; };
+  }, []);
+  const shareGuidePdf = async () => {
+    if (!guide) { setGuideMessage("The guide is not ready yet. It needs a signal; try again in a moment."); return; }
+    try {
+      const how = await deliver(GUIDE_FILE, guide, "application/pdf");
+      setGuideMessage(how === "shared" ? "Guide shared." : "Guide saved to your Downloads. Send that file on WhatsApp.");
+    } catch { setGuideMessage(null); }
+  };
   const [kitMessage, setKitMessage] = useState<string | null>(null);
   const copyLink = async () => {
     try { await navigator.clipboard.writeText(link); } catch {
@@ -105,6 +123,11 @@ export function SettingsHub() {
           <button disabled={sitesCount === 0} onClick={() => setAskDownload(true)}>Download starter kit</button>
         </div>
         {kitMessage && <p className="notice" role="status">{kitMessage}</p>}
+        <p className="muted small">Mobile guide: a step-by-step PDF with pictures that shows your colleague how to install the app and load the starter kit. Send it too.</p>
+        <div className="row">
+          <button onClick={() => void shareGuidePdf()}>Share guide (PDF)</button>
+        </div>
+        {guideMessage && <p className="notice" role="status">{guideMessage}</p>}
         {sitesCount === 0 && <p className="muted small">Add your sites first, then the starter kit is ready to share.</p>}
         <ShareGuide link={link} />
       </section>
