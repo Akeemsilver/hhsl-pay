@@ -116,7 +116,8 @@ export function DayList({ days, result, today, onPick }: { days: string[]; resul
               <span className="entries">
                 {priced.length === 0 && extra.length === 0 && <span className="muted">—</span>}
                 {priced.map(({ entry, pay }) => (
-                  <span key={entry.id} className="chip">
+                  <span key={entry.id} className="chip" style={{ background: `color-mix(in srgb, ${SITE_COLORS[siteColorIndex(data, entry.site)]!.hex} 22%, var(--card))` }}>
+                    <i className="sw" style={{ background: SITE_COLORS[siteColorIndex(data, entry.site)]!.hex }} />
                     {entry.site}
                     {entry.hours > 0 && ` · ${hoursText(entry.hours)} h`}
                     {entry.lead && " · lead"}

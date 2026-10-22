@@ -669,3 +669,4 @@ table.bands .row-no { width: 34px; text-align: center; color: var(--muted); font
 
 .welcome-install { margin-top: 8px; padding: 6px 12px; border: 1px solid var(--edge); border-radius: 14px; background: var(--card); }
 .welcome-install > summary { font-weight: 700; padding: 10px 0; cursor: pointer; }
+.chip .sw { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
