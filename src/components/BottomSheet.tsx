@@ -60,8 +60,10 @@ export function BottomSheet({ label, onRequestClose, onPullDismiss, top, fromTop
     };
 
     // Grabber and title bar: pointer events with touch-action none, so the browser never takes the gesture away.
+    // A sheet opened inside another one (the site search, the time picker) must not pull the sheet behind it.
+    const mine = (e: Event) => (e.target as Element | null)?.closest(".sheet") === el;
     const onDown = (e: PointerEvent) => {
-      if (settling || !(e.target as Element).closest(HANDLE)) return;
+      if (settling || !mine(e) || !(e.target as Element).closest(HANDLE)) return;
       startY = e.clientY; lastY = startY; lastT = performance.now(); speed = 0;
       tracking = true; dragging = false; pointerId = e.pointerId;
     };
@@ -81,7 +83,7 @@ export function BottomSheet({ label, onRequestClose, onPullDismiss, top, fromTop
     // The rest of the sheet: pulling down while the content is scrolled to the top.
     const inHandle = (e: TouchEvent) => !!(e.target as Element).closest(HANDLE);
     const onTouchStart = (e: TouchEvent) => {
-      if (settling || inHandle(e)) return;
+      if (settling || !mine(e) || inHandle(e)) return;
       startY = e.touches[0]!.clientY; lastY = startY; lastT = performance.now(); speed = 0;
       tracking = true; dragging = false; dy = 0;
     };

@@ -1,5 +1,5 @@
 import type { RuleHistory } from "./engine";
-import type { AppData } from "./model";
+import { isCombined, type AppData } from "./model";
 import type { TimesheetRule } from "./timesheet";
 import { allSiteColors } from "./siteColor";
 
@@ -17,6 +17,8 @@ export interface RatesKit extends RuleHistory {
   otherPayer?: string;
   /** Split or combined tax, and from which month. */
   taxMode?: AppData["taxMode"];
+  /** Split (false) or combined (true) tax for the whole app. */
+  combinedTax?: boolean;
   /** Public holiday edits (for example Divali). */
   holidays?: AppData["holidays"];
   /** Calendar colour per site (0–11), keyed by lower-case site name. */
@@ -43,7 +45,7 @@ export function ratesKitOf(data: AppData, template?: { name: string; bytes: Arra
     siteLabel: data.timesheet?.siteLabel,
     payrollEmail: data.timesheet?.payrollEmail,
     otherPayer: data.otherPayer,
-    taxMode: data.taxMode,
+    combinedTax: isCombined(data),
     holidays: data.holidays,
     siteColors: allSiteColors(data),
   };
@@ -56,7 +58,8 @@ export function applyKit(data: AppData, kit: RatesKit): AppData {
     history: { sites: kit.sites, tax: kit.tax },
     payerNames: { ...data.payerNames, ...(kit.payerNames ?? {}) },
     otherPayer: kit.otherPayer ?? data.otherPayer,
-    taxMode: kit.taxMode ?? data.taxMode,
+    combinedTax: kit.combinedTax ?? (kit.taxMode ? isCombined({ taxMode: kit.taxMode }) : data.combinedTax),
+    taxMode: kit.combinedTax !== undefined || kit.taxMode ? undefined : data.taxMode,
     holidays: kit.holidays ?? data.holidays,
     siteColors: kit.siteColors ? { ...data.siteColors, ...kit.siteColors } : data.siteColors,
     timesheet: kit.timesheetRules || kit.siteLabel || kit.payrollEmail
@@ -187,30 +190,35 @@ export async function deliver(fileName: string, content: string | Uint8Array, ty
   return download(fileName, content, type);
 }
 
+/** The ways tried when sharing the file, in order: file type and extension. One is tried each time the share button is tapped. Plain text comes first because phones accept it most readily. */
+export const SHARE_ATTEMPTS = [
+  { type: "text/plain", ext: ".json" },
+  { type: "application/json", ext: ".json" },
+  { type: "text/plain", ext: ".txt" },
+  { type: "application/octet-stream", ext: ".json" },
+] as const;
+export const SHARE_TYPES = SHARE_ATTEMPTS;
+
 /**
  * Open the phone's share menu (WhatsApp, Gmail, ...) with the file attached. Never downloads.
- * Some phones refuse a .json file under one file type but accept another, so it tries a few. "unsupported" means this
- * browser cannot share files at all; "failed" means every attempt failed (`error` names the last reason).
+ * A phone allows one share request for each tap (the first one uses up the tap), so this makes exactly one attempt,
+ * with the file type at `attempt` in SHARE_TYPES. The caller tries the next type on the next tap.
+ * "unsupported": this browser cannot share files; "failed": the phone refused (`error` says why).
  */
-export async function shareFile(fileName: string, content: string | Uint8Array, type = "application/json"): Promise<{ result: "shared" | "cancelled" | "unsupported" | "failed"; error?: string }> {
+export async function shareFile(fileName: string, content: string | Uint8Array, attempt = 0): Promise<{ result: "shared" | "cancelled" | "unsupported" | "failed"; error?: string; type: string }> {
+  const pick = SHARE_ATTEMPTS[Math.min(attempt, SHARE_ATTEMPTS.length - 1)]!;
+  const type: string = pick.type;
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-  if (!nav.share) return { result: "unsupported" };
-  const types = [type, "text/plain", "application/octet-stream"];
-  const files = types.map((t) => new File([content as BlobPart], fileName, { type: t })).filter((f) => !nav.canShare || nav.canShare({ files: [f] }));
-  if (files.length === 0) return { result: "unsupported" };
-  let error = "";
-  for (const file of files) {
-    for (const withTitle of [true, false]) {
-      try {
-        await nav.share(withTitle ? { files: [file], title: fileName } : { files: [file] });
-        return { result: "shared" };
-      } catch (e) {
-        if ((e as DOMException)?.name === "AbortError") return { result: "cancelled" };
-        error = `${(e as DOMException)?.name ?? "Error"}${(e as Error)?.message ? `: ${(e as Error).message}` : ""}`;
-      }
-    }
+  if (!nav.share) return { result: "unsupported", type };
+  const file = new File([content as BlobPart], fileName.replace(/\.json$/, pick.ext), { type });
+  if (nav.canShare && !nav.canShare({ files: [file] })) return { result: "failed", type, error: `this phone does not allow ${type} files` };
+  try {
+    await nav.share({ files: [file], title: fileName });
+    return { result: "shared", type };
+  } catch (e) {
+    if ((e as DOMException)?.name === "AbortError") return { result: "cancelled", type };
+    return { result: "failed", type, error: `${(e as DOMException)?.name ?? "Error"}${(e as Error)?.message ? `: ${(e as Error).message}` : ""}` };
   }
-  return { result: "failed", error };
 }
 
 /** Save the file to the phone's Downloads without opening the share sheet. */

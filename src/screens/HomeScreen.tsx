@@ -3,13 +3,14 @@ import { valueOn } from "../engine";
 import { MONTHS, WEEKDAYS, daysOfMonth, hoursText, money, shiftMonth, todayISO } from "../format";
 import { useInstall } from "../install";
 import { useSiteFilter } from "../filter";
-import { useMonth, useYear } from "../hooks";
+import { useMonth, useMonthSplit, useYear } from "../hooks";
 import { useMonthSlide } from "../slide";
 import { useNav } from "../nav";
 import { isOther, othersByDate } from "../model";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
-import { BackIcon, CalendarIcon, ForwardIcon } from "../components/Icons";
+import { BackIcon, ForwardIcon } from "../components/Icons";
+import { TaxSwitch } from "../components/TaxMode";
 import { MonthPicker } from "../components/MonthPicker";
 import { AverageLine } from "../components/AverageLine";
 import { CalendarGrid, PayerTax } from "../components/MonthParts";
@@ -45,6 +46,9 @@ export function HomeScreen() {
   const shownResult = useMonth(shown);
   const shownYear = useYear(Number(shown.slice(0, 4)));
   const prevShown = shiftMonth(shown, -1);
+  // The top card stays the same height whether tax is split or combined, so flipping it never moves what is below.
+  const splitResult = useMonthSplit(shown);
+  const groupCount = splitResult.payers.length;
   const lastMonth = useMonth(prevShown);
   const slide = useMonthSlide(shown, (by) => setShown(shiftMonth(shown, by)));
   const months = useYear(year);
@@ -140,12 +144,16 @@ export function HomeScreen() {
           <div><span>Hours</span><strong>{hoursText(hours)} h</strong></div>
         </div>
         <AverageLine gross={shownYear.map((m) => m.gross)} net={shownYear.map((m) => m.net)} index={Number(shown.slice(5)) - 1} />
-        <PayerTax payers={shownResult.payers} />
+        <div className="payer-slot">
+          <PayerTax payers={shownResult.payers} groups={groupCount} />
+          <div className="payer-ghost" aria-hidden="true"><PayerTax payers={splitResult.payers} groups={groupCount} /></div>
+        </div>
       </section>
 
       <div className="actions">
-        <button className="primary" disabled={shown === month} onClick={() => setShown(month)}><CalendarIcon /> {shown === month ? "This month" : `Back to ${MONTHS[Number(month.slice(5)) - 1]?.slice(0, 3)}`}</button>
-        <button onClick={() => selectTab("calendar")}>Open calendar</button>
+        <button className="primary" disabled={shown === month} onClick={() => setShown(month)}>{shown === month ? "This month" : `Back to ${MONTHS[Number(month.slice(5)) - 1]?.slice(0, 3)}`}</button>
+        <button onClick={() => selectTab("calendar")}>Calendar</button>
+        <TaxSwitch />
       </div>
 
       <div className="home-cal">

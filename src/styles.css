@@ -794,3 +794,19 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .more-details[open] > summary { border-bottom: 1px solid var(--line); margin-bottom: 8px; }
 .more-details > p { margin: 8px 14px; }
 .more-details > .ytable { margin: 0 10px 10px; }
+.pick-list { overscroll-behavior: contain; }
+
+/* Home: three equal buttons in a row; the third flips split / combined tax for the whole app */
+.actions { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.actions button { padding: 0 8px; font-size: 0.9rem; white-space: nowrap; min-width: 0; }
+.actions .tax-switch { display: flex; align-items: center; justify-content: space-between; gap: 3px; padding: 0 5px 0 8px !important; font-size: 0.72rem !important; }
+.ts-label { overflow: hidden; text-overflow: ellipsis; }
+.ts-track { position: relative; width: 26px; height: 16px; border-radius: 999px; background: var(--accent); flex: none; }
+.ts-track i { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.35); transform: translateX(10px); }
+.month-field { position: relative; display: inline-block; }
+.month-field input[type="month"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; }
+.month-field .mf-caret { font-style: normal; margin-left: 6px; font-size: 0.8em; }
+.payer-slot { display: grid; }
+.payer-slot > * { grid-area: 1 / 1; }
+.payer-ghost { visibility: hidden; pointer-events: none; }
+.other-payer { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }

@@ -1,5 +1,6 @@
 import { DEFAULT_PAYROLL_EMAIL } from "../timesheet";
-import { isCombined, setTaxModeForMonth, timesheetSettingsOf } from "../model";
+import { timesheetSettingsOf } from "../model";
+import { TaxSegment } from "./TaxMode";
 import { useMemo, useState } from "react";
 import { deliver } from "../backup";
 import { MONTHS, hoursText, money } from "../format";
@@ -54,7 +55,6 @@ function SlipPreview({ slip }: { slip: Payslip }) {
 /** Download sheet for the month in view: the payroll timesheet (Excel or PDF) and the payslip (PDF). */
 export function ExportSheet({ month }: { month: string }) {
   const { data, update } = useStore();
-  const combinedMonth = isCombined(data, month);
   const { back, open } = useNav();
   const { template } = useTemplate();
   const [tab, setTab] = useState<"timesheet" | "payslip">("timesheet");
@@ -170,11 +170,8 @@ export function ExportSheet({ month }: { month: string }) {
       ) : (
         <>
           <div className="row tax-mode">
-            <span className="muted small">Tax for {monthName}:</span>
-            <div className="segmented" role="group" aria-label="Tax for this month">
-              <button aria-pressed={!combinedMonth} className={!combinedMonth ? "on" : ""} onClick={() => update((d) => setTaxModeForMonth(d, month, false))}>Split</button>
-              <button aria-pressed={combinedMonth} className={combinedMonth ? "on" : ""} onClick={() => update((d) => setTaxModeForMonth(d, month, true))}>Combined</button>
-            </div>
+            <span className="muted small">Tax, for the whole app:</span>
+            <TaxSegment />
           </div>
           {slips.length === 0 ? (
             <p className="muted">No pay logged in {monthName}, so there is no payslip yet.</p>

@@ -69,7 +69,7 @@ export function WelcomeScreen() {
         <li>In WhatsApp, tap the file to download it to your phone.</li>
         <li>Come back here, tap <strong>Choose starter kit file</strong>, and pick it from your Downloads.</li>
       </ol>
-      <input ref={input} type="file" accept=".json,application/json" hidden aria-label="Starter kit file"
+      <input ref={input} type="file" accept=".json,.txt,application/json,text/plain" hidden aria-label="Starter kit file"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) void pick(f); e.target.value = ""; }} />
       <button className="primary wide" disabled={busy} onClick={() => input.current?.click()}>{busy ? "Reading…" : "Choose starter kit file…"}</button>
       {message && <p className="notice warn" role="alert">{message}</p>}

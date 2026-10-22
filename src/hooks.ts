@@ -14,6 +14,16 @@ export function useMonth(month: string): MonthResult<Entry> {
   }, [month, data, site]);
 }
 
+/** The month as it would be with split tax, whatever the app is set to. Used to size things so flipping split and combined moves nothing. */
+export function useMonthSplit(month: string): MonthResult<Entry> {
+  const { data } = useStore();
+  const { site } = useSiteFilter();
+  return useMemo(() => {
+    const r = computeMonth(month, data.entries.filter((e) => !isOther(e)), data.history, overridesFor(data, month), false, otherIncome(data, month));
+    return site ? filterMonth(r, site, data.history) : r;
+  }, [month, data, site]);
+}
+
 /** Month results for the twelve months of a year. */
 export function useYear(year: number): Array<MonthResult<Entry>> {
   const { data } = useStore();
