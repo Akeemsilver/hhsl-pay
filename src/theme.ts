@@ -6,11 +6,12 @@ const KEY = "hhsl-salary-tracker:theme";
 export function getTheme(): ThemePref {
   try {
     const v = localStorage.getItem(KEY);
-    if (v === "light" || v === "dark") return v;
+    if (v === "light" || v === "dark" || v === "system") return v;
   } catch {
     /* storage unavailable */
   }
-  return "system";
+  // Light until you choose otherwise.
+  return "light";
 }
 
 /** Sets or clears the data-theme override the stylesheet reads. */
@@ -26,8 +27,7 @@ export function useTheme(): [ThemePref, (p: ThemePref) => void] {
   const [pref, setPref] = useState<ThemePref>(getTheme);
   const set = useCallback((p: ThemePref) => {
     try {
-      if (p === "system") localStorage.removeItem(KEY);
-      else localStorage.setItem(KEY, p);
+      localStorage.setItem(KEY, p);
     } catch {
       /* ignore */
     }

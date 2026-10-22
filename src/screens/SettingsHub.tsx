@@ -197,7 +197,7 @@ export function SettingsHub() {
             if (ask === "days") {
               update((d) => ({ ...d, entries: [], corrections: undefined }));
             } else if (ask === "settings") {
-              setTheme("system");
+              setTheme("light");
               update((d) => {
                 const fresh = newData();
                 return {
@@ -209,7 +209,7 @@ export function SettingsHub() {
               });
             } else {
               replace(newData());
-              setTheme("system");
+              setTheme("light");
               selectTab("home");
             }
             setAsk(null);
