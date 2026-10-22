@@ -33,6 +33,8 @@ export interface PayerMonth extends MonthTax {
   hours: number;
   /** Hours counted at the normal rate: 1.5x hours count 1.5, double time 2, triple time 3 (other jobs count as they are). */
   weighted: number;
+  /** Days worked on this payslip (a day with pay, or an other job). */
+  days: number;
   /** True when the payslip's actual gross or PAYE replaced the calculated figure. */
   corrected: boolean;
 }
@@ -70,24 +72,26 @@ export function computeMonth<E extends DayEntry>(
     .filter((e) => monthOf(e.date) === month)
     .map((entry) => ({ entry, pay: computeDay(entry, valueOn(history.sites, entry.date)) }));
 
-  const byPayer = new Map<string, { gross: number; hours: number; weighted: number }>();
+  const byPayer = new Map<string, { gross: number; hours: number; weighted: number; dates: Set<string> }>();
   for (const { entry, pay } of entries) {
     const site = findSite(valueOn(history.sites, entry.date), entry.site);
     const payer = combined ? COMBINED_PAYER : (site?.payer ?? "main");
-    const acc = byPayer.get(payer) ?? { gross: 0, hours: 0, weighted: 0 };
+    const acc = byPayer.get(payer) ?? { gross: 0, hours: 0, weighted: 0, dates: new Set<string>() };
     acc.gross += pay.total;
     acc.hours += entry.hours;
     acc.weighted += weightedHours(pay, entry.hours);
+    if (pay.total > 0) acc.dates.add(entry.date);
     byPayer.set(payer, acc);
   }
 
   for (const x of extras) {
     if (monthOf(x.date) !== month || !(x.amount > 0)) continue;
     const payer = combined ? COMBINED_PAYER : x.payer;
-    const acc = byPayer.get(payer) ?? { gross: 0, hours: 0, weighted: 0 };
+    const acc = byPayer.get(payer) ?? { gross: 0, hours: 0, weighted: 0, dates: new Set<string>() };
     acc.gross += x.amount;
     acc.hours += x.hours;
     acc.weighted += x.hours;
+    acc.dates.add(x.date);
     byPayer.set(payer, acc);
   }
 
@@ -97,10 +101,10 @@ export function computeMonth<E extends DayEntry>(
 
   // A payer with a correction is shown even when no days were logged for it.
   for (const [payer, o] of Object.entries(overrides)) {
-    if (!byPayer.has(payer) && ((o.gross ?? 0) > 0 || o.paye !== undefined)) byPayer.set(payer, { gross: 0, hours: 0, weighted: 0 });
+    if (!byPayer.has(payer) && ((o.gross ?? 0) > 0 || o.paye !== undefined)) byPayer.set(payer, { gross: 0, hours: 0, weighted: 0, dates: new Set<string>() });
   }
 
-  const payers: PayerMonth[] = [...byPayer.entries()].map(([payer, { gross: calculated, hours, weighted }]) => {
+  const payers: PayerMonth[] = [...byPayer.entries()].map(([payer, { gross: calculated, hours, weighted, dates }]) => {
     const o = overrides[payer];
     const gross = o?.gross !== undefined && o.gross > 0 ? o.gross : calculated;
     const tax = monthTax(gross, mondays, rules);
@@ -109,6 +113,7 @@ export function computeMonth<E extends DayEntry>(
       payer,
       hours,
       weighted: Math.round(weighted * 100) / 100,
+      days: dates.size,
       corrected: gross !== calculated || (o?.paye !== undefined && o.paye !== tax.paye),
       ...tax,
       paye,
@@ -144,7 +149,7 @@ export function filterMonth<E extends DayEntry>(r: MonthResult<E>, site: string,
     if (mine.length === 0) continue;
     const share = p.gross > 0 ? gross / p.gross : 0;
     const paye = p.paye * share, nis = p.nis * share, surcharge = p.surcharge * share;
-    payers.push({ ...p, hours: mine.reduce((t, e) => t + e.entry.hours, 0), weighted: Math.round(mine.reduce((t, e) => t + weightedHours(e.pay, e.entry.hours), 0) * 100) / 100, gross, paye, nis, surcharge, net: gross - paye - nis - surcharge });
+    payers.push({ ...p, hours: mine.reduce((t, e) => t + e.entry.hours, 0), days: new Set(mine.filter((e) => e.pay.total > 0).map((e) => e.entry.date)).size, weighted: Math.round(mine.reduce((t, e) => t + weightedHours(e.pay, e.entry.hours), 0) * 100) / 100, gross, paye, nis, surcharge, net: gross - paye - nis - surcharge });
   }
   const sum = (pick: (p: PayerMonth) => number) => payers.reduce((t, p) => t + pick(p), 0);
   return { month: r.month, entries, payers, gross: sum((p) => p.gross), net: sum((p) => p.net), paye: sum((p) => p.paye), nis: sum((p) => p.nis), surcharge: sum((p) => p.surcharge) };
