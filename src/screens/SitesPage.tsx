@@ -91,7 +91,7 @@ function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename,
     <details className="site">
       <summary>
         {name}
-        <span className="muted"> · {payers[site.payer] ?? site.payer}{roleCount ? ` · ${roleCount} role${roleCount > 1 ? "s" : ""}` : ""}</span>
+        <span className="muted"> · {payers[site.payer] ?? site.payer}{site.baseRate ? ` · $${site.baseRate}/h${site.leadRate && site.leadRate !== site.baseRate ? ` · lead $${site.leadRate}` : ""}` : ""}{roleCount ? ` · ${roleCount} role${roleCount > 1 ? "s" : ""}` : ""}</span>
       </summary>
       <label>Site name
         <input value={draft} onChange={(e) => setDraft(e.target.value)} onBlur={() => draft.trim() && draft !== name && onRename(draft.trim())} />
@@ -102,9 +102,10 @@ function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename,
         </select>
       </label>
       <div className="grid2">
-        <label>Hourly rate<NumInput label="Hourly rate" value={site.baseRate} onChange={(v) => set("baseRate", v)} /></label>
-        <label>Lead / instructor rate<NumInput label="Lead rate" value={site.leadRate} onChange={(v) => set("leadRate", v)} /></label>
+        <label>Standard rate ($/h)<NumInput label="Hourly rate" value={site.baseRate} onChange={(v) => set("baseRate", v)} /></label>
+        <label>Team lead rate ($/h)<NumInput label="Lead rate" value={site.leadRate} onChange={(v) => set("leadRate", v)} /></label>
       </div>
+      <p className="muted small">{name} is in {payers[site.payer] ?? site.payer}. Changing the rates here only changes {name}. When you later use “Change for all sites” on the group, you can choose to leave {name} out.</p>
 
       <h3 className="section-title">Role rates</h3>
       <p className="muted small">You pick the role on the job, under the site. Give a role its own pay here, or leave it blank to use the site's standard rate.</p>
@@ -180,7 +181,7 @@ function GroupRates({ payer, name, table, firstDate, impactFor, farBack, onApply
   const curStd = commonValue(mine.map((m) => m.baseRate).filter((v) => v !== undefined));
   const curLead = commonValue(mine.map((m) => m.leadRate).filter((v) => v !== undefined));
   const curCaps = { weekday: commonValue(mine.map((m) => m.weekday)) ?? {}, weekend: commonValue(mine.map((m) => m.weekend)) ?? {}, holiday: commonValue(mine.map((m) => m.holiday)) ?? {} };
-  const key = JSON.stringify([curStd, curLead, curCaps, change]);
+  const key = JSON.stringify([curStd, curLead, curCaps, change, mine.map((m) => [m.baseRate, m.leadRate])]);
   const [std, setStd] = useState<Num>(curStd);
   const [lead, setLead] = useState<Num>(curLead);
   const [sameLead, setSameLead] = useState(curStd !== undefined && curStd === curLead);
@@ -188,17 +189,23 @@ function GroupRates({ payer, name, table, firstDate, impactFor, farBack, onApply
   const [more, setMore] = useState(false);
   const [from, setFrom] = useState(todayISO());
   const [ask, setAsk] = useState(false);
-  useEffect(() => { setStd(curStd); setLead(curLead); setSameLead(curStd !== undefined && curStd === curLead); setCaps(curCaps); }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Sites that already have their own rate are left out by default, so a group change never overwrites them by accident.
+  const ownRate = (n: string) => { const t = table[n]!; return (curStd !== undefined && t.baseRate !== curStd) || (curLead !== undefined && t.leadRate !== undefined && t.leadRate !== curLead); };
+  const defaultExcept = change.filter(ownRate);
+  const [except, setExcept] = useState<string[]>(defaultExcept);
+  const [showExcept, setShowExcept] = useState(false);
+  useEffect(() => { setStd(curStd); setLead(curLead); setSameLead(curStd !== undefined && curStd === curLead); setCaps(curCaps); setExcept(defaultExcept); }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
   const newLead = sameLead ? std : lead;
   const capsChanged = JSON.stringify(caps) !== JSON.stringify(curCaps);
   const changed = std !== curStd || newLead !== curLead || capsChanged;
-  const change_: GroupChange = { baseRate: std, leadRate: newLead, caps: capsChanged ? caps : undefined };
+  const change_: GroupChange = { baseRate: std, leadRate: newLead, caps: capsChanged ? caps : undefined, except };
+  const included = change.filter((n) => !except.includes(n));
   if (change.length === 0) return null;
   const impact = from < todayISO() ? impactFor(change_, from) : undefined;
   return (
     <section className="card group-rates" aria-label={`Rates for ${name}`}>
       <h2>{name}</h2>
-      <p className="muted small">The same rates for all {change.length} hourly site{change.length === 1 ? "" : "s"}: {change.join(", ")}.</p>
+      <p className="muted small">{included.length === change.length ? `The same rates for all ${change.length} hourly site${change.length === 1 ? "" : "s"}` : `Applies to ${included.length} of ${change.length} hourly sites`}: {included.join(", ") || "none"}.{except.length > 0 && <> Left out: <strong>{except.join(", ")}</strong>.</>}</p>
       <div className="grid2">
         <label>Standard rate ($/h)<NumInput label={`${name} standard rate`} value={std} onChange={setStd} /></label>
         <label>Team lead rate ($/h)<NumInput label={`${name} team lead rate`} value={sameLead ? std : lead} onChange={(v) => { setSameLead(false); setLead(v); }} /></label>
@@ -222,13 +229,25 @@ function GroupRates({ payer, name, table, firstDate, impactFor, farBack, onApply
           <p className="muted small">Example: 12 under 1x means the first 12 hours of each day are paid at 1x. Type 1000 for “no limit”. Holiday / TAR is used for a holiday or a turnaround / shutdown, even on a weekend.</p>
         </div>
       )}
+      <button className="more" aria-expanded={showExcept} onClick={() => setShowExcept(!showExcept)}>{showExcept ? "Except ▴" : `Except… ${except.length ? `(${except.length} left out)` : ""} ▾`}</button>
+      {showExcept && (
+        <div className="more-panel except-panel" role="group" aria-label={`Sites to leave out of ${name} changes`}>
+          <p className="muted small">Tick a site to <strong>leave it out</strong> of “Change for all sites”. Sites with their own rate start out ticked.</p>
+          {change.map((n) => (
+            <label key={n} className="check">
+              <input type="checkbox" aria-label={`Leave out ${n}`} checked={except.includes(n)} onChange={(e) => setExcept(e.target.checked ? [...except, n] : except.filter((x) => x !== n))} />
+              {" "}{n}{table[n]!.baseRate !== undefined && <span className="muted small"> · ${table[n]!.baseRate}/h{table[n]!.leadRate !== undefined && table[n]!.leadRate !== table[n]!.baseRate ? ` · lead $${table[n]!.leadRate}` : ""}{ownRate(n) ? " · own rate" : ""}</span>}
+            </label>
+          ))}
+        </div>
+      )}
       <TakeEffect from={from} setFrom={setFrom} firstDate={firstDate} label={`${name} take effect from`} impact={impact} />
-      <button className="primary wide" disabled={!changed} onClick={() => setAsk(true)}>Change for all sites</button>
+      <button className="primary wide" disabled={!changed || included.length === 0} onClick={() => setAsk(true)}>Change for all sites</button>
       {skip.length > 0 && <p className="muted small">Not changed (flat pay or a threshold rate): {skip.join(", ")}. Edit those below.</p>}
       {ask && (
         <ConfirmDialog
           title={farBack(from) ? `Are you sure? ${from} is a long way back` : `Change ${name}?`}
-          message={`${std !== curStd ? `Standard rate ${curStd ?? "-"} → ${std ?? "-"}. ` : ""}${newLead !== curLead ? `Team lead rate ${curLead ?? "-"} → ${newLead ?? "-"}. ` : ""}${capsChanged ? "Hours at 1x, 1.5x, 2x and 3x change too. " : ""}Applies to ${change.join(", ")} from ${from}${from === todayISO() ? " (today)" : ""}.${impact && impact.days > 0 ? ` This recalculates ${impact.days} logged day${impact.days === 1 ? "" : "s"} (${impact.delta >= 0 ? "+" : "-"}$${Math.abs(impact.delta).toFixed(2)} gross).` : ""}`}
+          message={`${std !== curStd ? `Standard rate ${curStd ?? "-"} → ${std ?? "-"}. ` : ""}${newLead !== curLead ? `Team lead rate ${curLead ?? "-"} → ${newLead ?? "-"}. ` : ""}${capsChanged ? "Hours at 1x, 1.5x, 2x and 3x change too. " : ""}Applies to ${included.join(", ")}${except.length ? ` (leaving out ${except.join(", ")})` : ""} from ${from}${from === todayISO() ? " (today)" : ""}.${impact && impact.days > 0 ? ` This recalculates ${impact.days} logged day${impact.days === 1 ? "" : "s"} (${impact.delta >= 0 ? "+" : "-"}$${Math.abs(impact.delta).toFixed(2)} gross).` : ""}`}
           confirmLabel="Change for all sites" cancelLabel="Cancel" safe
           onCancel={() => setAsk(false)}
           onConfirm={() => { setAsk(false); onApply(change_, from); }}

@@ -41,6 +41,8 @@ export function isHourlySite(s: SiteRates): boolean {
 }
 
 export interface GroupChange {
+  /** Sites in the group to leave alone, for example one with its own rate. */
+  except?: string[];
   baseRate?: number;
   leadRate?: number;
   caps?: { weekday: TierCaps; weekend: TierCaps; holiday: TierCaps };
@@ -59,7 +61,7 @@ export function groupSites(table: SiteTable, payer: string): { change: string[];
 /** One change for every hourly site in a payslip group. */
 export function changeGroup(table: SiteTable, payer: string, c: GroupChange): SiteTable {
   return Object.fromEntries(Object.entries(table).map(([name, s]) => {
-    if (s.payer !== payer || !isHourlySite(s)) return [name, s];
+    if (s.payer !== payer || !isHourlySite(s) || c.except?.includes(name)) return [name, s];
     const next: SiteRates = { ...s };
     if (c.baseRate !== undefined) next.baseRate = c.baseRate;
     if (c.leadRate !== undefined) next.leadRate = c.leadRate;

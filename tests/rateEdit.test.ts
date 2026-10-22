@@ -98,3 +98,12 @@ describe("templates", () => {
     expect(HOURS_TEMPLATES.map((t) => t.name)).toEqual(["Standard straight time", "Standard overtime", "Atlantic standard"]);
   });
 });
+
+describe("leaving sites out of a group change", () => {
+  it("skips the excepted sites", () => {
+    const t = changeGroup(table(), "pl", { baseRate: 70, except: ["B"] });
+    expect(t.A!.baseRate).toBe(70);
+    expect(t.B!.baseRate).toBe(60);
+    expect(t.Atl!.baseRate).toBe(69);
+  });
+});
