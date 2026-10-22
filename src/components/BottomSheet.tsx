@@ -50,10 +50,13 @@ export function BottomSheet({ label, onRequestClose, onPullDismiss, top, fromTop
       tracking = dragging = false;
       if (!far) { springBack(); return; }
       settling = true;
-      el.style.transition = "transform 0.2s ease-in";
-      el.style.transform = `translateY(${Math.max(el.offsetHeight, window.innerHeight)}px)`;
-      if (backdrop) { backdrop.style.transition = "background 0.2s"; backdrop.style.background = "rgba(0, 0, 0, 0)"; }
-      window.setTimeout(() => { (pull.current ?? close.current)(); }, 200);
+      // Carry on at the speed of the finger: a hard flick leaves quickly, a slow pull glides out, never a jump.
+      const rest = Math.max(el.offsetHeight, window.innerHeight) - dy;
+      const ms = Math.round(Math.min(360, Math.max(160, rest / Math.max(speed, 0.8))));
+      el.style.transition = `transform ${ms}ms cubic-bezier(0.4, 0, 0.2, 1)`;
+      el.style.transform = `translateY(${dy + rest}px)`;
+      if (backdrop) { backdrop.style.transition = `background ${ms}ms linear`; backdrop.style.background = "rgba(0, 0, 0, 0)"; }
+      window.setTimeout(() => { (pull.current ?? close.current)(); }, ms);
     };
 
     // Grabber and title bar: pointer events with touch-action none, so the browser never takes the gesture away.
