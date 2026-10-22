@@ -5,7 +5,11 @@ import { VitePWA } from "vite-plugin-pwa";
 // GitHub Pages serves a project site under /<repo>/. Set BASE_PATH=/ when moving to a custom domain.
 const base = process.env.BASE_PATH || "/hhsl-salary-tracker/";
 
+// Shown in Settings so you can tell which version is running.
+const buildId = `${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC · ${(process.env.GITHUB_SHA || "local").slice(0, 7)}`;
+
 export default defineConfig(({ command }) => ({
+  define: { __BUILD_ID__: JSON.stringify(buildId) },
   base: command === "build" ? base : "/",
   plugins: [
     react(),

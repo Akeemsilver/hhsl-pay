@@ -215,6 +215,7 @@ export function SettingsHub() {
           }}
         />
       )}
+      <p className="muted small pad" aria-label="App version">Version {typeof __BUILD_ID__ === "string" ? __BUILD_ID__ : "dev"}</p>
       <p className="muted small pad">
         Everything is saved on this phone only. There is no account and no server. {persistent ? "The browser has agreed to keep your data." : "Back up regularly so a cleared browser or lost phone does not lose your entries."}
       </p>
