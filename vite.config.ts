@@ -10,8 +10,9 @@ export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
       includeAssets: ["icon.svg"],
+      workbox: { clientsClaim: true },
       manifest: {
         name: "HHSL Salary Tracker",
         short_name: "Salary",

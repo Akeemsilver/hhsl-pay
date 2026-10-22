@@ -1,4 +1,5 @@
 import { FilterProvider } from "./filter";
+import { UpdateBanner } from "./components/UpdateBanner";
 import { NavProvider, useNav, type Tab } from "./nav";
 import { HomeScreen } from "./screens/HomeScreen";
 import { CalendarScreen } from "./screens/CalendarScreen";
@@ -65,6 +66,7 @@ export function App() {
   return (
     <NavProvider>
       <FilterProvider>
+        <UpdateBanner />
         <Shell />
       </FilterProvider>
     </NavProvider>
