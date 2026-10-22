@@ -26,6 +26,7 @@ export function SettingsHub() {
   const sitesCount = siteCount(data);
   const [copied, setCopied] = useState(false);
   const [askDownload, setAskDownload] = useState(false);
+  const [askShare, setAskShare] = useState(false);
   const [kitMessage, setKitMessage] = useState<string | null>(null);
   const copyLink = async () => {
     try { await navigator.clipboard.writeText(link); } catch {
@@ -54,15 +55,18 @@ export function SettingsHub() {
   }, [data.history, data.payerNames, data.siteColors, data.timesheet, data.otherPayer, data.taxMode, data.combinedTax, data.holidays, sitesCount]);
   // Each tap makes one attempt (the phone allows one per tap); a refused attempt moves on to the next file type.
   const attempt = useRef(0);
-  const shareKit = async () => {
+  const savedKit = useRef(false);
+  const shareKit = async (saveFirst = false) => {
     if (!kit) { setKitMessage("Getting the starter kit ready, try again in a moment."); return; }
     const tried = attempt.current;
+    // Saved to Downloads first, in the same tap, so the file is safe even if the share menu is refused.
+    if (saveFirst && !savedKit.current) { download(backupFileName("rates", false), kit); savedKit.current = true; }
     const { result, error, type } = await shareFile(backupFileName("rates", false), kit, tried);
-    if (result === "shared") { attempt.current = 0; setKitMessage("Starter kit shared."); }
-    else if (result === "cancelled") setKitMessage(null);
+    if (result === "shared") { attempt.current = 0; savedKit.current = false; setKitMessage("Starter kit saved to your Downloads and shared."); }
+    else if (result === "cancelled") { savedKit.current = false; setKitMessage("Starter kit saved to your Downloads."); }
     else if (result === "failed" && tried < SHARE_TYPES.length - 1) {
       attempt.current = tried + 1;
-      setKitMessage(`That did not open the share menu (${error}). Tap “Share starter kit” again to try another way.`);
+      setKitMessage(`The file is saved to your Downloads, but the share menu did not open (${error}). Tap “Share starter kit” again to try another way.`);
     } else if (result === "failed") {
       attempt.current = 0;
       setKitMessage(`The share menu would not open (${error}; tried ${SHARE_TYPES.length} ways, last as ${type}). Use “Download starter kit”, then send the file from your Downloads.`);
@@ -94,7 +98,7 @@ export function SettingsHub() {
         </div>
         <p className="muted small">Starter kit: your sites, rates, tax rules and the timesheet form (no days, no pay, no name). It has to be sent as a file because this app's code is public, and company rates must never be put in public code. Only send it to colleagues.</p>
         <div className="row">
-          <button className="primary" disabled={sitesCount === 0} onClick={() => void shareKit()}>Share starter kit</button>
+          <button className="primary" disabled={sitesCount === 0} onClick={() => setAskShare(true)}>Share starter kit</button>
           <button disabled={sitesCount === 0} onClick={() => setAskDownload(true)}>Download starter kit</button>
         </div>
         {kitMessage && <p className="notice" role="status">{kitMessage}</p>}
@@ -221,6 +225,15 @@ export function SettingsHub() {
             }
             setAsk(null);
           }}
+        />
+      )}
+      {askShare && (
+        <ConfirmDialog
+          title="Download and share the starter kit?"
+          message="The file with your sites, pay rates, tax rules and the timesheet form is saved to this phone's Downloads, then the share menu opens so you can send it on WhatsApp or Gmail. It has your company rates, so only send it to colleagues."
+          confirmLabel="Yes, download and share" cancelLabel="Cancel" safe
+          onCancel={() => setAskShare(false)}
+          onConfirm={() => { setAskShare(false); void shareKit(true); }}
         />
       )}
       {askDownload && (
