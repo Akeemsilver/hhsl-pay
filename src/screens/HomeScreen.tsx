@@ -8,7 +8,7 @@ import { useNav } from "../nav";
 import { isOther, othersByDate } from "../model";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
-import { PlusIcon } from "../components/Icons";
+import { BackIcon, ForwardIcon, PlusIcon } from "../components/Icons";
 import { CalendarGrid, PayerTax } from "../components/MonthParts";
 
 const DAY_MS = 86_400_000;
@@ -33,6 +33,7 @@ export function HomeScreen() {
   const { open, selectTab, loc } = useNav();
   const [picked, setPicked] = useState<string | undefined>();
   const today = todayISO();
+  const [shown, setShown] = useState(today.slice(0, 7));
   const month = today.slice(0, 7);
   const year = Number(today.slice(0, 4));
   const prevMonth = shiftMonth(month, -1);
@@ -41,6 +42,7 @@ export function HomeScreen() {
   const install = useInstall();
   const thisMonth = useMonth(month);
   const lastMonth = useMonth(prevMonth);
+  const shownResult = useMonth(shown);
   const months = useYear(year);
   const prevYearMonths = useYear(year - 1);
 
@@ -142,11 +144,12 @@ export function HomeScreen() {
       </div>
 
       <div className="home-cal">
-        <div className="card-head">
-          <h2>{MONTHS[thisMonthIndex]}</h2>
-          <button className="link" onClick={() => selectTab("calendar")}>Full calendar</button>
+        <div className="monthbar">
+          <button className="icon" onClick={() => setShown(shiftMonth(shown, -1))} aria-label="Previous month"><BackIcon /></button>
+          <h2 className="monthname">{MONTHS[Number(shown.slice(5)) - 1]}{shown.slice(0, 4) !== String(year) ? ` ${shown.slice(0, 4)}` : ""}</h2>
+          <button className="icon" onClick={() => setShown(shiftMonth(shown, 1))} aria-label="Next month"><ForwardIcon /></button>
         </div>
-        <CalendarGrid month={month} days={daysOfMonth(month)} result={thisMonth} today={today} selected={loc.day ?? picked} onPick={(d) => { setPicked(d); open({ day: d }); }} />
+        <CalendarGrid month={shown} days={daysOfMonth(shown)} result={shownResult} today={today} selected={loc.day ?? picked} onPick={(d) => { setPicked(d); open({ day: d }); }} onShift={(by) => setShown(shiftMonth(shown, by))} />
       </div>
 
       <section className="card">

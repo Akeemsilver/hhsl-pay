@@ -4,6 +4,7 @@ import { useSiteFilter } from "../filter";
 import { holidayMap } from "../holidays";
 import { useStore } from "../store";
 import { SITE_COLORS, siteColorIndex } from "../siteColor";
+import { useSwipe } from "../swipe";
 import type { MonthResult } from "../engine";
 import type { Entry } from "../model";
 
@@ -92,13 +93,14 @@ export function CorrectionBox({ month, result }: { month: string; result: MonthR
   );
 }
 
-export function DayList({ days, result, today, onPick }: { days: string[]; result: MonthResult<Entry>; today: string; onPick: (d: string) => void }) {
+export function DayList({ days, result, today, onPick, onShift }: { days: string[]; result: MonthResult<Entry>; today: string; onPick: (d: string) => void; onShift?: (by: -1 | 1) => void }) {
   const { data } = useStore();
+  const swipe = useSwipe(() => onShift?.(-1), () => onShift?.(1));
   const hol = holidayMap(days.map((d) => Number(d.slice(0, 4))), data);
   const { site: fsite } = useSiteFilter();
   const others = fsite ? new Map<string, Entry[]>() : othersByDate(data.entries, (days[0] ?? "").slice(0, 7));
   return (
-    <ul className="days">
+    <ul className="days" {...(onShift ? swipe : {})}>
       {days.map((date) => {
         const wd = new Date(`${date}T00:00:00Z`).getUTCDay();
         const priced = result.entries.filter((e) => e.entry.date === date);
@@ -142,17 +144,20 @@ export function DayList({ days, result, today, onPick }: { days: string[]; resul
 }
 
 /** Month grid, Sunday first. Each cell shows the day's total and the site(s) worked, plus other jobs. */
-export function CalendarGrid({ month, days, result, today, onPick, selected }: {
+export function CalendarGrid({ month, days, result, today, onPick, selected, onShift }: {
   month: string; days: string[]; result: MonthResult<Entry>; today: string; onPick: (d: string) => void; selected?: string | null;
+  /** Swipe left (+1) or right (-1) to change the month. */
+  onShift?: (by: -1 | 1) => void;
 }) {
   const { data } = useStore();
+  const swipe = useSwipe(() => onShift?.(-1), () => onShift?.(1));
   const hol = holidayMap(days.map((d) => Number(d.slice(0, 4))), data);
   const { site: fsite } = useSiteFilter();
   const others = fsite ? new Map<string, Entry[]>() : othersByDate(data.entries, month);
   const legend = [...new Set(result.entries.map((e) => e.entry.site))];
   const lead = new Date(`${month}-01T00:00:00Z`).getUTCDay();
   return (
-    <section className="card calendar" aria-label="Calendar">
+    <section className="card calendar" aria-label="Calendar" {...(onShift ? swipe : {})}>
       <div className="cal-head" aria-hidden="true">
         {WEEKDAYS.map((w) => <span key={w} className={w === "Sun" || w === "Sat" ? "red" : ""}>{w.slice(0, 2)}</span>)}
       </div>

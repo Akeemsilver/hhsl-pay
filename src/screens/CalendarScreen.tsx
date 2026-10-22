@@ -54,11 +54,11 @@ export function CalendarScreen() {
 
       {view === "calendar" ? (
         <>
-          <CalendarGrid month={month} days={days} result={result} today={today} selected={selected} onPick={setPicked} />
+          <CalendarGrid month={month} days={days} result={result} today={today} selected={selected} onPick={setPicked} onShift={(by) => setMonth(shiftMonth(month, by))} />
           {selected ? <DayPanel date={selected} /> : <p className="muted pad">Tap a date to see its jobs and add one.</p>}
         </>
       ) : (
-        <DayList days={days} result={result} today={today} onPick={(d) => open({ day: d })} />
+        <DayList days={days} result={result} today={today} onPick={(d) => open({ day: d })} onShift={(by) => setMonth(shiftMonth(month, by))} />
       )}
 
       {loc.sub === "export" && !loc.day && !loc.page && <ExportSheet month={month} />}

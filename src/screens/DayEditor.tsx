@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { SitePicker } from "../components/SitePicker";
 import { computeDay, findSite, valueOn } from "../engine";
 import { WEEKDAYS, durationText, hoursText, money } from "../format";
 import { isDetailed, isOther, newId, rolesFor, toDetailed, toSimple, withComputedHours, type Entry } from "../model";
@@ -144,13 +145,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
           const bump = (delta: number) => patch(entry.id, { hours: Math.min(24, Math.max(0, Math.round((entry.hours + delta) * 4) / 4)) });
           return (
             <div className="entry" key={entry.id} data-entry-id={entry.id}>
-              <label>
-                Site
-                <select value={entry.site} onChange={(e) => changeSite(entry, e.target.value)}>
-                  {!known && <option value={entry.site}>{entry.site || "Choose…"} (not in rates)</option>}
-                  {siteNames.map((n) => <option key={n}>{n}</option>)}
-                </select>
-              </label>
+              <SitePicker value={entry.site} names={siteNames} onPick={(n) => changeSite(entry, n)} />
               {(() => {
                 const roleNames = rolesFor(findSite(sites, entry.site));
                 const orphan = entry.role && !roleNames.some((r) => r.toLowerCase() === entry.role!.toLowerCase());

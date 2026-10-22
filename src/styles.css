@@ -686,3 +686,16 @@ button.icon.gear, .bar.page button.icon[aria-label="Back"] { box-shadow: 0 1px 2
 .segmented button.on { box-shadow: var(--shadow); }
 :root[data-theme="dark"] .hero { box-shadow: var(--shadow); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hero { box-shadow: var(--shadow); } }
+.calendar, .days { touch-action: pan-y; }
+.home-cal .monthbar { margin: 4px 0 8px; }
+.home-cal .monthname { margin: 0; font-size: 1.15rem; }
+.site-field { display: grid; gap: 4px; margin-bottom: 8px; }
+.site-field .lbl { font-size: 0.85rem; color: var(--muted); }
+.site-btn { display: flex; align-items: center; justify-content: space-between; text-align: left; width: 100%; font-size: 1rem; }
+.site-btn .sw, .pick-list .sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
+.sheet-title { margin: 4px 0 10px; font-size: 1.15rem; }
+.pick-search { width: 100%; margin-bottom: 10px; }
+.pick-list { list-style: none; margin: 0; padding: 0; max-height: 52vh; overflow-y: auto; border: 1px solid var(--edge); border-radius: 12px; }
+.pick-list li + li { border-top: 1px solid var(--line); }
+.pick-list button { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 52px; border: 0; border-radius: 0; background: transparent; box-shadow: none; text-align: left; font-size: 1.05rem; }
+.pick-list button.on { font-weight: 700; color: var(--accent); }
