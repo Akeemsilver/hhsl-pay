@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { BadBackup, PasswordRequired, backupFileName, deliver, isEncrypted, parse, serialize } from "../backup";
 import { newData } from "../model";
 import { useStore } from "../store";
+import { AnnualImport } from "../components/AnnualImport";
 import { TimesheetImport } from "../components/TimesheetImport";
 import { PageHeader } from "../components/TopBar";
 
@@ -81,6 +82,8 @@ export function BackupScreen() {
         <input ref={fullInput} type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void readFile(f, "full"); e.target.value = ""; }} />
         <button className="wide" onClick={() => fullInput.current?.click()}>Choose backup file…</button>
       </section>
+
+      <AnnualImport />
 
       <TimesheetImport />
 

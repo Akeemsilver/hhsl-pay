@@ -20,6 +20,12 @@ phone (IndexedDB), with no account and no server. Backup and moving to a new pho
 - Payroll timesheet: fills the company's .xlsx template for the month you are viewing (kept on the phone, not in this repo)
 - Separate settings pages for site locations, NIS & tax (with start dates for changes), payslips and the timesheet
 - Backup, restore, and a rates-only file for sharing a setup
+- Rate groups: sites share their payslip group's rates (for example Point Lisas / other at $60 and $65), with a "Change for all sites" button, an Except list, hours templates (standard straight time, standard overtime, Atlantic standard) and new groups
+- Every rate and tax change has a "Take effect from" date (today by default); a past date recalculates logged days and shows how many days and how much
+- Split or combined tax: each payslip group is taxed on its own, or everything is added up and taxed once, dated like the rates
+- Payslip PDF (one page per payslip group, hours and rates by site, year to date), timesheet viewer, Excel and PDF, and "Send to payroll" (saves the file and opens the email app with the address and message ready)
+- Location filter on every tab, calendar with red weekends and public holidays, and Android-style Back (press Back again on Home to exit)
+- Imports: days from a filled-in HHSL time sheet, or from the yearly salary spreadsheet (month tabs), with a preview and Add or Replace
 
 ## Development
 
