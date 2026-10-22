@@ -43,7 +43,8 @@ def shareicon(d,cx,cy,col):
 im,d=canvas(240)
 rr(d,(20,20,620,100),WHITE); label(d,(320,60),"akeemsilver.github.io",26,fill=GREY,anchor="mm")
 d.rectangle((0,150,W,240),fill=WHITE); d.line((0,150,W,150),fill=LINE,width=2)
-for x in (90,240): d.polygon([(x-14,195),(x+10,176),(x+10,214)],fill=GREY)
+d.polygon([(76,195),(100,176),(100,214)],fill=GREY)  # back
+d.polygon([(254,195),(230,176),(230,214)],fill=GREY)  # forward
 shareicon(d,380,198,TEAL); ring(d,(342,148,418,232),2)
 for x in (500,570): d.rounded_rectangle((x-20,178,x+20,218),6,outline=GREY,width=4)
 label(d,(380,118),"Tap Share",24,True,RED,"mm")
