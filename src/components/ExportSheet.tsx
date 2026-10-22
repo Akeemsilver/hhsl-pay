@@ -103,6 +103,7 @@ export function ExportSheet({ month }: { month: string }) {
   const openPayroll = async () => {
     setMessage(null);
     setPayrollFile(null);
+    setPayrollSaved(false);
     setPayrollOpen(true);
     try {
       const made = await makeTimesheetXlsx(template!.bytes, settings, month, data.entries, data.history);
@@ -112,24 +113,26 @@ export function ExportSheet({ month }: { month: string }) {
       setMessage({ text: e instanceof TemplateError ? e.message : "Could not create the file.", ok: false });
     }
   };
+  const [payrollSaved, setPayrollSaved] = useState(false);
   const sendToPayroll = async () => {
     if (!payrollFile) return;
     const { fileName, bytes } = payrollFile;
+    // Save a copy to Downloads first (once), staying on this screen, then open the share menu in the same tap.
+    if (!payrollSaved) { download(fileName, bytes, XLSX_MIME); setPayrollSaved(true); }
     const file = new File([bytes as BlobPart], fileName, { type: XLSX_MIME });
     const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
     if (nav.share && nav.canShare?.({ files: [file] })) {
       try {
         await nav.share({ files: [file], title: email.subject, text: email.body });
-        setPayrollOpen(false);
-        setMessage({ text: "Time sheet shared.", ok: true });
-        return;
+        setPayrollOpen(false); setPayrollSaved(false);
+        setMessage({ text: "Time sheet saved to your Downloads and shared.", ok: true });
       } catch (e) {
-        if ((e as DOMException)?.name === "AbortError") return;
+        // The phone did not open the menu (or it was closed). The file is saved; the button now just says Share.
       }
+      return;
     }
-    // No share menu on this phone: save the file and open the mail app instead.
-    setPayrollOpen(false);
-    download(fileName, bytes, XLSX_MIME);
+    // No share menu on this phone: the file is saved, so open the mail app for the message.
+    setPayrollOpen(false); setPayrollSaved(false);
     setMessage({ text: `${fileName} is in your Downloads. Attach it to the email that opens, then send.`, ok: true });
     setTimeout(() => { window.location.href = mailtoLink(email); }, 700);
   };
@@ -224,7 +227,7 @@ export function ExportSheet({ month }: { month: string }) {
           </>
         )}
       </div>
-      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={sendToPayroll} ready={!!payrollFile} />}
+      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={sendToPayroll} ready={!!payrollFile} saved={payrollSaved} />}
     </BottomSheet>
   );
 }
