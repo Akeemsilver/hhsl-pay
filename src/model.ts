@@ -58,6 +58,8 @@ export interface AppData {
   holidays?: { added: { date: string; name: string }[]; removed: string[] };
   /** The name shown on payslips and timesheets. */
   userName?: string;
+  /** Which payslip group other jobs are paid on and taxed with. */
+  otherPayer?: string;
   /** Whether PAYE, NIS and the surcharge are worked out per payslip group (split) or on everything together, from a month on. */
   taxMode?: Array<{ effectiveFrom: string; combined: boolean }>;
   lastBackupAt?: string;
@@ -195,4 +197,28 @@ export function setTaxModeForMonth(data: AppData, month: string, combined: boole
   let out = setTaxModeFrom(data, month, combined);
   if (!hasNext) out = setTaxModeFrom(out, next, before);
   return out;
+}
+
+/** The payslip group other jobs belong to: the chosen one, else "main", else the first group. */
+export function otherPayerId(data: Pick<AppData, "otherPayer" | "payerNames">): string {
+  const names = Object.keys(data.payerNames);
+  if (data.otherPayer && names.includes(data.otherPayer)) return data.otherPayer;
+  return names.includes("main") ? "main" : (names[0] ?? "main");
+}
+
+/** Hours between an other job's start and end time (0 when either is missing). */
+export function otherHours(e: Pick<Entry, "startTime" | "endTime">): number {
+  if (!e.startTime || !e.endTime) return 0;
+  const m = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+  let span = m(e.endTime) - m(e.startTime);
+  if (span <= 0) span += 24 * 60;
+  return Math.round((span / 60) * 100) / 100;
+}
+
+/** Other jobs with an amount, as income on the payslip they belong to. */
+export function otherIncome(data: Pick<AppData, "entries" | "otherPayer" | "payerNames">, month: string): Array<{ date: string; payer: string; amount: number; hours: number }> {
+  const payer = otherPayerId(data);
+  return data.entries
+    .filter((e) => isOther(e) && e.date.startsWith(month) && (e.amount ?? 0) > 0)
+    .map((e) => ({ date: e.date, payer, amount: e.amount ?? 0, hours: otherHours(e) }));
 }

@@ -1,6 +1,6 @@
 import { computeDay, findSite, valueOn, type RuleHistory } from "./engine";
 import { daysOfMonth } from "./format";
-import { isOther, type Entry } from "./model";
+import { isOther, otherHours, type Entry } from "./model";
 
 /** Which jobs go on the payroll timesheet, and what to call the client. */
 export interface TimesheetRule {
@@ -44,7 +44,8 @@ export const CLIENT_MEDIC = "Client medic";
 const same = (a: string | undefined, b: string | undefined) => (a ?? "").trim().toLowerCase() === (b ?? "").trim().toLowerCase();
 
 export function matchRule(entry: Entry, rules: TimesheetRule[]): TimesheetRule | undefined {
-  if (isOther(entry)) return undefined;
+  // Other jobs always go on the timesheet, named by what they were.
+  if (isOther(entry)) return { site: "", label: `Other job${entry.description?.trim() ? ` - ${entry.description.trim()}` : ""}` };
   // A specific role rule wins over an "any role" rule for the same site.
   const roleMatch = rules.find((r) => r.role && same(r.site, entry.site) && same(r.role, entry.role));
   const siteMatch = roleMatch ?? rules.find((r) => !r.role && same(r.site, entry.site));
@@ -72,6 +73,7 @@ export function buildTimesheet(month: string, entries: Entry[], history: RuleHis
     if (!jobs) continue;
     const hours = { t: 0, t15: 0, t2: 0, t3: 0 };
     for (const { entry } of jobs) {
+      if (isOther(entry)) { hours.t += otherHours(entry); continue; }
       const site = findSite(valueOn(history.sites, date), entry.site);
       const pay = site ? computeDay(entry, valueOn(history.sites, date)) : undefined;
       const tiers = pay?.tierHours ?? { x1: 0, x15: 0, x2: 0, x3: 0 };

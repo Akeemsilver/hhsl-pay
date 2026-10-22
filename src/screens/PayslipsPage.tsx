@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { isCombined, setTaxModeFrom } from "../model";
+import { isCombined, otherPayerId, setTaxModeFrom } from "../model";
 import { MONTHS, todayISO } from "../format";
 import { useStore } from "../store";
 import { PageHeader } from "../components/TopBar";
@@ -36,6 +36,16 @@ export function PayslipsPage() {
           </ul>
         )}
       </section>
+      <h2 className="section-title">Other jobs</h2>
+      <section className="card">
+        <label>Other jobs are paid on
+          <select aria-label="Other jobs payslip" value={otherPayerId(data)} onChange={(e) => update((d) => ({ ...d, otherPayer: e.target.value }))}>
+            {Object.entries(payers).map(([id, n]) => <option key={id} value={id}>{n}</option>)}
+          </select>
+        </label>
+        <p className="muted small">Pickups and deliveries that have an amount are added to this payslip's gross and taxed with it. Leave the amount blank until the company confirms it.</p>
+      </section>
+
       <h2 className="section-title">Payslip names</h2>
       <p className="muted pad">Income is taxed per payslip (each employer or paymaster has its own allowance). Name each payslip here, then assign sites to one under Site locations.</p>
       <section className="card">

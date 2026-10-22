@@ -1,7 +1,7 @@
 import { computeDay, computeMonth, findSite, valueOn, type RuleHistory } from "./engine";
 import { monthOf } from "./engine";
 import { COMBINED_PAYER } from "./engine";
-import { isCombined, overridesFor, isOther, type AppData, type Entry } from "./model";
+import { isCombined, otherHours, otherIncome, otherPayerId, overridesFor, isOther, type AppData, type Entry } from "./model";
 
 export interface SiteBreakdown {
   label: string;
@@ -102,6 +102,11 @@ export function earningsLines(entries: Entry[], history: RuleHistory): PayslipLi
     .map(({ line }) => ({ ...line, qty: round2(line.qty), amount: round2(line.amount) }));
 }
 
+function otherRow(extras: Array<{ date: string; amount: number; hours: number }>): SiteBreakdown {
+  const hours = round2(extras.reduce((t, x) => t + x.hours, 0));
+  return { label: "Other jobs", rates: [], flat: false, days: new Set(extras.map((x) => x.date)).size, hours, x1: hours, x15: 0, x2: 0, x3: 0, weighted: hours, amount: round2(extras.reduce((t, x) => t + x.amount, 0)), ytdAmount: 0 };
+}
+
 /** One payslip for each payslip (payer) that has income in the month. */
 export function buildPayslips(month: string, data: AppData, employee: string): Payslip[] {
   const jobs = data.entries.filter((e) => !isOther(e));
@@ -109,7 +114,7 @@ export function buildPayslips(month: string, data: AppData, employee: string): P
   const upTo = Number(month.slice(5));
   const months = Array.from({ length: upTo }, (_, i) => {
     const m = `${year}-${String(i + 1).padStart(2, "0")}`;
-    return computeMonth(m, jobs, data.history, overridesFor(data, m), isCombined(data, m));
+    return computeMonth(m, jobs, data.history, overridesFor(data, m), isCombined(data, m), otherIncome(data, m));
   });
   const current = months[upTo - 1]!;
 
@@ -120,6 +125,10 @@ export function buildPayslips(month: string, data: AppData, employee: string): P
       return (site?.payer ?? "main") === p.payer;
     });
     const lines = earningsLines(mine.map((e) => e.entry), data.history);
+    const extras = otherIncome(data, month).filter((x) => p.payer === "all" || x.payer === p.payer);
+    const otherDays = new Set(extras.map((x) => x.date));
+    const otherTotal = round2(extras.reduce((t, x) => t + x.amount, 0));
+    if (extras.length) lines.push({ description: "Other jobs", qty: otherDays.size, unit: "days", rate: 0, amount: otherTotal });
     const calculated = round2(lines.reduce((s, l) => s + l.amount, 0));
     // A gross typed in from the real payslip replaces the calculated one; show the difference so the lines add up.
     if (Math.abs(p.gross - calculated) > 0.005) {
@@ -133,13 +142,13 @@ export function buildPayslips(month: string, data: AppData, employee: string): P
     }
     return {
       month, payer: p.payer, payerName: p.payer === COMBINED_PAYER ? "All sites" : (data.payerNames[p.payer] ?? p.payer), employee,
-      lines, sites: siteBreakdown(mine).map((b) => ({
+      lines, sites: [...siteBreakdown(mine), ...(extras.length ? [otherRow(extras)] : [])].map((b) => ({
         ...b,
         ytdAmount: round2(months.reduce((t, m) => t + m.entries.filter((x) => x.entry.site === b.label).reduce((u, x) => u + x.pay.total, 0), 0)),
       })), gross: p.gross, paye: p.paye, nis: p.nis, surcharge: p.surcharge, net: p.net,
-      hours: mine.reduce((s, e) => s + e.entry.hours, 0),
-      days: new Set(mine.filter((e) => e.pay.total > 0).map((e) => e.entry.date)).size,
-      dates: [...new Set(mine.filter((e) => e.pay.total > 0).map((e) => e.entry.date))],
+      hours: mine.reduce((s, e) => s + e.entry.hours, 0) + extras.reduce((t, x) => t + x.hours, 0),
+      days: new Set([...mine.filter((e) => e.pay.total > 0).map((e) => e.entry.date), ...otherDays]).size,
+      dates: [...new Set([...mine.filter((e) => e.pay.total > 0).map((e) => e.entry.date), ...otherDays])],
       corrected: p.corrected,
       ytd,
     };
@@ -174,6 +183,7 @@ export function combinePayslips(slips: Payslip[]): Payslip | undefined {
 
 /** The text for a site's rate column: hourly, or per day on a flat-pay site; a range if the rate changed during the month. */
 export function siteRateText(b: SiteBreakdown, fmt: (n: number) => string): string {
+  if (b.rates.length === 0) return "";
   const lo = b.rates[0] ?? 0, hi = b.rates[b.rates.length - 1] ?? 0;
   return `${lo === hi ? fmt(lo) : `${fmt(lo)} - ${fmt(hi)}`}${b.flat ? " /day" : " /h"}`;
 }

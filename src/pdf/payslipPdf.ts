@@ -172,6 +172,7 @@ function drawBreakdown(doc: Doc, slips: Payslip[]) {
   const n = (v: number) => (v ? `${Math.round(v * 100) / 100}` : "-");
   const nh = (v: number) => (v ? `${n(v)} h` : "-");
   const rateText = (b: Payslip["sites"][number]) => {
+    if (b.rates.length === 0) return "";
     const lo = b.rates[0] ?? 0, hi = b.rates[b.rates.length - 1] ?? 0;
     return `${lo === hi ? usd(lo) : `${usd(lo)} - ${usd(hi)}`}${b.flat ? " /day" : " /h"}`;
   };

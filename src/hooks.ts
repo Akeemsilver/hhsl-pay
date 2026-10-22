@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { computeMonth, filterMonth, type MonthResult } from "./engine";
-import { isCombined, isOther, overridesFor, type Entry } from "./model";
+import { isCombined, isOther, otherIncome, overridesFor, type Entry } from "./model";
 import { useSiteFilter } from "./filter";
 import { useStore } from "./store";
 import { clearTemplate, loadTemplate, saveTemplate, type StoredTemplate } from "./storage";
@@ -9,7 +9,7 @@ export function useMonth(month: string): MonthResult<Entry> {
   const { data } = useStore();
   const { site } = useSiteFilter();
   return useMemo(() => {
-    const r = computeMonth(month, data.entries.filter((e) => !isOther(e)), data.history, overridesFor(data, month), isCombined(data, month));
+    const r = computeMonth(month, data.entries.filter((e) => !isOther(e)), data.history, overridesFor(data, month), isCombined(data, month), otherIncome(data, month));
     return site ? filterMonth(r, site, data.history) : r;
   }, [month, data, site]);
 }
@@ -22,7 +22,7 @@ export function useYear(year: number): Array<MonthResult<Entry>> {
     () =>
       Array.from({ length: 12 }, (_, i) => {
         const month = `${year}-${String(i + 1).padStart(2, "0")}`;
-        const r = computeMonth(month, data.entries.filter((e) => !isOther(e)), data.history, overridesFor(data, month), isCombined(data, month));
+        const r = computeMonth(month, data.entries.filter((e) => !isOther(e)), data.history, overridesFor(data, month), isCombined(data, month), otherIncome(data, month));
         return site ? filterMonth(r, site, data.history) : r;
       }),
     [year, data, site],

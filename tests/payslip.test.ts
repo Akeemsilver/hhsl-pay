@@ -144,3 +144,25 @@ describe("split and combined tax", () => {
     expect(comb[0]!.nis + comb[0]!.surcharge).not.toBeCloseTo(split.reduce((s, p) => s + p.nis + p.surcharge, 0), 2);
   });
 });
+
+describe("other jobs with an amount", () => {
+  it("add to the gross of their payslip, are taxed with it, and show as a line", () => {
+    const base = data([e("1", "2026-07-01", "Beta")]);
+    const withOther = data([e("1", "2026-07-01", "Beta"), { id: "o", date: "2026-07-02", kind: "other", site: "", hours: 0, description: "Pickup", startTime: "08:00", endTime: "10:00", amount: 300 }]);
+    withOther.payerNames = { ...withOther.payerNames };
+    const a = buildPayslips("2026-07", base, "T");
+    const b = buildPayslips("2026-07", withOther, "T");
+    const payer = b.find((p) => p.lines.some((l) => l.description === "Other jobs"))!;
+    expect(payer).toBeDefined();
+    const before = a.find((p) => p.payer === payer.payer)!;
+    expect(payer.gross).toBeCloseTo(before.gross + 300, 2);
+    expect(payer.nis + payer.surcharge + payer.paye).toBeGreaterThan(before.nis + before.surcharge + before.paye - 0.001);
+    expect(payer.sites.find((s) => s.label === "Other jobs")).toMatchObject({ amount: 300, hours: 2 });
+    expect(payer.lines.reduce((t, l) => t + l.amount, 0)).toBeCloseTo(payer.gross, 2);
+  });
+  it("count as nothing while the amount is blank", () => {
+    const d = data([e("1", "2026-07-01", "Beta"), { id: "o", date: "2026-07-02", kind: "other", site: "", hours: 0, description: "Pickup" }]);
+    const slips = buildPayslips("2026-07", d, "T");
+    expect(slips.every((p) => !p.lines.some((l) => l.description === "Other jobs"))).toBe(true);
+  });
+});

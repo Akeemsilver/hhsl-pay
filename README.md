@@ -15,7 +15,7 @@ phone (IndexedDB), with no account and no server. Backup and moving to a new pho
 - Payslip corrections (actual gross / PAYE) per month and payslip
 - Dashboard home, calendar grid, and a Charts tab (year to date by site, gross vs net, PAYE vs NIS, split by payslip)
 - Light, dark or system theme from the settings gear
-- Roles per site (for example client medic) with their own rates, and other jobs (pickups, deliveries) logged without pay
+- Roles per site (for example client medic) with their own rates, and other jobs (pickups, deliveries): once an amount is entered it is added to the Point Lisas / other gross, taxed with it, and listed on the payslip and timesheet
 - Start/end times with automatic paid hours (unpaid lunch comes off)
 - Payroll timesheet: fills the company's .xlsx template for the month you are viewing (kept on the phone, not in this repo)
 - Separate settings pages for site locations, NIS & tax (with start dates for changes), payslips and the timesheet

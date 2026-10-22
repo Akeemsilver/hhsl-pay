@@ -5,6 +5,14 @@ import { valueOn } from "./rules";
 import { monthTax, type MonthTax } from "./tax";
 import type { DayEntry, DayPay, RuleHistory } from "./types";
 
+/** Money earned outside the sites table (other jobs): added to a payslip's gross and taxed with it. */
+export interface ExtraIncome {
+  date: string;
+  payer: string;
+  amount: number;
+  hours: number;
+}
+
 /** The payer id used when every site is taxed together. */
 export const COMBINED_PAYER = "all";
 
@@ -45,6 +53,7 @@ export function computeMonth<E extends DayEntry>(
   overrides: Record<string, PayerOverride> = {},
   /** Tax everything together as one payer ("all") instead of each payslip group on its own. */
   combined = false,
+  extras: ExtraIncome[] = [],
 ): MonthResult<E> {
   const { y, m } = parseISO(`${month}-01`);
   const mondays = mondaysInMonth(y, m);
@@ -59,6 +68,15 @@ export function computeMonth<E extends DayEntry>(
     const acc = byPayer.get(payer) ?? { gross: 0, hours: 0 };
     acc.gross += pay.total;
     acc.hours += entry.hours;
+    byPayer.set(payer, acc);
+  }
+
+  for (const x of extras) {
+    if (monthOf(x.date) !== month || !(x.amount > 0)) continue;
+    const payer = combined ? COMBINED_PAYER : x.payer;
+    const acc = byPayer.get(payer) ?? { gross: 0, hours: 0 };
+    acc.gross += x.amount;
+    acc.hours += x.hours;
     byPayer.set(payer, acc);
   }
 
