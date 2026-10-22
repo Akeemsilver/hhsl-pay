@@ -9,6 +9,8 @@ import { isCombined, overridesFor } from "../model";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
 import { BackIcon, ForwardIcon } from "../components/Icons";
+import { YearByPayslip, YearSites } from "../components/YearParts";
+import { yearReport } from "../yearReport";
 
 export function YearScreen() {
   const { data } = useStore();
@@ -29,6 +31,7 @@ export function YearScreen() {
     byPayer.set(p.payer, t);
   }
   const yearPayers = [...byPayer.values()];
+  const report = useMemo(() => yearReport(months, data, !filterSite), [months, data, filterSite]);
   const max = Math.max(1, ...months.map((m) => m.gross));
   const progress = Math.min(1, gross / rules.annualThreshold);
 
@@ -50,6 +53,18 @@ export function YearScreen() {
           <div><dt><i className="dot dot-sur" />Surcharge</dt><dd className="c-sur">{money(total((m) => m.surcharge))}</dd></div>
         </dl>
         <PayerTax payers={yearPayers} />
+      </section>
+
+      <section className="card">
+        <h2>By site</h2>
+        <p className="muted small">Days, hours worked and hours paid for (overtime counted at its multiple) at each site this year. Tap a site for the months.</p>
+        <YearSites sites={report.sites} year={year} />
+      </section>
+
+      <section className="card">
+        <h2>By payslip, month by month</h2>
+        <p className="muted small">Income, taxes, hours and days for each month, laid out like your yearly spreadsheet. Slide the table sideways for all the months.</p>
+        <YearByPayslip report={report} />
       </section>
 
       {!filterSite && (

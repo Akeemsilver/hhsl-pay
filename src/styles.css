@@ -734,3 +734,38 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .days-clip > .days { box-shadow: none; }
 .actions button.primary:disabled { opacity: 0.55; box-shadow: none; }
 .monthbar .monthname select { cursor: pointer; }
+
+/* Year tab: sites and payslip tables */
+.ysite-total { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin: 6px 0 12px; }
+.ysite-total div { display: grid; gap: 2px; }
+.ysite-total span { font-size: 0.75rem; color: var(--muted); }
+.ysite-total strong { font-size: 1.2rem; white-space: nowrap; }
+.ysites { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ysites li { border: 1px solid var(--edge); border-radius: 12px; background: var(--card); box-shadow: var(--lift-sm); }
+.ysites summary { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; padding: 10px 12px; list-style: none; cursor: pointer; }
+.ysites summary::-webkit-details-marker { display: none; }
+.ysite-name { font-weight: 700; display: flex; align-items: center; flex-wrap: wrap; }
+.ysite-name .sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; flex: none; }
+.ysite-amount { font-weight: 700; text-align: right; }
+.ysite-bar { grid-column: 1 / -1; height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.ysite-bar i { display: block; height: 100%; border-radius: 999px; }
+.ysite-stats { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.85rem; color: var(--muted); }
+.ysite-stats b { color: var(--text); font-weight: 700; }
+.ysite-table { width: calc(100% - 24px); margin: 0 12px 12px; font-size: 0.9rem; }
+.ysite-table th, .ysite-table td { padding: 4px 4px; }
+.ysite-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.ytable { border: 1px solid var(--edge); border-radius: 12px; background: var(--card); box-shadow: var(--lift-sm); margin-bottom: 10px; padding: 0 0 8px; }
+.ytable > summary { display: flex; justify-content: space-between; gap: 8px; padding: 12px; font-weight: 700; cursor: pointer; }
+.ytable > p { margin: 6px 12px 0; }
+.yt-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 0 4px; }
+.yt-scroll table { border-collapse: separate; border-spacing: 0; font-size: 0.85rem; min-width: 1500px; }
+.yt-scroll th, .yt-scroll td { padding: 5px 8px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; border: 0; }
+.yt-scroll thead th { color: var(--muted); font-weight: 600; }
+.yt-scroll tbody th[scope="row"], .yt-scroll thead th:first-child { position: sticky; left: 0; background: var(--card); text-align: left; min-width: 130px; z-index: 1; font-weight: 500; }
+.yt-block th { text-align: left !important; color: var(--accent) !important; font-weight: 800 !important; padding-top: 12px; }
+.yt-scroll tr.strong th, .yt-scroll tr.strong td { font-weight: 700; }
+.yt-scroll tr.dotted td, .yt-scroll tr.dotted th { border-bottom: 1px dotted var(--line); }
+.yt-scroll td.tot { font-weight: 700; border-left: 1px solid var(--line); }
+.ysite-name .muted { margin-left: 6px; }
+.yt-scroll { scroll-snap-type: x proximity; scroll-padding-left: 138px; }
+.yt-scroll thead th:not(:first-child) { scroll-snap-align: start; }
