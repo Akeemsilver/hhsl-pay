@@ -11,6 +11,13 @@ export interface RatesKit extends RuleHistory {
   payerNames?: Record<string, string>;
   timesheetRules?: TimesheetRule[];
   siteLabel?: string;
+  payrollEmail?: string;
+  /** Which payslip group other jobs are paid and taxed on. */
+  otherPayer?: string;
+  /** Split or combined tax, and from which month. */
+  taxMode?: AppData["taxMode"];
+  /** Public holiday edits (for example Divali). */
+  holidays?: AppData["holidays"];
   /** The company time sheet form (.xlsx), so a colleague does not have to find it. Sent inside the kit, never kept in the app's public code. */
   timesheetTemplate?: { name: string; data: string };
 }
@@ -31,6 +38,10 @@ export function ratesKitOf(data: AppData, template?: { name: string; bytes: Arra
     payerNames: data.payerNames,
     timesheetRules: data.timesheet?.rules,
     siteLabel: data.timesheet?.siteLabel,
+    payrollEmail: data.timesheet?.payrollEmail,
+    otherPayer: data.otherPayer,
+    taxMode: data.taxMode,
+    holidays: data.holidays,
   };
 }
 
@@ -40,8 +51,11 @@ export function applyKit(data: AppData, kit: RatesKit): AppData {
     ...data,
     history: { sites: kit.sites, tax: kit.tax },
     payerNames: { ...data.payerNames, ...(kit.payerNames ?? {}) },
-    timesheet: kit.timesheetRules || kit.siteLabel
-      ? { name: data.timesheet?.name ?? "", siteLabel: kit.siteLabel ?? data.timesheet?.siteLabel ?? "ERT Offsite", rules: kit.timesheetRules ?? data.timesheet?.rules ?? [], payrollEmail: data.timesheet?.payrollEmail }
+    otherPayer: kit.otherPayer ?? data.otherPayer,
+    taxMode: kit.taxMode ?? data.taxMode,
+    holidays: kit.holidays ?? data.holidays,
+    timesheet: kit.timesheetRules || kit.siteLabel || kit.payrollEmail
+      ? { name: data.timesheet?.name ?? "", siteLabel: kit.siteLabel ?? data.timesheet?.siteLabel ?? "ERT Offsite", rules: kit.timesheetRules ?? data.timesheet?.rules ?? [], payrollEmail: kit.payrollEmail ?? data.timesheet?.payrollEmail, includeOther: data.timesheet?.includeOther }
       : data.timesheet,
   };
 }

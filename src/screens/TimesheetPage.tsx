@@ -52,11 +52,7 @@ export function TimesheetPage() {
 
       <section className="card">
         <h2>Other jobs</h2>
-        <label className="check">
-          <input type="checkbox" aria-label="List other jobs on the timesheet" checked={settings.includeOther !== false} onChange={(e) => setSettings({ includeOther: e.target.checked })} />
-          {" "}List other jobs (pickups, deliveries) on the timesheet
-        </label>
-        <p className="muted small">Each one appears as its own row, named “Other job - what it was”, with the hours from its start and end time. They are also paid and listed on the payslip once you enter their amount.</p>
+        <p className="muted small">All other jobs (pickups, deliveries) go on the timesheet automatically, each as its own row named “Other job - what it was”, with the hours from its start and end time. Once you enter an amount they are also added to the payslip. Which payslip they go on is set in Settings, Payslips.</p>
       </section>
 
       <section className="card">
