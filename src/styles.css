@@ -608,3 +608,6 @@ button.icon.gear svg, .bar.page button.icon[aria-label="Back"] svg { width: 18px
 .mail-preview > div { display: flex; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--line); }
 .mail-preview > div span { color: var(--muted); min-width: 52px; }
 .mail-preview pre { margin: 8px 0 0; white-space: pre-wrap; font: inherit; }
+
+button.more { width: 100%; text-align: left; justify-content: flex-start; min-height: 40px; margin: 8px 0 4px; background: var(--bg); }
+.more-panel { padding: 6px 0 2px; display: grid; gap: 8px; }

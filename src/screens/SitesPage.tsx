@@ -23,6 +23,7 @@ function RoleCard({ name, role, site, builtIn, onChange, onRename, onRemove }: {
 }) {
   const [draft, setDraft] = useState(name);
   const own = !!(role.weekday || role.weekend || role.holiday);
+  const [more, setMore] = useState(own);
   return (
     <div className="role-card">
       {builtIn ? <strong>{name}</strong> : (
@@ -35,21 +36,31 @@ function RoleCard({ name, role, site, builtIn, onChange, onRename, onRemove }: {
         <label>Flat day<NumInput label={`${name} flat daily pay`} value={role.dailyPay} onChange={(v) => onChange({ ...role, dailyPay: v })} /></label>
         <label>Holiday day<NumInput label={`${name} holiday daily pay`} value={role.dailyHoliday} onChange={(v) => onChange({ ...role, dailyHoliday: v })} /></label>
       </div>
-      <label className="check">
-        <input type="checkbox" aria-label={`${name} has its own overtime hours`} checked={own}
-          onChange={(e) => onChange(e.target.checked
-            ? { ...role, weekday: { ...site.weekday }, weekend: { ...site.weekend }, holiday: { ...site.holiday } }
-            : { ...role, weekday: undefined, weekend: undefined, holiday: undefined })} />
-        {" "}Own overtime hours for {name}
-      </label>
-      {own ? (
-        <div className="caps">
-          <span /><span className="cap-h">×1</span><span className="cap-h">×1.5</span><span className="cap-h">×2</span><span className="cap-h">×3</span>
-          <CapsRow label="Weekday" caps={role.weekday ?? {}} onChange={(c) => onChange({ ...role, weekday: c })} />
-          <CapsRow label="Weekend" caps={role.weekend ?? {}} onChange={(c) => onChange({ ...role, weekend: c })} />
-          <CapsRow label="Holiday" caps={role.holiday ?? {}} onChange={(c) => onChange({ ...role, holiday: c })} withX3 />
+      <button className="more" aria-expanded={more} onClick={() => setMore(!more)}>
+        {more ? "Less ▴" : "More ▾"} <span className="muted small">· hours at 1x, 1.5x, 2x, 3x{own ? " (own hours set)" : " (same as site)"}</span>
+      </button>
+      {more && (
+        <div className="more-panel">
+          <label className="check">
+            <input type="checkbox" aria-label={`${name} has its own overtime hours`} checked={own}
+              onChange={(e) => onChange(e.target.checked
+                ? { ...role, weekday: { ...site.weekday }, weekend: { ...site.weekend }, holiday: { ...site.holiday } }
+                : { ...role, weekday: undefined, weekend: undefined, holiday: undefined })} />
+            {" "}Different hours for {name} than the rest of the site
+          </label>
+          {own ? (
+            <>
+              <div className="caps">
+                <span /><span className="cap-h">1x</span><span className="cap-h">1.5x</span><span className="cap-h">2x</span><span className="cap-h">3x</span>
+                <CapsRow label="Weekday" caps={role.weekday ?? {}} onChange={(c) => onChange({ ...role, weekday: c })} />
+                <CapsRow label="Weekend" caps={role.weekend ?? {}} onChange={(c) => onChange({ ...role, weekend: c })} />
+                <CapsRow label="Holiday" caps={role.holiday ?? {}} onChange={(c) => onChange({ ...role, holiday: c })} withX3 />
+              </div>
+              <p className="muted small">Example: <strong>8</strong> under 1x and <strong>4</strong> under 1.5x means the first 8 hours of the day are paid at 1x and the next 4 hours at 1.5x. Type <strong>1000</strong> for “no limit”.</p>
+            </>
+          ) : <p className="muted small">{name} uses the site's hours (see “Overtime hours” lower on this page).</p>}
         </div>
-      ) : <p className="muted small">Uses the site's overtime hours below.</p>}
+      )}
       {builtIn
         ? <p className="muted small">Leave blank to pay this role at the site's standard rate.</p>
         : <button className="danger" onClick={() => confirm(`Remove the role ${name}? Days that used it go back to the standard rate.`) && onRemove()}>Remove role</button>}
@@ -108,9 +119,9 @@ function SiteCard({ name, site, payers, onChange, onRename, onRemove, onRenameRo
       </div>
 
       <h3 className="section-title">Overtime hours</h3>
-      <p className="muted small">Hours at each pay multiple per day. Use a large number such as 1000 for “no limit”. Leave blank for none. Roles use these unless you give a role its own above.</p>
+      <p className="muted small">How many hours of each day are paid at 1x, 1.5x, 2x and 3x. Example: 8 under 1x and 4 under 1.5x means the first 8 hours at 1x, then 4 hours at 1.5x. Type 1000 for “no limit”. A role can have its own hours under “More” in its card.</p>
       <div className="caps">
-        <span /><span className="cap-h">×1</span><span className="cap-h">×1.5</span><span className="cap-h">×2</span><span className="cap-h">×3</span>
+        <span /><span className="cap-h">1x</span><span className="cap-h">1.5x</span><span className="cap-h">2x</span><span className="cap-h">3x</span>
         <CapsRow label="Weekday" caps={site.weekday} onChange={(c) => set("weekday", c)} />
         <CapsRow label="Weekend" caps={site.weekend} onChange={(c) => set("weekend", c)} />
         <CapsRow label="Holiday" caps={site.holiday} onChange={(c) => set("holiday", c)} withX3 />
@@ -178,7 +189,7 @@ export function SitesPage() {
   return (
     <>
       <PageHeader title="Site locations & rates" />
-      <p className="muted pad">Add the sites you work at, with their pay rates. When you get a raise, add new rates from its start date. Earlier days keep their old rates.</p>
+      <p className="muted pad">Add the sites you work at, with their pay rates. When your pay changes (a raise, for example), tap “Pay changed? Add new rates” and pick the first day it applies. Days before that keep the old rates.</p>
 
       <section className="card">
         <VersionBar

@@ -24,8 +24,8 @@ export function TaxPage() {
         <h2>Which rules</h2>
         <VersionBar
           versions={versions} selected={now.effectiveFrom} onSelect={setSel}
-          heading="NIS and tax rules in effect" addLabel="＋ NIS / tax changes on a date"
-          hint="Copies the rules shown. Edit the copy afterwards (for example, the new NIS table). Months from this date onward use it; earlier months are untouched."
+          heading="Which NIS and tax rules are you editing?" addLabel="＋ NIS or tax changed? Add new rules"
+          hint="Pick the first day the new rules apply. The app copies the rules shown for you to change (for example, the new NIS table). Earlier months keep the old rules."
           onAdd={(date) => {
             const r = addVersion(versions, sel, date);
             if (typeof r === "string") return r;
