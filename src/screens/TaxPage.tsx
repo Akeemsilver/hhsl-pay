@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { valueOn, type TaxRules } from "../engine";
 import { useStore } from "../store";
 import { PageHeader } from "../components/TopBar";
-import { BandTable, NumInput, versionLabel } from "../components/settingsParts";
+import { BandTable, NumInput, TakeEffect, versionLabel } from "../components/settingsParts";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { isFarBack } from "../rateEdit";
 import { applyFrom, diffObject } from "../rateEdit";
 import { todayISO } from "../format";
 
@@ -16,6 +18,8 @@ export function TaxPage() {
   useEffect(() => setDraft(JSON.parse(savedKey) as TaxRules), [savedKey]);
   const dirty = JSON.stringify(draft) !== savedKey;
   const [from, setFrom] = useState(todayISO());
+  const [ask, setAsk] = useState(false);
+  const earliest = data.entries.reduce<string | undefined>((m, e) => (!m || e.date < m ? e.date : m), undefined);
   const setTax = (fn: (t: TaxRules) => TaxRules) => setDraft((t) => fn(t));
 
   const save = () => {
@@ -61,14 +65,15 @@ export function TaxPage() {
 
       {dirty && (
         <div className="save-bar" role="group" aria-label="Save NIS and tax changes">
+          <TakeEffect from={from} setFrom={setFrom} firstDate={versions[0]!.effectiveFrom} label="NIS and tax take effect from" what="rules" />
           <div className="save-row">
-            <label>Take effect from
-              <input type="date" aria-label="NIS and tax take effect from" value={from} onChange={(e) => setFrom(e.target.value || todayISO())} />
-            </label>
             <button onClick={() => setDraft(saved)}>Discard</button>
-            <button className="primary" onClick={save}>Save</button>
+            <button className="primary" onClick={() => (isFarBack(from, todayISO(), earliest) ? setAsk(true) : save())}>Save</button>
           </div>
-          <p className="muted small">{from === todayISO() ? "Starts today; earlier months keep the old rules." : from < todayISO() ? "Past date: months since then are recalculated with these rules." : "Nothing changes until that day."}</p>
+          {ask && (
+            <ConfirmDialog title={`Are you sure? ${from} is a long way back`} message={`Saving these rules from ${from} recalculates every month since then.`} confirmLabel="Save from that date" cancelLabel="Cancel" safe
+              onCancel={() => setAsk(false)} onConfirm={() => { setAsk(false); save(); }} />
+          )}
         </div>
       )}
 

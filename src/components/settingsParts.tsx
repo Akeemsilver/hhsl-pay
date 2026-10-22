@@ -1,4 +1,6 @@
 import type { Dated } from "../engine";
+import type { Impact } from "../rateEdit";
+import { money } from "../format";
 import { FIRST_VERSION_DATE } from "../model";
 import { todayISO } from "../format";
 
@@ -58,5 +60,35 @@ export function BandTable({ title, bands, onChange, firstLabel, secondLabel, ope
       </table>
       <button onClick={() => onChange([...bands, [(bands.at(-1)?.[0] ?? 0) + 1, bands.at(-1)?.[1] ?? 0]])}>Add row</button>
     </details>
+  );
+}
+
+/** "Take effect from": a date (today unless changed), an All days shortcut, and what the date will do to logged days. */
+export function TakeEffect({ from, setFrom, firstDate, impact, label, what = "rates" }: {
+  from: string; setFrom: (d: string) => void; firstDate: string; impact?: Impact; label: string; what?: string;
+}) {
+  const today = todayISO();
+  return (
+    <div className="take-effect">
+      <label>Take effect from
+        <input type="date" aria-label={label} value={from} onChange={(e) => setFrom(e.target.value || today)} />
+      </label>
+      <p className="muted small">
+        {from > today
+          ? "A future date: nothing changes until that day."
+          : from === today
+            ? `Today: it starts now and earlier days keep their old ${what}.`
+            : "A past date: every day since then is recalculated."}
+        {" "}
+        <button className="link small" onClick={() => setFrom(firstDate)}>Apply to all days</button>
+      </p>
+      {from < today && impact && (
+        <p className={`notice ${impact.days > 0 ? "" : "muted"}`}>
+          {impact.days > 0
+            ? <>This recalculates <strong>{impact.days}</strong> logged day{impact.days === 1 ? "" : "s"} since {impact.first}. Gross changes by <strong>{impact.delta >= 0 ? "+" : "-"}{money(Math.abs(impact.delta))}</strong>.</>
+            : "No logged days change."}
+        </p>
+      )}
+    </div>
   );
 }

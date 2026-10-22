@@ -1,4 +1,4 @@
-import type { Dated, SiteRates, SiteTable, TierCaps } from "./engine";
+import { computeDay, valueOn, type Dated, type DayEntry, type SiteRates, type SiteTable, type TierCaps } from "./engine";
 import { FIRST_VERSION_DATE } from "./model";
 
 const clone = <T,>(v: T): T => structuredClone(v);
@@ -78,4 +78,36 @@ export function commonValue<T>(values: T[]): T | undefined {
     counts.set(k, e);
   }
   return [...counts.values()].sort((a, b) => b.n - a.n)[0]?.v;
+}
+
+export interface Impact {
+  /** Days of work whose pay changes. */
+  days: number;
+  /** New gross minus old gross for those days. */
+  delta: number;
+  /** The first affected day. */
+  first?: string;
+}
+
+/** What a rate change does to days already logged from a date on: how many days reprice and by how much. */
+export function rateImpact(entries: DayEntry[], oldSites: Array<Dated<SiteTable>>, newSites: Array<Dated<SiteTable>>, from: string): Impact {
+  let days = 0, delta = 0, first: string | undefined;
+  for (const e of entries) {
+    if (e.date < from) continue;
+    const before = computeDay(e, valueOn(oldSites, e.date)).total;
+    const after = computeDay(e, valueOn(newSites, e.date)).total;
+    if (Math.abs(after - before) < 0.005) continue;
+    days++;
+    delta += after - before;
+    if (!first || e.date < first) first = e.date;
+  }
+  return { days, delta: Math.round(delta * 100) / 100, first };
+}
+
+/** A past start date is worth a second look when it is before any logged work, or more than about three months back. */
+export function isFarBack(from: string, today: string, earliestEntry: string | undefined): boolean {
+  const d = new Date(`${today}T00:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() - 3);
+  const limit = d.toISOString().slice(0, 10);
+  return from < today && (from < limit || (!!earliestEntry && from < earliestEntry));
 }

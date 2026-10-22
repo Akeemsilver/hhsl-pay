@@ -162,7 +162,8 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
               })()}
               <div className="checks">
                 <label><input type="checkbox" checked={!!entry.lead} onChange={(e) => patch(entry.id, { lead: e.target.checked })} /> Team lead / instructor</label>
-                <label><input type="checkbox" checked={!!entry.holiday} onChange={(e) => patch(entry.id, { holiday: e.target.checked })} /> Public holiday / TAR</label>
+                <label><input type="checkbox" checked={!!entry.holiday} onChange={(e) => patch(entry.id, { holiday: e.target.checked })} /> Holiday / TAR</label>
+                <p className="muted small">Tick for a public holiday, or a turnaround / shutdown. It is paid at the holiday rate, even on a weekend.</p>
               </div>
 
               <div className="hours-block">

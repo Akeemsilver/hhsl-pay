@@ -68,3 +68,33 @@ describe("tax rules take effect from a date too", () => {
     expect(valueOn(list, "2027-01-01").nisBands[1]![1]).toBe(demoTax.nisBands[1]![1] + 10);
   });
 });
+
+describe("what a change does to logged days", () => {
+  it("counts the days that reprice and the money", async () => {
+    const { rateImpact, isFarBack } = await import("../src/rateEdit");
+    const entries = [
+      { date: "2026-09-10", site: "A", hours: 12 },
+      { date: "2026-10-05", site: "A", hours: 12 },
+      { date: "2026-10-06", site: "Atl", hours: 12 },
+    ];
+    const next = applyFrom(v0(), "2026-10-01", (t) => changeGroup(t, "pl", { baseRate: 70 }));
+    const imp = rateImpact(entries, v0(), next, "2026-10-01");
+    expect(imp.days).toBe(1);
+    expect(imp.first).toBe("2026-10-05");
+    expect(imp.delta).toBeGreaterThan(0);
+    expect(isFarBack("2026-01-01", "2026-10-22", "2026-03-01")).toBe(true);
+    expect(isFarBack("2026-10-01", "2026-10-22", "2026-03-01")).toBe(false);
+    expect(isFarBack("2026-10-01", "2026-10-22", "2026-10-10")).toBe(true);
+    expect(isFarBack("2026-11-01", "2026-10-22", undefined)).toBe(false);
+  });
+});
+describe("templates", () => {
+  it("match the sites they came from", async () => {
+    const { detectTemplate, applyTemplate, HOURS_TEMPLATES } = await import("../src/templates");
+    const s = applyTemplate(site("pl", 60), "overtime");
+    expect(s.weekday).toEqual({ x1: 8, x15: 4, x2: 1000 });
+    expect(detectTemplate(s)).toBe("overtime");
+    expect(detectTemplate(applyTemplate(s, "atlantic"))).toBe("atlantic");
+    expect(HOURS_TEMPLATES.map((t) => t.name)).toEqual(["Standard straight time", "Standard overtime", "Atlantic standard"]);
+  });
+});

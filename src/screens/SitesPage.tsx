@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { valueOn, type RoleRates, type SiteRates, type SiteTable, type TierCaps } from "../engine";
-import { DEFAULT_ROLES, emptySite, rolesFor } from "../model";
+import { DEFAULT_ROLES, emptySite, isOther, rolesFor } from "../model";
 import { useStore } from "../store";
 import { PageHeader } from "../components/TopBar";
-import { NumInput, versionLabel, type Num } from "../components/settingsParts";
+import { NumInput, TakeEffect, versionLabel, type Num } from "../components/settingsParts";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { applyFrom, changeGroup, commonValue, diffSite, groupSites, patchSite } from "../rateEdit";
+import { applyFrom, changeGroup, commonValue, diffSite, groupSites, isFarBack, patchSite, rateImpact, type GroupChange, type Impact } from "../rateEdit";
+import { HOURS_TEMPLATES, applyTemplate, detectTemplate, templateById } from "../templates";
 import { todayISO } from "../format";
 
 function CapsRow({ label, caps, onChange, withX3 }: { label: string; caps: TierCaps; onChange: (c: TierCaps) => void; withX3?: boolean }) {
@@ -71,8 +72,8 @@ function RoleCard({ name, role, site, builtIn, onChange, onRename, onRemove }: {
   );
 }
 
-function SiteCard({ name, saved, payers, onSave, onRename, onRemove, onRenameRole }: {
-  name: string; saved: SiteRates; payers: Record<string, string>;
+function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename, onRemove, onRenameRole }: {
+  name: string; saved: SiteRates; payers: Record<string, string>; firstDate: string; impactFor: (draft: SiteRates, from: string) => Impact;
   onSave: (draft: SiteRates, from: string) => void; onRename: (n: string) => void; onRemove: () => void; onRenameRole: (from: string, to: string) => void;
 }) {
   const savedKey = JSON.stringify(saved);
@@ -128,6 +129,13 @@ function SiteCard({ name, saved, payers, onSave, onRename, onRemove, onRenameRol
       </div>
 
       <h3 className="section-title">Overtime hours</h3>
+      <label>Start from a template
+        <select aria-label={`${name} hours template`} value={detectTemplate(site) ?? ""} onChange={(e) => e.target.value && onChange(applyTemplate(site, e.target.value))}>
+          <option value="">{detectTemplate(site) ? "" : "Custom hours"}</option>
+          {HOURS_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
+      </label>
+      {templateById(detectTemplate(site)) && <p className="muted small">{templateById(detectTemplate(site))!.description}</p>}
       <p className="muted small">How many hours of each day are paid at 1x, 1.5x, 2x and 3x. Example: 8 under 1x and 4 under 1.5x means the first 8 hours at 1x, then 4 hours at 1.5x. Type 1000 for “no limit”. A role can have its own hours under “More” in its card.</p>
       <div className="caps">
         <span /><span className="cap-h">1x</span><span className="cap-h">1.5x</span><span className="cap-h">2x</span><span className="cap-h">3x</span>
@@ -151,23 +159,21 @@ function SiteCard({ name, saved, payers, onSave, onRename, onRemove, onRenameRol
       <button className="danger" onClick={() => confirm(`Remove ${name} and its rates?`) && onRemove()}>Remove site</button>
       {dirty && (
         <div className="save-bar" role="group" aria-label={`Save changes to ${name}`}>
+          <TakeEffect from={from} setFrom={setFrom} firstDate={firstDate} label={`${name} take effect from`} impact={from < todayISO() ? impactFor(site, from) : undefined} />
           <div className="save-row">
-            <label>Take effect from
-              <input type="date" value={from} onChange={(e) => setFrom(e.target.value || todayISO())} />
-            </label>
             <button onClick={() => setSite(saved)}>Discard</button>
             <button className="primary" onClick={() => onSave(site, from)}>Save</button>
           </div>
-          <p className="muted small">{from === todayISO() ? "Starts today; earlier days keep their old rates." : from < todayISO() ? "Past date: days since then are repriced." : "Nothing changes until that day."}</p>
         </div>
       )}
     </details>
   );
 }
 
-function GroupRates({ payer, name, table, onApply }: {
-  payer: string; name: string; table: SiteTable;
-  onApply: (c: { baseRate?: number; leadRate?: number; caps?: { weekday: TierCaps; weekend: TierCaps; holiday: TierCaps } }, from: string) => void;
+function GroupRates({ payer, name, table, firstDate, impactFor, farBack, onApply }: {
+  payer: string; name: string; table: SiteTable; firstDate: string;
+  impactFor: (c: GroupChange, from: string) => Impact; farBack: (from: string) => boolean;
+  onApply: (c: GroupChange, from: string) => void;
 }) {
   const { change, skip } = groupSites(table, payer);
   const mine = change.map((n) => table[n]!);
@@ -177,63 +183,144 @@ function GroupRates({ payer, name, table, onApply }: {
   const key = JSON.stringify([curStd, curLead, curCaps, change]);
   const [std, setStd] = useState<Num>(curStd);
   const [lead, setLead] = useState<Num>(curLead);
+  const [sameLead, setSameLead] = useState(curStd !== undefined && curStd === curLead);
   const [caps, setCaps] = useState(curCaps);
   const [more, setMore] = useState(false);
   const [from, setFrom] = useState(todayISO());
   const [ask, setAsk] = useState(false);
-  useEffect(() => { setStd(curStd); setLead(curLead); setCaps(curCaps); }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setStd(curStd); setLead(curLead); setSameLead(curStd !== undefined && curStd === curLead); setCaps(curCaps); }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
+  const newLead = sameLead ? std : lead;
   const capsChanged = JSON.stringify(caps) !== JSON.stringify(curCaps);
-  const changed = std !== curStd || lead !== curLead || capsChanged;
+  const changed = std !== curStd || newLead !== curLead || capsChanged;
+  const change_: GroupChange = { baseRate: std, leadRate: newLead, caps: capsChanged ? caps : undefined };
   if (change.length === 0) return null;
+  const impact = from < todayISO() ? impactFor(change_, from) : undefined;
   return (
     <section className="card group-rates" aria-label={`Rates for ${name}`}>
       <h2>{name}</h2>
       <p className="muted small">The same rates for all {change.length} hourly site{change.length === 1 ? "" : "s"}: {change.join(", ")}.</p>
       <div className="grid2">
         <label>Standard rate ($/h)<NumInput label={`${name} standard rate`} value={std} onChange={setStd} /></label>
-        <label>Team lead rate ($/h)<NumInput label={`${name} team lead rate`} value={lead} onChange={setLead} /></label>
+        <label>Team lead rate ($/h)<NumInput label={`${name} team lead rate`} value={sameLead ? std : lead} onChange={(v) => { setSameLead(false); setLead(v); }} /></label>
       </div>
+      <label className="check"><input type="checkbox" aria-label={`${name} team lead same as standard`} checked={sameLead} onChange={(e) => setSameLead(e.target.checked)} /> {" "}Team lead is paid the same as standard</label>
       <button className="more" aria-expanded={more} onClick={() => setMore(!more)}>{more ? "Less ▴" : "More ▾"} <span className="muted small">· hours at 1x, 1.5x, 2x, 3x</span></button>
       {more && (
         <div className="more-panel">
+          <label>Start from a template
+            <select aria-label={`${name} hours template`} value={detectTemplate(caps) ?? ""} onChange={(e) => e.target.value && setCaps(applyTemplate(caps, e.target.value))}>
+              <option value="">{detectTemplate(caps) ? "" : "Custom hours"}</option>
+              {HOURS_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+          </label>
           <div className="caps">
             <span /><span className="cap-h">1x</span><span className="cap-h">1.5x</span><span className="cap-h">2x</span><span className="cap-h">3x</span>
             <CapsRow label="Weekday" caps={caps.weekday} onChange={(c) => setCaps({ ...caps, weekday: c })} />
             <CapsRow label="Weekend" caps={caps.weekend} onChange={(c) => setCaps({ ...caps, weekend: c })} />
-            <CapsRow label="Holiday" caps={caps.holiday} onChange={(c) => setCaps({ ...caps, holiday: c })} withX3 />
+            <CapsRow label="Holiday / TAR" caps={caps.holiday} onChange={(c) => setCaps({ ...caps, holiday: c })} withX3 />
           </div>
-          <p className="muted small">Example: 12 under 1x means the first 12 hours of each day are paid at 1x. Type 1000 for “no limit”.</p>
+          <p className="muted small">Example: 12 under 1x means the first 12 hours of each day are paid at 1x. Type 1000 for “no limit”. Holiday / TAR is used for a holiday or a turnaround / shutdown, even on a weekend.</p>
         </div>
       )}
-      <label>Take effect from
-        <input type="date" aria-label={`${name} take effect from`} value={from} onChange={(e) => setFrom(e.target.value || todayISO())} />
-      </label>
-      <p className="muted small">{from === todayISO() ? "Today: it starts now, and earlier days keep their old rates." : from < todayISO() ? "A past date: every day since then is repriced with the new rates." : "A future date: nothing changes until that day."}</p>
+      <TakeEffect from={from} setFrom={setFrom} firstDate={firstDate} label={`${name} take effect from`} impact={impact} />
       <button className="primary wide" disabled={!changed} onClick={() => setAsk(true)}>Change for all sites</button>
       {skip.length > 0 && <p className="muted small">Not changed (flat pay or a threshold rate): {skip.join(", ")}. Edit those below.</p>}
       {ask && (
         <ConfirmDialog
-          title={`Change ${name}?`}
-          message={`${std !== curStd ? `Standard rate ${curStd ?? "-"} → ${std ?? "-"}. ` : ""}${lead !== curLead ? `Team lead rate ${curLead ?? "-"} → ${lead ?? "-"}. ` : ""}${capsChanged ? "Hours at 1x, 1.5x, 2x and 3x change too. " : ""}Applies to ${change.join(", ")} from ${from}${from === todayISO() ? " (today)" : ""}.`}
+          title={farBack(from) ? `Are you sure? ${from} is a long way back` : `Change ${name}?`}
+          message={`${std !== curStd ? `Standard rate ${curStd ?? "-"} → ${std ?? "-"}. ` : ""}${newLead !== curLead ? `Team lead rate ${curLead ?? "-"} → ${newLead ?? "-"}. ` : ""}${capsChanged ? "Hours at 1x, 1.5x, 2x and 3x change too. " : ""}Applies to ${change.join(", ")} from ${from}${from === todayISO() ? " (today)" : ""}.${impact && impact.days > 0 ? ` This recalculates ${impact.days} logged day${impact.days === 1 ? "" : "s"} (${impact.delta >= 0 ? "+" : "-"}$${Math.abs(impact.delta).toFixed(2)} gross).` : ""}`}
           confirmLabel="Change for all sites" cancelLabel="Cancel" safe
           onCancel={() => setAsk(false)}
-          onConfirm={() => { setAsk(false); onApply({ baseRate: std, leadRate: lead, caps: capsChanged ? caps : undefined }, from); }}
+          onConfirm={() => { setAsk(false); onApply(change_, from); }}
         />
       )}
     </section>
   );
 }
 
+function AddSiteForm({ table, payers, onAdd }: {
+  table: SiteTable; payers: Record<string, string>;
+  onAdd: (name: string, payer: string, site: SiteRates, newGroupName?: string) => void;
+}) {
+  const [name, setName] = useState("");
+  const groupIds = Object.keys(payers);
+  const [group, setGroup] = useState(groupIds[0] ?? "main");
+  const [groupName, setGroupName] = useState("");
+  const [std, setStd] = useState<Num>();
+  const [lead, setLead] = useState<Num>();
+  const [template, setTemplate] = useState<string | undefined>();
+  const isNew = group === "__new";
+  const mine = Object.values(table).filter((s) => s.payer === group && (s.baseRate ?? 0) > 0);
+  const groupStd = commonValue(mine.map((m) => m.baseRate));
+  const groupLead = commonValue(mine.map((m) => m.leadRate).filter((v) => v !== undefined));
+  const groupTemplate = commonValue(mine.map((m) => detectTemplate(m)).filter((v) => v !== undefined));
+  const tpl = template ?? (isNew ? "overtime" : groupTemplate ?? "overtime");
+  const finalStd = isNew ? std : groupStd;
+  const finalLead = isNew ? (lead ?? std) : (groupLead ?? groupStd);
+  const taken = Object.keys(table).some((k) => k.toLowerCase() === name.trim().toLowerCase());
+  const ok = !!name.trim() && !taken && (!isNew || (!!groupName.trim() && (std ?? 0) > 0));
+  const add = () => {
+    const id = isNew ? slug(groupName, groupIds) : group;
+    const site = applyTemplate({ ...emptySite(id), baseRate: finalStd, leadRate: finalLead }, tpl);
+    onAdd(name.trim(), id, site, isNew ? groupName.trim() : undefined);
+    setName(""); setGroupName(""); setStd(undefined); setLead(undefined); setTemplate(undefined); setGroup(isNew ? id : group);
+  };
+  return (
+    <div className="add-site">
+      <h3 className="section-title">Add a site</h3>
+      <label>Site name<input placeholder="New site name" aria-label="New site name" value={name} onChange={(e) => setName(e.target.value)} /></label>
+      <label>Group (which payslip it goes on)
+        <select aria-label="Group for the new site" value={group} onChange={(e) => { setGroup(e.target.value); setTemplate(undefined); }}>
+          {groupIds.map((id) => <option key={id} value={id}>{payers[id]}</option>)}
+          <option value="__new">＋ New group…</option>
+        </select>
+      </label>
+      {isNew ? (
+        <>
+          <label>New group name<input aria-label="New group name" placeholder="e.g. Trinidad Offshore" value={groupName} onChange={(e) => setGroupName(e.target.value)} /></label>
+          <p className="muted small">A group is its own payslip: in Split mode it pays its own PAYE, NIS and health surcharge. Its sites share these rates.</p>
+          <div className="grid2">
+            <label>Standard rate ($/h)<NumInput label="New group standard rate" value={std} onChange={setStd} /></label>
+            <label>Team lead rate ($/h)<NumInput label="New group team lead rate" value={lead ?? std} onChange={setLead} /></label>
+          </div>
+        </>
+      ) : (
+        <p className="muted small">Uses the group's rates: {groupStd !== undefined ? `$${groupStd}/h standard, $${finalLead ?? groupStd}/h team lead` : "no hourly rates set yet; edit the site after adding it"}.</p>
+      )}
+      <label>Overtime hours
+        <select aria-label="Hours template for the new site" value={tpl} onChange={(e) => setTemplate(e.target.value)}>
+          {HOURS_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
+      </label>
+      <p className="muted small">{templateById(tpl)?.description}</p>
+      <button className="primary wide" disabled={!ok} onClick={add}>Add site</button>
+      {taken && <p className="bad" role="alert">There is already a site with that name.</p>}
+    </div>
+  );
+}
+
+function slug(name: string, taken: string[]): string {
+  const base = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "group";
+  let id = base, n = 2;
+  while (taken.includes(id)) id = `${base}-${n++}`;
+  return id;
+}
+
 export function SitesPage() {
   const { data, update } = useStore();
   const versions = data.history.sites;
   const [asOf, setAsOf] = useState(todayISO());
-  const [newSite, setNewSite] = useState("");
+  const [pending, setPending] = useState<{ title: string; message: string; run: () => void } | null>(null);
   const table = valueOn(versions, asOf < versions[0]!.effectiveFrom ? versions[0]!.effectiveFrom : asOf);
 
   const payers = { ...data.payerNames };
   for (const v of versions) for (const s of Object.values(v.value)) payers[s.payer] ??= s.payer;
   const groups = [...new Set(Object.values(table).map((s) => s.payer))];
+  const jobs = data.entries.filter((e) => !isOther(e));
+  const earliest = jobs.reduce<string | undefined>((m, e) => (!m || e.date < m ? e.date : m), undefined);
+  const firstDate = versions[0]!.effectiveFrom;
+  const farBack = (from: string) => isFarBack(from, todayISO(), earliest);
+  const impactFor = (mutate: (t: SiteTable) => SiteTable, from: string) => rateImpact(jobs, versions, applyFrom(versions, from, mutate), from);
 
   const setVersions = (fn: (list: typeof versions) => typeof versions) =>
     update((d) => ({ ...d, history: { ...d.history, sites: fn(d.history.sites) } }));
@@ -269,8 +356,14 @@ export function SitesPage() {
     // A site with no rates yet (just added) gets its first rates for all days; otherwise they start on the chosen date.
     const isNew = !(saved.baseRate || saved.leadRate || saved.dailyStd || saved.dailyLead || saved.dailyHoliday || saved.rateAboveHrs);
     const start = isNew ? versions[0]!.effectiveFrom : from;
-    setVersions((list) => applyFrom(list, start, (t) => patchSite(t, name, patch, draft)));
-    if (start > todayISO()) setAsOf(start);
+    const run = () => {
+      setVersions((list) => applyFrom(list, start, (t) => patchSite(t, name, patch, draft)));
+      if (start > todayISO()) setAsOf(start);
+    };
+    if (farBack(start) && !isNew) {
+      const imp = impactFor((t) => patchSite(t, name, patch, draft), start);
+      setPending({ title: `Are you sure? ${start} is a long way back`, message: `Saving ${name} from ${start} recalculates ${imp.days} logged day${imp.days === 1 ? "" : "s"} (${imp.delta >= 0 ? "+" : "-"}$${Math.abs(imp.delta).toFixed(2)} gross).`, run });
+    } else run();
   };
 
   return (
@@ -284,7 +377,8 @@ export function SitesPage() {
 
       {groups.map((g) => (
         <GroupRates
-          key={g} payer={g} name={payers[g] ?? g} table={table}
+          key={g} payer={g} name={payers[g] ?? g} table={table} firstDate={firstDate} farBack={farBack}
+          impactFor={(c, from) => impactFor((t) => changeGroup(t, g, c), from)}
           onApply={(c, from) => { setVersions((list) => applyFrom(list, from, (t) => changeGroup(t, g, c))); if (from > todayISO()) setAsOf(from); }}
         />
       ))}
@@ -293,22 +387,28 @@ export function SitesPage() {
       <section className="card">
         {Object.entries(table).map(([name, site]) => (
           <SiteCard
-            key={name} name={name} saved={site} payers={payers}
+            key={name} name={name} saved={site} payers={payers} firstDate={firstDate}
+            impactFor={(draft, from) => impactFor((t) => patchSite(t, name, diffSite(site, draft), draft), from)}
             onSave={(draft, from) => saveSite(name, site, draft, from)}
             onRename={(to) => renameSite(name, to)}
             onRenameRole={(from, to) => renameRole(name, from, to)}
             onRemove={() => setVersions((list) => list.map((v) => ({ ...v, value: Object.fromEntries(Object.entries(v.value).filter(([k]) => k !== name)) })))}
           />
         ))}
-        <div className="row add">
-          <input placeholder="New site name" aria-label="New site name" value={newSite} onChange={(e) => setNewSite(e.target.value)} />
-          <button
-            className="primary"
-            disabled={!newSite.trim() || Object.keys(table).some((k) => k.toLowerCase() === newSite.trim().toLowerCase())}
-            onClick={() => { setVersions((list) => list.map((v) => ({ ...v, value: { ...v.value, [newSite.trim()]: emptySite(groups[0] ?? Object.keys(payers)[0] ?? "main") } }))); setNewSite(""); }}
-          >Add site</button>
-        </div>
+        <AddSiteForm
+          table={table} payers={payers}
+          onAdd={(name, payer, site, groupName) => update((d) => ({
+            ...d,
+            payerNames: groupName ? { ...d.payerNames, [payer]: groupName } : d.payerNames,
+            history: { ...d.history, sites: d.history.sites.map((v) => ({ ...v, value: { ...v.value, [name]: structuredClone(site) } })) },
+          }))}
+        />
       </section>
+
+      {pending && (
+        <ConfirmDialog title={pending.title} message={pending.message} confirmLabel="Save from that date" cancelLabel="Cancel" safe
+          onCancel={() => setPending(null)} onConfirm={() => { const r = pending.run; setPending(null); r(); }} />
+      )}
 
       <details className="card history">
         <summary>Rate history (advanced)</summary>
