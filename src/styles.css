@@ -611,3 +611,17 @@ button.icon.gear svg, .bar.page button.icon[aria-label="Back"] svg { width: 18px
 
 button.more { width: 100%; text-align: left; justify-content: flex-start; min-height: 40px; margin: 8px 0 4px; background: var(--bg); }
 .more-panel { padding: 6px 0 2px; display: grid; gap: 8px; }
+
+.save-bar { position: sticky; bottom: 0; margin-top: 12px; padding: 12px; border-radius: 12px; background: var(--card); border: 2px solid var(--accent); box-shadow: 0 -4px 14px rgba(16,24,40,.12); display: grid; gap: 8px; }
+.group-rates h2 { margin-bottom: 2px; }
+.group-rates { display: grid; gap: 8px; }
+
+.save-bar { gap: 4px; padding: 10px 12px; }
+.save-bar p { margin: 0; }
+.save-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: end; }
+.save-row label { margin: 0; }
+.save-row { grid-template-columns: minmax(0, 1fr) auto auto; }
+.save-row input { min-width: 0; }
+.save-row button { padding: 0 12px; }
+.save-row { grid-template-columns: 1fr 1fr; }
+.save-row label { grid-column: 1 / -1; }

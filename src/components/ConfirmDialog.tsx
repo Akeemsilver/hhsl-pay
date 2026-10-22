@@ -3,8 +3,10 @@ import { createPortal } from "react-dom";
 import { useLayer } from "./layers";
 
 /** A small "are you sure?" box. Escape or tapping outside keeps the user where they were. */
-export function ConfirmDialog({ title, message, confirmLabel, cancelLabel, onConfirm, onCancel }: {
+export function ConfirmDialog({ title, message, confirmLabel, cancelLabel, onConfirm, onCancel, safe }: {
   title: string; message: string; confirmLabel: string; cancelLabel: string; onConfirm: () => void; onCancel: () => void;
+  /** The confirm button is the normal, expected action (not a destructive one). */
+  safe?: boolean;
 }) {
   const keep = useRef<HTMLButtonElement>(null);
   useLayer(onCancel);
@@ -15,8 +17,8 @@ export function ConfirmDialog({ title, message, confirmLabel, cancelLabel, onCon
         <h2>{title}</h2>
         <p id="confirm-msg" className="muted">{message}</p>
         <div className="row">
-          <button ref={keep} className="primary" onClick={onCancel}>{cancelLabel}</button>
-          <button className="danger" onClick={onConfirm}>{confirmLabel}</button>
+          <button ref={keep} className={safe ? "" : "primary"} onClick={onCancel}>{cancelLabel}</button>
+          <button className={safe ? "primary" : "danger"} onClick={onConfirm}>{confirmLabel}</button>
         </div>
       </div>
     </div>,
