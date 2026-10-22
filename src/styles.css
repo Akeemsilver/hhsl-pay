@@ -1,5 +1,5 @@
 :root {
-  --bg: #f6f7f9;
+  --bg: #edf0f4;
   --card: #ffffff;
   --text: #16202a;
   --muted: #5b6672;
@@ -13,7 +13,8 @@
   --good: #0a7a3c;
   --warn-bg: #fff4e5;
   --warn-line: #f0b36a;
-  --shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.12), 0 4px 10px rgba(16, 24, 40, 0.12), 0 12px 24px rgba(16, 24, 40, 0.10);
+  --lift-sm: 0 1px 2px rgba(16, 24, 40, 0.16), 0 3px 6px rgba(16, 24, 40, 0.12);
   --s1: #2a78d6;
   --s2: #eb6834;
   --s3: #1baf7a;
@@ -48,6 +49,7 @@
     --warn-bg: #33270f;
     --warn-line: #8a6420;
     --shadow: none;
+    --lift-sm: none;
     --s1: #3987e5;
     --s2: #d95926;
     --s3: #199e70;
@@ -82,6 +84,7 @@
     --warn-bg: #33270f;
     --warn-line: #8a6420;
     --shadow: none;
+    --lift-sm: none;
     --s1: #3987e5;
     --s2: #d95926;
     --s3: #199e70;
@@ -532,7 +535,7 @@ th.c-gross, th.c-paye, th.c-net { font-weight: 700; }
 td.c-gross, td.c-net, td.c-paye { font-weight: 600; }
 
 /* Home hero: a plain card so the money colours read clearly */
-.hero { background: var(--card); color: var(--text); border: 1px solid var(--edge); box-shadow: 0 1px 2px rgba(16,24,40,.06), 0 6px 16px rgba(16,24,40,.10), 0 14px 28px rgba(16,24,40,.06); }
+.hero { background: var(--card); color: var(--text); border: 1px solid var(--edge); box-shadow: 0 2px 3px rgba(16,24,40,.14), 0 10px 22px rgba(16,24,40,.16), 0 22px 40px rgba(16,24,40,.12); }
 .hero-top { opacity: 1; color: var(--muted); }
 .hero-value { color: var(--gross-text); }
 .hero-stats span { opacity: 1; color: var(--muted); }
@@ -672,3 +675,6 @@ table.bands .row-no { width: 34px; text-align: center; color: var(--muted); font
 .chip .sw { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
 .update-banner { position: fixed; left: 12px; right: 12px; top: calc(10px + env(safe-area-inset-top)); display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--card); color: var(--text); border: 1px solid var(--edge); padding: 10px 12px 10px 16px; border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.25); z-index: 80; }
 .update-banner button { width: auto; padding: 8px 18px; }
+button.primary, button.secondary-lift { box-shadow: var(--lift-sm); }
+.cal-cell { box-shadow: var(--lift-sm); }
+.tabs { box-shadow: 0 -4px 16px rgba(16,24,40,.12); }
