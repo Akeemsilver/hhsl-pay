@@ -270,6 +270,7 @@ export function SitesPage() {
     const isNew = !(saved.baseRate || saved.leadRate || saved.dailyStd || saved.dailyLead || saved.dailyHoliday || saved.rateAboveHrs);
     const start = isNew ? versions[0]!.effectiveFrom : from;
     setVersions((list) => applyFrom(list, start, (t) => patchSite(t, name, patch, draft)));
+    if (start > todayISO()) setAsOf(start);
   };
 
   return (
@@ -277,10 +278,14 @@ export function SitesPage() {
       <PageHeader title="Site locations & rates" />
       <p className="muted pad">Change the rates for a whole payslip group in one go, or edit one site. Every change has a “Take effect from” date, which is today unless you pick another day. Earlier days keep their old rates, so a raise never changes past pay.</p>
 
+      {asOf !== todayISO() && (
+        <p className="notice">Showing the rates in force on <strong>{asOf}</strong>. <button className="link" onClick={() => setAsOf(todayISO())}>Back to today</button></p>
+      )}
+
       {groups.map((g) => (
         <GroupRates
           key={g} payer={g} name={payers[g] ?? g} table={table}
-          onApply={(c, from) => setVersions((list) => applyFrom(list, from, (t) => changeGroup(t, g, c)))}
+          onApply={(c, from) => { setVersions((list) => applyFrom(list, from, (t) => changeGroup(t, g, c))); if (from > todayISO()) setAsOf(from); }}
         />
       ))}
 

@@ -54,3 +54,17 @@ describe("rate changes take effect from a date", () => {
     expect(commonValue([])).toBeUndefined();
   });
 });
+
+describe("tax rules take effect from a date too", () => {
+  it("changes a band from a chosen date and leaves earlier months alone", async () => {
+    const { demoTax } = await import("./support");
+    const { diffObject } = await import("../src/rateEdit");
+    const base = [{ effectiveFrom: "2000-01-01", value: demoTax }];
+    const draft = { ...demoTax, nisBands: demoTax.nisBands.map((b, i) => (i === 1 ? [b[0], b[1] + 10] : b)) as typeof demoTax.nisBands };
+    const patch = diffObject(demoTax, draft);
+    expect(Object.keys(patch)).toEqual(["nisBands"]);
+    const list = applyFrom(base, "2027-01-01", (t) => ({ ...t, ...patch }));
+    expect(valueOn(list, "2026-12-31").nisBands[1]![1]).toBe(demoTax.nisBands[1]![1]);
+    expect(valueOn(list, "2027-01-01").nisBands[1]![1]).toBe(demoTax.nisBands[1]![1] + 10);
+  });
+});

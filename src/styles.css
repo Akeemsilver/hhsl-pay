@@ -625,3 +625,5 @@ button.more { width: 100%; text-align: left; justify-content: flex-start; min-he
 .save-row button { padding: 0 12px; }
 .save-row { grid-template-columns: 1fr 1fr; }
 .save-row label { grid-column: 1 / -1; }
+
+table.bands .row-no { width: 34px; text-align: center; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }

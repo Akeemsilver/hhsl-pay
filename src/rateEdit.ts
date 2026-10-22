@@ -8,7 +8,7 @@ const clone = <T,>(v: T): T => structuredClone(v);
  * and the change is applied to it and to every later version, so nothing after the date keeps the old numbers.
  * Days before the date keep their old rates. A date at or before the first version changes everything.
  */
-export function applyFrom(versions: Array<Dated<SiteTable>>, date: string, mutate: (t: SiteTable) => SiteTable): Array<Dated<SiteTable>> {
+export function applyFrom<T = SiteTable>(versions: Array<Dated<T>>, date: string, mutate: (t: T) => T): Array<Dated<T>> {
   const sorted = [...versions].sort((a, b) => a.effectiveFrom.localeCompare(b.effectiveFrom));
   const first = sorted[0]?.effectiveFrom ?? FIRST_VERSION_DATE;
   let list = sorted;
@@ -19,13 +19,15 @@ export function applyFrom(versions: Array<Dated<SiteTable>>, date: string, mutat
   return list.map((v) => (v.effectiveFrom >= date || date <= first ? { ...v, value: mutate(clone(v.value)) } : v));
 }
 
-/** The settings of a site that differ between what is saved and the edited copy. */
-export function diffSite(saved: SiteRates, draft: SiteRates): Partial<SiteRates> {
+/** The settings that differ between what is saved and the edited copy. */
+export function diffObject<T extends object>(saved: T, draft: T): Partial<T> {
   const patch: Record<string, unknown> = {};
-  const keys = new Set([...Object.keys(saved), ...Object.keys(draft)]) as Set<keyof SiteRates>;
-  for (const k of keys) if (JSON.stringify(saved[k]) !== JSON.stringify(draft[k])) patch[k] = draft[k];
-  return patch as Partial<SiteRates>;
+  const keys = new Set([...Object.keys(saved), ...Object.keys(draft)]) as Set<keyof T>;
+  for (const k of keys) if (JSON.stringify(saved[k]) !== JSON.stringify(draft[k])) patch[k as string] = draft[k];
+  return patch as Partial<T>;
 }
+
+export const diffSite = (saved: SiteRates, draft: SiteRates): Partial<SiteRates> => diffObject(saved, draft);
 
 /** Applies a site change to a table: patch the site's changed settings, or add the whole site if that version lacks it. */
 export function patchSite(table: SiteTable, name: string, patch: Partial<SiteRates>, whole: SiteRates): SiteTable {
