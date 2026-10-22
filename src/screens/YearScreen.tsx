@@ -63,11 +63,6 @@ export function YearScreen() {
         <YearSites sites={report.sites} year={year} />
       </section>
 
-      <section className="card">
-        <h2>By payslip, month by month</h2>
-        <p className="muted small">Income, taxes, year to date, and hours and days for each month, down the page like your yearly spreadsheet.</p>
-        <YearByPayslip report={report} />
-      </section>
 
       {!filterSite && (
       <section className="card">
@@ -119,6 +114,14 @@ export function YearScreen() {
           <tfoot><tr><td>Total</td><td className="c-gross">{money(gross)}</td><td className="c-paye">{money(paye)}</td><td className="c-net">{money(total((m) => m.net))}</td></tr></tfoot>
         </table>
       </section>
+
+      {report.groups.length > 0 && (
+        <details className="card more-details">
+          <summary><span>More details</span><span aria-hidden="true">▾</span></summary>
+          <p className="muted small">Each payslip month by month: income, average a month, taxes, year to date, hours and days.</p>
+          <YearByPayslip report={report} />
+        </details>
+      )}
     </>
   );
 }

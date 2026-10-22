@@ -782,3 +782,15 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .ym tfoot th, .ym tfoot td { font-weight: 800; border-top: 2px solid var(--text); }
 .ym td.strong { font-weight: 700; }
 .ym td.site { text-align: right; font-size: 0.7rem; max-width: 84px; overflow: hidden; text-overflow: ellipsis; }
+
+/* roomier month tables, and the More details button at the bottom of the Year tab */
+.ym { font-size: 0.85rem; }
+.ym th, .ym td { padding: 7px 4px; }
+.ym thead th { font-size: 0.76rem; }
+.ym th:first-child, .ym td:first-child { width: 22%; }
+.more-details { padding: 0; }
+.more-details > summary { display: flex; align-items: center; justify-content: space-between; min-height: 52px; padding: 0 16px; font-weight: 700; font-size: 1.05rem; list-style: none; cursor: pointer; }
+.more-details > summary::-webkit-details-marker { display: none; }
+.more-details[open] > summary { border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.more-details > p { margin: 8px 14px; }
+.more-details > .ytable { margin: 0 10px 10px; }

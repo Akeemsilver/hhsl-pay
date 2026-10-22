@@ -58,7 +58,7 @@ export function YearSites({ sites, year }: { sites: YearSite[]; year: number }) 
   );
 }
 
-/** One payslip group (or all sites) as small tables with the months down the side: Income, Taxes, Year to date, Hours and days. */
+/** One payslip group as small, roomy tables with the months down the side: Income, Average a month, Taxes, Year to date, Hours and days. */
 export function YearTable({ section, open }: { section: YearSection; open?: boolean }) {
   const ms = section.months;
   const has = (m: YearMonth) => m.gross > 0 || m.days > 0;
@@ -67,88 +67,67 @@ export function YearTable({ section, open }: { section: YearSection; open?: bool
   const net = ms.map((m) => m.net);
   const unknown = ms.some((m) => m.net === null);
   const sum = (v: Array<number | null>) => v.reduce<number>((t, x) => t + (x ?? 0), 0);
-  const cell = (m: YearMonth, v: string) => (has(m) ? v : dash);
-  const money0 = (m: YearMonth, v: number | null) => cell(m, m$(v));
+  const money0 = (m: YearMonth, v: number | null) => (has(m) ? m$(v) : dash);
   const ded = (m: YearMonth) => (m.paye === null || m.nis === null || m.surcharge === null ? null : m.paye + m.nis + m.surcharge);
-  const toDate = {
-    gross: runningTotal(gross), net: runningTotal(net), paye: runningTotal(ms.map((m) => m.paye)), nis: runningTotal(ms.map((m) => m.nis)),
-  };
+  const dedToDate = runningTotal(ms.map(ded));
+  const grossToDate = runningTotal(gross);
+  const netToDate = runningTotal(net);
   // An average needs every month up to it, so a month whose net could not be told has no average net.
   const avgNet = (i: number) => (net.slice(0, i + 1).some((v) => v === null) ? null : averageThrough(net as number[], i));
+  const rows = (cells: (m: YearMonth, i: number) => Array<string | number>) =>
+    ms.map((m, i) => (
+      <tr key={m.month} className={has(m) ? "" : "idle"}>
+        <th scope="row">{MONTHS[i]?.slice(0, 3)}</th>
+        {cells(m, i).map((c, k) => <td key={k}>{c}</td>)}
+      </tr>
+    ));
   return (
     <details className="ytable" open={open}>
       <summary><span>{section.title}</span><span className="c-gross">{money(sum(gross))}</span></summary>
 
       <h3>Income</h3>
       <table className="ym">
-        <thead><tr><th>Month</th><th className="c-gross">Gross</th><th className="c-net">Net</th><th className="c-gross">Avg gross</th><th className="c-net">Avg net</th></tr></thead>
-        <tbody>
-          {ms.map((m, i) => (
-            <tr key={m.month} className={has(m) ? "" : "idle"}>
-              <th scope="row">{MONTHS[i]?.slice(0, 3)}</th>
-              <td>{money0(m, m.gross)}</td><td>{money0(m, m.net)}</td>
-              <td>{i <= latest ? money(averageThrough(gross, i)) : dash}</td>
-              <td>{i <= latest ? m$(avgNet(i)) : dash}</td>
-            </tr>
-          ))}
-        </tbody>
-        <tfoot><tr><th scope="row">Total</th><td>{money(sum(gross))}</td><td>{money(sum(net))}</td><td>{latest >= 0 ? money(averageThrough(gross, latest)) : dash}</td><td>{latest >= 0 ? m$(avgNet(latest)) : dash}</td></tr></tfoot>
+        <thead><tr><th>Month</th><th className="c-gross">Gross</th><th className="c-net">Net</th></tr></thead>
+        <tbody>{rows((m) => [money0(m, m.gross), money0(m, m.net)])}</tbody>
+        <tfoot><tr><th scope="row">Total</th><td>{money(sum(gross))}</td><td>{money(sum(net))}</td></tr></tfoot>
       </table>
-      <p className="muted small">The average for a month counts January up to that month, so it does not change when later months do.</p>
+
+      <h3>Average a month</h3>
+      <table className="ym">
+        <thead><tr><th>Up to</th><th className="c-gross">Avg gross</th><th className="c-net">Avg net</th></tr></thead>
+        <tbody>{rows((_m, i) => [i <= latest ? money(averageThrough(gross, i)) : dash, i <= latest ? m$(avgNet(i)) : dash])}</tbody>
+      </table>
+      <p className="muted small">Each month's average counts January up to that month, so it does not change when later months do.</p>
 
       <h3>Taxes</h3>
       <table className="ym">
-        <thead><tr><th>Month</th><th className="c-paye">PAYE</th><th>Surcharge</th><th>NIS</th><th>Total</th></tr></thead>
-        <tbody>
-          {ms.map((m, i) => (
-            <tr key={m.month} className={has(m) ? "" : "idle"}>
-              <th scope="row">{MONTHS[i]?.slice(0, 3)}</th>
-              <td>{money0(m, m.paye)}</td><td>{money0(m, m.surcharge)}</td><td>{money0(m, m.nis)}</td><td className="strong">{money0(m, ded(m))}</td>
-            </tr>
-          ))}
-        </tbody>
-        <tfoot><tr><th scope="row">Total</th><td>{money(sum(ms.map((m) => m.paye)))}</td><td>{money(sum(ms.map((m) => m.surcharge)))}</td><td>{money(sum(ms.map((m) => m.nis)))}</td><td>{money(sum(ms.map(ded)))}</td></tr></tfoot>
+        <thead><tr><th>Month</th><th className="c-paye">PAYE</th><th>NIS</th><th>Surcharge</th></tr></thead>
+        <tbody>{rows((m) => [money0(m, m.paye), money0(m, m.nis), money0(m, m.surcharge)])}</tbody>
+        <tfoot>
+          <tr><th scope="row">Total</th><td>{money(sum(ms.map((m) => m.paye)))}</td><td>{money(sum(ms.map((m) => m.nis)))}</td><td>{money(sum(ms.map((m) => m.surcharge)))}</td></tr>
+        </tfoot>
       </table>
+      <p className="muted small">All taxes taken off this year: <strong>{money(sum(ms.map(ded)))}</strong></p>
 
       <h3>Year to date</h3>
       <table className="ym">
-        <thead><tr><th>Month</th><th className="c-gross">Gross</th><th className="c-net">Net</th><th className="c-paye">PAYE</th><th>NIS</th></tr></thead>
-        <tbody>
-          {ms.map((m, i) => (
-            <tr key={m.month} className={has(m) ? "" : "idle"}>
-              <th scope="row">{MONTHS[i]?.slice(0, 3)}</th>
-              <td>{i <= latest ? money(toDate.gross[i]!) : dash}</td><td>{i <= latest ? money(toDate.net[i]!) : dash}</td>
-              <td>{i <= latest ? money(toDate.paye[i]!) : dash}</td><td>{i <= latest ? money(toDate.nis[i]!) : dash}</td>
-            </tr>
-          ))}
-        </tbody>
+        <thead><tr><th>Month</th><th className="c-gross">Gross</th><th className="c-net">Net</th><th>Taxes</th></tr></thead>
+        <tbody>{rows((_m, i) => (i <= latest ? [money(grossToDate[i]!), money(netToDate[i]!), money(dedToDate[i]!)] : [dash, dash, dash]))}</tbody>
       </table>
 
       <h3>Hours and days</h3>
       <table className="ym">
-        <thead><tr><th>Month</th><th>Paid h</th><th>Worked h</th><th>Days</th><th>Most worked</th></tr></thead>
-        <tbody>
-          {ms.map((m, i) => (
-            <tr key={m.month} className={has(m) ? "" : "idle"}>
-              <th scope="row">{MONTHS[i]?.slice(0, 3)}</th>
-              <td className="strong">{m.weighted ? hoursText(m.weighted) : dash}</td><td>{m.hours ? hoursText(m.hours) : dash}</td><td>{m.days || dash}</td>
-              <td className="site">{m.topSite ?? dash}</td>
-            </tr>
-          ))}
-        </tbody>
-        <tfoot><tr><th scope="row">Total</th><td>{hoursText(sum(ms.map((m) => m.weighted)))}</td><td>{hoursText(sum(ms.map((m) => m.hours)))}</td><td>{sum(ms.map((m) => m.days))}</td><td /></tr></tfoot>
+        <thead><tr><th>Month</th><th>Paid h</th><th>Worked h</th><th>Days</th></tr></thead>
+        <tbody>{rows((m) => [m.weighted ? hoursText(m.weighted) : dash, m.hours ? hoursText(m.hours) : dash, m.days || dash])}</tbody>
+        <tfoot><tr><th scope="row">Total</th><td>{hoursText(sum(ms.map((m) => m.weighted)))}</td><td>{hoursText(sum(ms.map((m) => m.hours)))}</td><td>{sum(ms.map((m) => m.days))}</td></tr></tfoot>
       </table>
       <p className="muted small">Paid h counts overtime at its multiple: an hour at x1.5 counts as 1.5.</p>
-      {unknown && <p className="muted small">A “–” in a payslip's net or taxes means that month's tax was worked out on all payslips together. See “All sites” for it.</p>}
+      {unknown && <p className="muted small">A “–” in net or taxes means that month's tax was worked out on all payslips together, so it is not split per payslip.</p>}
     </details>
   );
 }
 
+/** One table set for each payslip group. */
 export function YearByPayslip({ report }: { report: YearReport }) {
-  return (
-    <>
-      <YearTable section={report.all} open />
-      {report.groups.length > 1 && report.groups.map((g) => <YearTable key={g.id} section={g} />)}
-    </>
-  );
+  return <>{report.groups.map((g) => <YearTable key={g.id} section={g} />)}</>;
 }
