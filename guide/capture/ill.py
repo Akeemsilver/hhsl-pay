@@ -74,26 +74,6 @@ label(d,(94,190),"Tap the file to download it.",26,True,RED)
 label(d,(94,226),"Tap it again to open or save it.",22,fill=GREY)
 save(im,"whatsapp")
 
-# 6 Google Sheets on computer: File > Download > Excel
-im,d=canvas(430)
-rr(d,(20,16,620,76),WHITE); 
-for i,t in enumerate(["File","Edit","View","Insert"]):
-    x=44+i*100
-    if t=="File": rr(d,(x-12,24,x+66,68),(222,243,240),8); ring(d,(x-12,24,x+66,68),2)
-    label(d,(x,32),t,26,t=="File",TEAL if t=="File" else INK)
-rr(d,(30,86,300,330),WHITE,10,outline=LINE)
-for i,t in enumerate(["Share","Make a copy","Download","Email","Print"]):
-    y=96+i*46
-    if t=="Download": rr(d,(36,y-2,294,y+40),(222,243,240),8)
-    label(d,(54,y+6),t,24,t=="Download",TEAL if t=="Download" else INK)
-d.polygon([(278,205),(270,196),(270,214)],fill=GREY)
-rr(d,(310,170,620,400),WHITE,10,outline=LINE)
-for i,t in enumerate(["Microsoft Excel (.xlsx)","OpenDocument (.ods)","PDF (.pdf)","Web page (.html)"]):
-    y=182+i*52
-    if i==0: rr(d,(316,y-4,614,y+42),(222,243,240),8); ring(d,(316,y-4,614,y+42),2)
-    label(d,(330,y+6),t,23,i==0,TEAL if i==0 else INK)
-save(im,"sheets-pc")
-
 # 7 Sheets phone: dots > Share & export > Save as > Excel
 im,d=canvas(460)
 rr(d,(20,16,620,76),WHITE); label(d,(44,32),"My salary sheet",26,True); dots(d,580,46); ring(d,(560,18,602,76),2)

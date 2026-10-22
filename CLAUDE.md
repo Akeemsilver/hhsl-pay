@@ -16,5 +16,7 @@ update the guide in the same change**:
   menu title or a main tab is missing from the guide.
 - Changed look of a screen the guide shows: re-take its screenshots (see `guide/capture/README.md`)
   and replace the images in `guide/assets/shots/`.
+- The guide is **mobile only**: every picture and every step must be a phone screen (screenshots are
+  390 px wide at 2x, so 780 px). No computer or desktop screens or steps. `tests/guide.test.ts` checks this.
 - Never put real pay rates, names or money figures in the guide. Use the made-up "Example Site" data.
 - Preview locally: `npm run guide` (needs `pip install reportlab pillow`).
