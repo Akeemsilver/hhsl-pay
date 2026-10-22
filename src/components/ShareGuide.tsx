@@ -20,7 +20,7 @@ export function ShareGuide({ link }: { link: string }) {
     <details className="share-guide">
       <summary className="guide-toggle"><span>Sharing guide</span><span aria-hidden="true">▾</span></summary>
       <h3 className="section-title">Message to send</h3>
-      <p className="muted small">Send this first. It has the link and tells your colleague what to do. Then send the starter kit file with the button above.</p>
+      <p className="muted small">Send this first. It has the link and tells your colleague what to do. Then send the starter kit file and the guide (PDF) with the buttons above.</p>
       <textarea readOnly aria-label="Message to send" rows={17} value={message} onFocus={(e) => e.currentTarget.select()} />
       <div className="row">
         <button onClick={() => void copy()}>Copy message</button>
@@ -33,6 +33,7 @@ export function ShareGuide({ link }: { link: string }) {
         <ol className="steps">
           <li>Tap <strong>Share message</strong> and pick <strong>WhatsApp</strong> (or Gmail), then the person. The link is inside the message.</li>
           <li>Tap <strong>Share starter kit</strong> above, pick <strong>WhatsApp</strong> and the same person. This sends the file with your sites, rates and tax rules. It has no days and no pay.</li>
+          <li>Tap <strong>Share guide (PDF)</strong> above and send it to the same person. It has the steps, with pictures, for doing everything on their phone.</li>
           <li>Wait for them to say it works. If they get stuck, see the problems list below.</li>
           <li>Keep your own app up to date. If you change rates later, send a new starter kit. They apply it from Settings, Backup &amp; restore, and their days stay as they are.</li>
         </ol>
