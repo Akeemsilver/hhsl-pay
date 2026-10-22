@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { valueOn, type RoleRates, type SiteRates, type SiteTable, type TierCaps } from "../engine";
-import { DEFAULT_ROLES, emptySite, isOther, rolesFor } from "../model";
+import { DEFAULT_ROLES, emptySite, isOther, payerLabel, rolesFor } from "../model";
 import { useStore } from "../store";
 import { PageHeader } from "../components/TopBar";
 import { NumInput, TakeEffect, versionLabel, type Num } from "../components/settingsParts";
@@ -20,6 +20,11 @@ function CapsRow({ label, caps, onChange, withX3 }: { label: string; caps: TierC
       {withX3 ? <NumInput label={`${label} ×3 hours`} value={caps.x3} onChange={set("x3")} /> : <span />}
     </>
   );
+}
+
+function pickTemplate(id: string) {
+  const t = templateById(id)!;
+  return { weekday: { ...t.weekday }, weekend: { ...t.weekend }, holiday: { ...t.holiday } };
 }
 
 function RoleCard({ name, role, site, builtIn, onChange, onRename, onRemove }: {
@@ -45,13 +50,20 @@ function RoleCard({ name, role, site, builtIn, onChange, onRename, onRemove }: {
       </button>
       {more && (
         <div className="more-panel">
-          <label className="check">
-            <input type="checkbox" aria-label={`${name} has its own overtime hours`} checked={own}
-              onChange={(e) => onChange(e.target.checked
-                ? { ...role, weekday: { ...site.weekday }, weekend: { ...site.weekend }, holiday: { ...site.holiday } }
-                : { ...role, weekday: undefined, weekend: undefined, holiday: undefined })} />
-            {" "}Different hours for {name} than the rest of the site
+          <label>Hours at 1x, 1.5x, 2x, 3x
+            <select aria-label={`${name} hours template`} value={own ? (detectTemplate(role as Pick<SiteRates, "weekday" | "weekend" | "holiday"> & RoleRates) ?? "custom") : "site"}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "site") onChange({ ...role, weekday: undefined, weekend: undefined, holiday: undefined });
+                else if (v === "custom") onChange({ ...role, weekday: role.weekday ?? { ...site.weekday }, weekend: role.weekend ?? { ...site.weekend }, holiday: role.holiday ?? { ...site.holiday } });
+                else onChange({ ...role, ...pickTemplate(v) });
+              }}>
+              <option value="site">Same as the rest of the site</option>
+              {HOURS_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              <option value="custom">Custom hours…</option>
+            </select>
           </label>
+          {own && templateById(detectTemplate(role as Pick<SiteRates, "weekday" | "weekend" | "holiday"> & RoleRates)) && <p className="muted small">{templateById(detectTemplate(role as Pick<SiteRates, "weekday" | "weekend" | "holiday"> & RoleRates))!.description}</p>}
           {own ? (
             <>
               <div className="caps">
@@ -333,7 +345,7 @@ export function SitesPage() {
   const table = valueOn(versions, asOf < versions[0]!.effectiveFrom ? versions[0]!.effectiveFrom : asOf);
 
   const payers = { ...data.payerNames };
-  for (const v of versions) for (const s of Object.values(v.value)) payers[s.payer] ??= s.payer;
+  for (const v of versions) for (const s of Object.values(v.value)) payers[s.payer] ??= payerLabel(data.payerNames, s.payer);
   const groups = [...new Set(Object.values(table).map((s) => s.payer))];
   const jobs = data.entries.filter((e) => !isOther(e));
   const earliest = jobs.reduce<string | undefined>((m, e) => (!m || e.date < m ? e.date : m), undefined);

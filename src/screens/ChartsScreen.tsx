@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { MONTHS, todayISO } from "../format";
 import { useYear } from "../hooks";
 import { useStore } from "../store";
+import { payerLabel } from "../model";
 import { TopBar } from "../components/TopBar";
 import { BackIcon, ForwardIcon } from "../components/Icons";
 import { ChartCard, HBars, MonthColumns, SplitBar, TipRow, fullMoney } from "../components/charts";
@@ -39,7 +40,7 @@ export function ChartsScreen() {
     for (const m of months) for (const p of m.payers) totals.set(p.payer, (totals.get(p.payer) ?? 0) + p.gross);
     return [...totals.entries()]
       .sort((a, b) => b[1] - a[1])
-      .map(([payer, value], i) => ({ name: data.payerNames[payer] ?? payer, value, color: PAYSLIP_SHADES[i] ?? "var(--muted)" }));
+      .map(([payer, value], i) => ({ name: payerLabel(data.payerNames, payer), value, color: PAYSLIP_SHADES[i] ?? "var(--muted)" }));
   }, [months, data.payerNames]);
 
   const gross = months.map((m) => m.gross);

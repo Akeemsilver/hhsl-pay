@@ -41,3 +41,22 @@ describe("backup", () => {
     await expect(parse(broken)).rejects.toBeInstanceOf(BadBackup);
   });
 });
+
+describe("starter kit (rates file)", () => {
+  it("carries rates, groups and timesheet rules and applies them without touching days or name", async () => {
+    const { ratesKitOf, applyKit, serialize, parse } = await import("../src/backup");
+    const { newData } = await import("../src/model");
+    const source = newData();
+    source.payerNames = { main: "Point Lisas / other", atlantic: "Atlantic LNG" };
+    source.timesheet = { name: "Someone", siteLabel: "ERT Offsite", rules: [{ site: "A", label: "A" }] };
+    const parsed = await parse(await serialize("rates", ratesKitOf(source)));
+    expect(parsed.kind).toBe("rates");
+    const target = { ...newData(), userName: "Me", entries: [{ id: "1", date: "2026-10-01", site: "A", hours: 1 }] };
+    const out = applyKit(target, parsed.kit!);
+    expect(out.payerNames.atlantic).toBe("Atlantic LNG");
+    expect(out.timesheet?.rules).toHaveLength(1);
+    expect(out.timesheet?.name).toBe("");
+    expect(out.userName).toBe("Me");
+    expect(out.entries).toHaveLength(1);
+  });
+});

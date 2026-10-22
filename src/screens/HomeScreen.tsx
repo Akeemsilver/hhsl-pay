@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { valueOn } from "../engine";
 import { MONTHS, WEEKDAYS, daysOfMonth, hoursText, money, shiftMonth, todayISO } from "../format";
+import { useInstall } from "../install";
 import { useSiteFilter } from "../filter";
 import { useMonth, useYear } from "../hooks";
 import { useNav } from "../nav";
@@ -28,13 +30,15 @@ function shortDate(iso: string): string {
 
 export function HomeScreen() {
   const { data } = useStore();
-  const { open, selectTab } = useNav();
+  const { open, selectTab, loc } = useNav();
+  const [picked, setPicked] = useState<string | undefined>();
   const today = todayISO();
   const month = today.slice(0, 7);
   const year = Number(today.slice(0, 4));
   const prevMonth = shiftMonth(month, -1);
 
   const { site: filterSite } = useSiteFilter();
+  const install = useInstall();
   const thisMonth = useMonth(month);
   const lastMonth = useMonth(prevMonth);
   const months = useYear(year);
@@ -80,6 +84,20 @@ export function HomeScreen() {
   return (
     <>
       <TopBar title={`${greeting()}`} subtitle={longDate(today)} />
+
+      {install.state === "ready" && (
+        <div className="notice install-card">
+          <strong>Install the app</strong>
+          <p>Put it on your home screen so it opens like any other app, full screen, and works without a signal.</p>
+          <button className="primary wide" onClick={() => void install.install()}>Install app</button>
+        </div>
+      )}
+      {install.state === "ios" && (
+        <div className="notice install-card">
+          <strong>Install the app</strong>
+          <p>In Safari tap the Share button, then <strong>Add to Home Screen</strong>.</p>
+        </div>
+      )}
 
       {noSites && (
         <div className="notice">
@@ -127,7 +145,7 @@ export function HomeScreen() {
           <h2>{MONTHS[thisMonthIndex]}</h2>
           <button className="link" onClick={() => selectTab("calendar")}>Full calendar</button>
         </div>
-        <CalendarGrid month={month} days={daysOfMonth(month)} result={thisMonth} today={today} onPick={(d) => open({ day: d })} payerOrder={Object.keys(data.payerNames)} />
+        <CalendarGrid month={month} days={daysOfMonth(month)} result={thisMonth} today={today} selected={loc.day ?? picked} onPick={(d) => { setPicked(d); open({ day: d }); }} payerOrder={Object.keys(data.payerNames)} />
       </div>
 
       <section className="card">

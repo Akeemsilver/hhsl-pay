@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { isCombined, otherPayerId, setTaxModeFrom } from "../model";
+import { isCombined, payerLabel, otherPayerId, setTaxModeFrom } from "../model";
 import { MONTHS, todayISO } from "../format";
 import { useStore } from "../store";
 import { PageHeader } from "../components/TopBar";
@@ -8,7 +8,7 @@ export function PayslipsPage() {
   const { data, update } = useStore();
   const [newPayer, setNewPayer] = useState("");
   const payers = { ...data.payerNames };
-  for (const v of data.history.sites) for (const s of Object.values(v.value)) payers[s.payer] ??= s.payer;
+  for (const v of data.history.sites) for (const s of Object.values(v.value)) payers[s.payer] ??= payerLabel(data.payerNames, s.payer);
   const thisMonth = todayISO().slice(0, 7);
   const [from, setFrom] = useState(thisMonth);
   const combinedNow = isCombined(data, from);

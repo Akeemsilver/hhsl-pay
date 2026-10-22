@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import JSZip from "jszip";
-import { applyAnnual, guessAnnualAssignment, parseAnnual } from "../src/annualImport";
+import { applyAnnual, guessAnnualAssignment, parseAnnual, withSheetSites } from "../src/annualImport";
 import { newData } from "../src/model";
 import { demoSites, demoTax } from "./support";
 
@@ -13,7 +13,7 @@ const cell = (row: number, col: number, v: string | number | boolean) => {
 };
 
 /** A month tab with the weekly calendar layout: each day block is 5 columns wide, each week 12 rows tall. */
-async function workbook(month: number, days: Array<{ date: string; site: string; hours: number; lead?: boolean; holiday?: boolean }>, year = 2026) {
+async function workbook(month: number, days: Array<{ date: string; site: string; hours: number; lead?: boolean; holiday?: boolean }>, year = 2026, settings: Array<Array<string | number>> = []) {
   const zip = new JSZip();
   const cells: string[] = [cell(4, 9, year), cell(1, 2, "Created by Test Person ")];
   const first = new Date(Date.UTC(year, month - 1, 1)); first.setUTCDate(1 - first.getUTCDay());
@@ -30,6 +30,11 @@ async function workbook(month: number, days: Array<{ date: string; site: string;
   zip.file("xl/workbook.xml", `<workbook><sheets><sheet name="DATA" sheetId="1" r:id="rId1"/><sheet name="${["January","February","March","April","May","June","July","August","September","October","November","December"][month - 1]}" sheetId="2" r:id="rId2"/></sheets></workbook>`);
   zip.file("xl/_rels/workbook.xml.rels", `<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Target="worksheets/sheet2.xml"/></Relationships>`);
   zip.file("xl/worksheets/sheet1.xml", "<worksheet/>");
+  if (settings.length) {
+    zip.file("xl/workbook.xml", `<workbook><sheets><sheet name="Settings" sheetId="1" r:id="rId1"/><sheet name="${["January","February","March","April","May","June","July","August","September","October","November","December"][month - 1]}" sheetId="2" r:id="rId2"/></sheets></workbook>`);
+    const rows = settings.map((r, i) => `<row r="${5 + i}">${r.map((v, c) => (v === "" ? "" : cell(5 + i, c + 1, v))).join("")}</row>`).join("");
+    zip.file("xl/worksheets/sheet1.xml", `<worksheet><sheetData>${rows}</sheetData></worksheet>`);
+  }
   zip.file("xl/worksheets/sheet2.xml", `<worksheet><sheetData>${rowsXml}</sheetData></worksheet>`);
   return zip.generateAsync({ type: "uint8array" });
 }
@@ -64,5 +69,27 @@ describe("yearly spreadsheet import", () => {
     const rep = applyAnnual(d, sheet, assign, "replace");
     expect(rep.removed).toBe(1); expect(rep.added).toBe(2);
     expect(rep.data.entries.map((e) => e.date)).toEqual(["2026-09-02", "2026-10-01", "2026-10-02"]);
+  });
+});
+
+describe("sites and rates from the Settings tab", () => {
+  const settings = [["All sites"], ["Atlantic", 69.09, 79.09, "", "", 1000, "", "", "", "", 8, 1000, 1000], ["TGU", 60, 65, "", "", 8, 4, 1000, "", "", 1000, "", "", 12, 1000], ["Hhsl Yard", "", "", "", "", "", "", "", "", "", "", "", "", "", "", 500, 700]];
+  it("reads each site's rates and hours, naming the yard HHSL Compound", async () => {
+    const sheet = await parseAnnual(await workbook(10, [{ date: "2026-10-01", site: "TGU", hours: 12 }], 2026, settings));
+    expect(sheet.sites.map((s) => s.name)).toEqual(["Atlantic", "TGU", "HHSL Compound"]);
+    const tgu = sheet.sites.find((s) => s.name === "TGU")!.rates;
+    expect(tgu).toMatchObject({ payer: "main", baseRate: 60, leadRate: 65, weekday: { x1: 8, x15: 4, x2: 1000 }, weekend: { x15: 12, x2: 1000 } });
+    expect(sheet.sites[0]!.rates.payer).toBe("atlantic");
+    expect(sheet.sites[2]!.rates).toMatchObject({ dailyStd: 500, dailyLead: 700 });
+  });
+  it("adds only the sites a new app lacks, keeping existing ones", async () => {
+    const sheet = await parseAnnual(await workbook(10, [{ date: "2026-10-01", site: "TGU", hours: 12 }], 2026, settings));
+    const fresh = newData();
+    const plan = withSheetSites(fresh, sheet);
+    expect(plan.added).toEqual(["Atlantic", "TGU", "HHSL Compound"]);
+    expect(plan.data.payerNames).toMatchObject({ main: "Point Lisas / other", atlantic: "Atlantic LNG" });
+    const again = withSheetSites({ ...plan.data, history: { ...plan.data.history, sites: plan.data.history.sites.map((v) => ({ ...v, value: { ...v.value, TGU: { ...v.value.TGU!, baseRate: 99 } } })) } }, sheet);
+    expect(again.added).toEqual([]);
+    expect(again.data.history.sites[0]!.value.TGU!.baseRate).toBe(99);
   });
 });

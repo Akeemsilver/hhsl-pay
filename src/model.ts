@@ -58,6 +58,8 @@ export interface AppData {
   holidays?: { added: { date: string; name: string }[]; removed: string[] };
   /** The name shown on payslips and timesheets. */
   userName?: string;
+  /** The person chose to set up their sites by hand instead of loading a starter kit. */
+  setupSkipped?: boolean;
   /** Which payslip group other jobs are paid on and taxed with. */
   otherPayer?: string;
   /** Whether PAYE, NIS and the surcharge are worked out per payslip group (split) or on everything together, from a month on. */
@@ -221,4 +223,11 @@ export function otherIncome(data: Pick<AppData, "entries" | "otherPayer" | "paye
   return data.entries
     .filter((e) => isOther(e) && e.date.startsWith(month) && (e.amount ?? 0) > 0)
     .map((e) => ({ date: e.date, payer, amount: e.amount ?? 0, hours: otherHours(e) }));
+}
+
+/** The name to show for a payslip group: the name you gave it, else its id tidied up ("atlantic" shows as "Atlantic"). */
+export function payerLabel(names: Record<string, string>, id: string): string {
+  const given = names[id]?.trim();
+  if (given) return given;
+  return id.replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }

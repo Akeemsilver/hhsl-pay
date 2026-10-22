@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { BadBackup, PasswordRequired, backupFileName, deliver, isEncrypted, parse, serialize } from "../backup";
+import { applyKit, ratesKitOf, BadBackup, PasswordRequired, backupFileName, deliver, isEncrypted, parse, serialize } from "../backup";
 import { newData } from "../model";
 import { useStore } from "../store";
 import { AnnualImport } from "../components/AnnualImport";
@@ -20,7 +20,7 @@ export function BackupScreen() {
   async function backUp(kind: "full" | "rates") {
     if (lock && !password) return say("Enter a password, or turn off the password lock.", false);
     try {
-      const text = await serialize(kind, kind === "full" ? data : data.history, pw);
+      const text = await serialize(kind, kind === "full" ? data : ratesKitOf(data), pw);
       const how = await deliver(backupFileName(kind, !!pw), text);
       if (kind === "full") update((d) => ({ ...d, lastBackupAt: new Date().toISOString() }));
       say(how === "shared" ? "Backup shared. Keep that file somewhere safe." : "Backup saved to your Downloads. Keep that file somewhere safe.");
@@ -45,8 +45,8 @@ export function BackupScreen() {
         say("Backup restored.");
       } else if (parsed.history) {
         if (!confirm("Replace your sites, rates and tax rules with the ones in this file? Your entries are kept.")) return;
-        const history = parsed.history;
-        update((d) => ({ ...d, history }));
+        const kit = parsed.kit ?? { ...parsed.history };
+        update((d) => applyKit(d, kit));
         say("Rates imported.");
       }
     } catch (e) {

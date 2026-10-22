@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { applyAnnual, guessAnnualAssignment, parseAnnual, type AnnualSheet } from "../annualImport";
+import { applyAnnual, guessAnnualAssignment, parseAnnual, withSheetSites, type AnnualSheet } from "../annualImport";
 import { MONTHS } from "../format";
 import { useStore } from "../store";
 import { ImportError, type Assignment } from "../timesheetImport";
@@ -15,7 +15,10 @@ export function AnnualImport() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
 
-  const siteNames = [...new Set(data.history.sites.flatMap((v) => Object.keys(v.value)))];
+  const [useSheetSites, setUseSheetSites] = useState(true);
+  const plan = sheet && useSheetSites ? withSheetSites(data, sheet) : { data, added: [] as string[] };
+  const base = plan.data;
+  const siteNames = [...new Set(base.history.sites.flatMap((v) => Object.keys(v.value)))];
   const clients = sheet ? [...new Set(sheet.days.map((d) => d.client))] : [];
   const perMonth = sheet ? Object.entries(sheet.days.reduce<Record<string, number>>((m, d) => ({ ...m, [d.date.slice(0, 7)]: (m[d.date.slice(0, 7)] ?? 0) + 1 }), {})).sort() : [];
 
@@ -24,9 +27,11 @@ export function AnnualImport() {
     setBusy(true);
     try {
       const parsed = await parseAnnual(await file.arrayBuffer());
+      const planned = withSheetSites(data, parsed);
       const guessed: Record<string, Assignment | undefined> = {};
-      for (const c of new Set(parsed.days.map((d) => d.client))) guessed[c] = guessAnnualAssignment(c, data);
+      for (const c of new Set(parsed.days.map((d) => d.client))) guessed[c] = guessAnnualAssignment(c, planned.data);
       setAssign(guessed);
+      setUseSheetSites(true);
       setSheet(parsed);
     } catch (e) {
       setSheet(null);
@@ -40,9 +45,9 @@ export function AnnualImport() {
 
   function run() {
     if (!sheet) return;
-    const r = applyAnnual(data, sheet, assign, mode);
+    const r = applyAnnual(base, sheet, assign, mode);
     replace(r.data);
-    setMessage({ text: `Added ${r.added} day${r.added === 1 ? "" : "s"} across ${r.months.length} month${r.months.length === 1 ? "" : "s"}${r.removed ? `, replaced ${r.removed} existing` : ""}${r.skipped ? `, skipped ${r.skipped}` : ""}.`, ok: true });
+    setMessage({ text: `${plan.added.length ? `Added ${plan.added.length} site${plan.added.length === 1 ? "" : "s"} with their rates. ` : ""}Added ${r.added} day${r.added === 1 ? "" : "s"} across ${r.months.length} month${r.months.length === 1 ? "" : "s"}${r.removed ? `, replaced ${r.removed} existing` : ""}${r.skipped ? `, skipped ${r.skipped}` : ""}.`, ok: true });
     setSheet(null);
   }
 
@@ -61,6 +66,19 @@ export function AnnualImport() {
           <ul className="plain small">
             {perMonth.map(([m, n]) => <li key={m} className="row"><span>{MONTHS[Number(m.slice(5)) - 1]} {m.slice(0, 4)}</span><span>{n} day{n === 1 ? "" : "s"}</span></li>)}
           </ul>
+          {sheet.sites.length > 0 && (() => {
+            const missing = withSheetSites(data, sheet).added;
+            return missing.length > 0 ? (
+              <label className="check">
+                <input type="checkbox" aria-label="Also add the sites and rates from the sheet" checked={useSheetSites} onChange={(e) => {
+                  setUseSheetSites(e.target.checked);
+                  const planned = e.target.checked ? withSheetSites(data, sheet).data : data;
+                  setAssign(Object.fromEntries(clients.map((c) => [c, guessAnnualAssignment(c, planned)])));
+                }} />
+                {" "}Also add the {missing.length} site{missing.length === 1 ? "" : "s"} and rates from the sheet's Settings tab: {missing.join(", ")}
+              </label>
+            ) : null;
+          })()}
           {clients.map((c) => (
             <label key={c}>“{c}” is
               <select aria-label={`Site for ${c}`} value={assign[c]?.site ?? ""} onChange={(e) => setAssign((a) => ({ ...a, [c]: e.target.value ? { site: e.target.value, role: a[c]?.role } : undefined }))}>

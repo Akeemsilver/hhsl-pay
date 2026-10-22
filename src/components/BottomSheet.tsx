@@ -8,12 +8,14 @@ const DISMISS_DISTANCE = 110;
  * or pull it down. Pulling down only starts when the content is scrolled to the top, so scrolling still works.
  * The owner decides what "close" means, for example asking to discard unsaved changes.
  */
-export function BottomSheet({ label, onRequestClose, top, children }: {
-  label: string; onRequestClose: () => void; top?: boolean; children: ReactNode;
+export function BottomSheet({ label, onRequestClose, onPullDismiss, top, children }: {
+  label: string; onRequestClose: () => void; /** What pulling the sheet down does; closing straight away by default is the same as onRequestClose. */ onPullDismiss?: () => void; top?: boolean; children: ReactNode;
 }) {
   const sheet = useRef<HTMLDivElement>(null);
   const close = useRef(onRequestClose);
   close.current = onRequestClose;
+  const pull = useRef(onPullDismiss);
+  pull.current = onPullDismiss;
   useLayer(() => close.current());
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export function BottomSheet({ label, onRequestClose, top, children }: {
       el.style.transform = "";
       tracking = dragging = false;
       dy = 0;
-      if (far) close.current();
+      if (far) (pull.current ?? close.current)();
     };
 
     const onStart = (e: TouchEvent) => { startY = e.touches[0]!.clientY; tracking = true; dragging = false; dy = 0; };
