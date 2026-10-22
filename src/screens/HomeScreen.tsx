@@ -37,13 +37,12 @@ export function HomeScreen() {
   const [shown, setShown] = useState(today.slice(0, 7));
   const month = today.slice(0, 7);
   const year = Number(today.slice(0, 4));
-  const prevMonth = shiftMonth(month, -1);
 
   const { site: filterSite } = useSiteFilter();
   const install = useInstall();
-  const thisMonth = useMonth(month);
-  const lastMonth = useMonth(prevMonth);
   const shownResult = useMonth(shown);
+  const prevShown = shiftMonth(shown, -1);
+  const lastMonth = useMonth(prevShown);
   const slide = useMonthSlide(shown, (by) => setShown(shiftMonth(shown, by)));
   const months = useYear(year);
   const prevYearMonths = useYear(year - 1);
@@ -53,11 +52,11 @@ export function HomeScreen() {
   const backupDue = data.entries.length > 0 && Date.now() - lastBackup > 30 * DAY_MS;
 
   const worked = new Set([
-    ...thisMonth.entries.filter((e) => e.pay.total > 0).map((e) => e.entry.date),
-    ...(filterSite ? [] : [...othersByDate(data.entries, month).keys()]),
+    ...shownResult.entries.filter((e) => e.pay.total > 0).map((e) => e.entry.date),
+    ...(filterSite ? [] : [...othersByDate(data.entries, shown).keys()]),
   ]);
-  const hours = thisMonth.entries.reduce((s, e) => s + e.entry.hours, 0);
-  const diff = thisMonth.gross - lastMonth.gross;
+  const hours = shownResult.entries.reduce((s, e) => s + e.entry.hours, 0);
+  const diff = shownResult.gross - lastMonth.gross;
 
   const rules = valueOn(data.history.tax, today);
   const ytdGross = months.reduce((s, m) => s + m.gross, 0);
@@ -123,21 +122,21 @@ export function HomeScreen() {
         </div>
       )}
 
-      <section className="hero" aria-label="This month">
+      <section className="hero" aria-label={`Totals for ${shown}`}>
         <div className="hero-top">
-          <span><i className="dot dot-gross" />Gross · {MONTHS[thisMonthIndex]} so far</span>
+          <span><i className="dot dot-gross" />Gross · {MONTHS[Number(shown.slice(5)) - 1]}{shown.slice(0, 4) !== String(year) ? ` ${shown.slice(0, 4)}` : ""}{shown === month ? " so far" : ""}</span>
           {lastMonth.gross > 0 && (
-            <span className="delta">{diff >= 0 ? "▲" : "▼"} {money(Math.abs(diff))} vs {MONTHS[Number(prevMonth.slice(5)) - 1]?.slice(0, 3)}</span>
+            <span className="delta">{diff >= 0 ? "▲" : "▼"} {money(Math.abs(diff))} vs {MONTHS[Number(prevShown.slice(5)) - 1]?.slice(0, 3)}</span>
           )}
         </div>
-        <div className="hero-value">{money(thisMonth.gross)}</div>
+        <div className="hero-value">{money(shownResult.gross)}</div>
         <div className="hero-stats">
-          <div><span><i className="dot dot-net" />Net</span><strong className="c-net">{money(thisMonth.net)}</strong></div>
-          <div><span><i className="dot dot-paye" />PAYE</span><strong className="c-paye">{money(thisMonth.paye)}</strong></div>
+          <div><span><i className="dot dot-net" />Net</span><strong className="c-net">{money(shownResult.net)}</strong></div>
+          <div><span><i className="dot dot-paye" />PAYE</span><strong className="c-paye">{money(shownResult.paye)}</strong></div>
           <div><span>Days</span><strong>{worked.size}</strong></div>
           <div><span>Hours</span><strong>{hoursText(hours)} h</strong></div>
         </div>
-        <PayerTax payers={thisMonth.payers} />
+        <PayerTax payers={shownResult.payers} />
       </section>
 
       <div className="actions">
