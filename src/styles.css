@@ -810,3 +810,19 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .payer-slot > * { grid-area: 1 / 1; }
 .payer-ghost { visibility: hidden; pointer-events: none; }
 .other-payer { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+
+/* Timesheet jobs checklist */
+.tj-site { border-top: 1px solid var(--line); padding: 6px 0; }
+.tj-row { display: grid; gap: 6px; padding: 4px 0; }
+.tj-check { display: flex; align-items: center; gap: 12px; min-height: 44px; font-weight: 600; }
+.tj-label { font-size: 0.8rem; color: var(--muted); margin-left: 32px; }
+.tj-label input { margin-top: 2px; }
+.tj-roles { margin: 0 0 4px 32px; }
+.tj-roles > summary { min-height: 40px; display: flex; align-items: center; font-size: 0.88rem; color: var(--accent); cursor: pointer; }
+.tj-roles .tj-check { font-weight: 500; }
+.tj .save-bar { display: flex; gap: 8px; }
+.tj .save-bar button.primary { flex: 1; }
+.tj .save-bar.idle { opacity: 0.8; }
+.tj-check span { color: var(--text); }
+.tj-roles > summary { min-height: 34px; }
+.tj-site { padding: 2px 0; }
