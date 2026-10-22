@@ -18,6 +18,8 @@ export interface RatesKit extends RuleHistory {
   taxMode?: AppData["taxMode"];
   /** Public holiday edits (for example Divali). */
   holidays?: AppData["holidays"];
+  /** Calendar colour per site (0–11), keyed by lower-case site name. */
+  siteColors?: AppData["siteColors"];
   /** The company time sheet form (.xlsx), so a colleague does not have to find it. Sent inside the kit, never kept in the app's public code. */
   timesheetTemplate?: { name: string; data: string };
 }
@@ -42,6 +44,7 @@ export function ratesKitOf(data: AppData, template?: { name: string; bytes: Arra
     otherPayer: data.otherPayer,
     taxMode: data.taxMode,
     holidays: data.holidays,
+    siteColors: data.siteColors,
   };
 }
 
@@ -54,6 +57,7 @@ export function applyKit(data: AppData, kit: RatesKit): AppData {
     otherPayer: kit.otherPayer ?? data.otherPayer,
     taxMode: kit.taxMode ?? data.taxMode,
     holidays: kit.holidays ?? data.holidays,
+    siteColors: kit.siteColors ? { ...data.siteColors, ...kit.siteColors } : data.siteColors,
     timesheet: kit.timesheetRules || kit.siteLabel || kit.payrollEmail
       ? { name: data.timesheet?.name ?? "", siteLabel: kit.siteLabel ?? data.timesheet?.siteLabel ?? "ERT Offsite", rules: kit.timesheetRules ?? data.timesheet?.rules ?? [], payrollEmail: kit.payrollEmail ?? data.timesheet?.payrollEmail, includeOther: data.timesheet?.includeOther }
       : data.timesheet,
