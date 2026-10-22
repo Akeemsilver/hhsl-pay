@@ -13,6 +13,19 @@ export const SITE_COLORS = [
   { name: "Orange", hex: "#ea580c" },
   { name: "Slate", hex: "#475569" },
   { name: "Green", hex: "#16a34a" },
+  // Added later; the first twelve keep their numbers so existing sites keep their colours.
+  { name: "Red", hex: "#dc2626" },
+  { name: "Sky", hex: "#38bdf8" },
+  { name: "Magenta", hex: "#a21caf" },
+  { name: "Gold", hex: "#eab308" },
+  { name: "Navy", hex: "#1e3a8a" },
+  { name: "Coral", hex: "#fb7185" },
+  { name: "Olive", hex: "#4d7c0f" },
+  { name: "Maroon", hex: "#7f1d1d" },
+  { name: "Lavender", hex: "#a78bfa" },
+  { name: "Mint", hex: "#34d399" },
+  { name: "Steel", hex: "#94a3b8" },
+  { name: "Forest", hex: "#14532d" },
 ] as const;
 
 /** Sites in the order they were first set up, so each keeps the same default colour. */
@@ -27,7 +40,7 @@ function siteOrder(data: AppData): string[] {
   return seen;
 }
 
-/** The colour number (0–11) for a site: the one chosen in its settings, otherwise the next unused one in order. */
+/** The colour number (0–23) for a site: the one chosen in its settings, otherwise the next unused one in order. */
 export function siteColorIndex(data: AppData, site: string): number {
   const key = site.toLowerCase();
   const chosen = data.siteColors?.[key];
