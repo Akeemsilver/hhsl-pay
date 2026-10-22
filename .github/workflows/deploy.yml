@@ -25,6 +25,17 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # The PDF guide is rebuilt from guide/build_guide.py on every deploy, so the live guide always matches this
+      # version of the app and carries the app's real web address and the deploy date.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install reportlab pillow
+      - name: Build the mobile guide (PDF)
+        env:
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+        run: python guide/build_guide.py --out public/HHSL-pay-app-mobile-guide.pdf --link "https://${OWNER,,}.github.io/${REPO}/" --stamp "$(date -u +%F), build ${GITHUB_SHA::7}"
       - run: npm run build
         env:
           # The web address follows the repository name, so renaming the repository renames the link.
