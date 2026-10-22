@@ -1,9 +1,9 @@
 import { loadTemplate } from "../storage";
 import { InstallHelp } from "../components/InstallHelp";
 import { appLink, siteCount } from "../kit";
-import { backupFileName, deliver, download, ratesKitOf, serialize } from "../backup";
+import { backupFileName, download, ratesKitOf, serialize, shareFile } from "../backup";
 import { useNav } from "../nav";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { newData, isCombined, setTaxModeFrom, userNameOf } from "../model";
 import { todayISO } from "../format";
@@ -40,11 +40,22 @@ export function SettingsHub() {
     } catch { /* cancelled */ }
   };
   const kitText = async () => serialize("rates", ratesKitOf(data, await loadTemplate()));
+  // The kit is built ahead of time so that tapping Share opens the share menu straight away (phones only allow
+  // it right after a tap).
+  const [kit, setKit] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    if (sitesCount > 0) void kitText().then((t) => live && setKit(t));
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.history, data.payerNames, data.siteColors, data.timesheet, data.otherPayer, data.taxMode, data.holidays, sitesCount]);
   const shareKit = async () => {
-    try {
-      const how = await deliver(backupFileName("rates", false), await kitText());
-      setKitMessage(how === "shared" ? "Starter kit shared." : "Starter kit saved to your Downloads. Send that file on WhatsApp.");
-    } catch (e) { if ((e as DOMException)?.name !== "AbortError") setKitMessage("Could not create the starter kit."); }
+    if (!kit) { setKitMessage("Getting the starter kit ready, try again in a moment."); return; }
+    const result = await shareFile(backupFileName("rates", false), kit);
+    if (result === "shared") setKitMessage("Starter kit shared.");
+    else if (result === "unsupported") setKitMessage("This browser cannot open the share menu. Use “Download starter kit” and send the file from your Downloads.");
+    else if (result === "failed") setKitMessage("The share menu could not open. Use “Download starter kit” instead.");
+    else setKitMessage(null);
   };
   const saveKit = async () => {
     download(backupFileName("rates", false), await kitText());

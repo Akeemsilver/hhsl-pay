@@ -187,6 +187,25 @@ export async function deliver(fileName: string, content: string | Uint8Array, ty
   return download(fileName, content, type);
 }
 
+/**
+ * Open the phone's share menu (WhatsApp, Gmail, ...) with the file attached. Never downloads.
+ * "unsupported" means this browser cannot share files; "failed" means the menu could not be opened.
+ */
+export async function shareFile(fileName: string, content: string | Uint8Array, type = "application/json"): Promise<"shared" | "cancelled" | "unsupported" | "failed"> {
+  const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+  if (!nav.share || !nav.canShare) return "unsupported";
+  // Some phones refuse to share a .json file as application/json but accept it as plain text.
+  const candidates = [type, "text/plain"].map((t) => new File([content as BlobPart], fileName, { type: t }));
+  const file = candidates.find((f) => nav.canShare!({ files: [f] }));
+  if (!file) return "unsupported";
+  try {
+    await nav.share({ files: [file], title: fileName });
+    return "shared";
+  } catch (e) {
+    return (e as DOMException)?.name === "AbortError" ? "cancelled" : "failed";
+  }
+}
+
 /** Save the file to the phone's Downloads without opening the share sheet. */
 export function download(fileName: string, content: string | Uint8Array, type = "application/json"): "downloaded" {
   const file = new File([content as BlobPart], fileName, { type });
