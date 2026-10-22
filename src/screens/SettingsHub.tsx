@@ -1,0 +1,152 @@
+import { useNav } from "../nav";
+import { useState } from "react";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { newData, isCombined, setTaxModeFrom, userNameOf } from "../model";
+import { todayISO } from "../format";
+import { useStore } from "../store";
+import { useTheme, type ThemePref } from "../theme";
+import { PageHeader } from "../components/TopBar";
+import { CalendarIcon, ChevronRight, FileIcon, MapPinIcon, SaveIcon, ShieldIcon, UsersIcon } from "../components/Icons";
+
+export function SettingsHub() {
+  const { open, selectTab } = useNav();
+  const { data, persistent, update, replace } = useStore();
+  const [ask, setAsk] = useState<"settings" | "days" | "all" | null>(null);
+
+  const [theme, setTheme] = useTheme();
+  const thisMonth = todayISO().slice(0, 7);
+  const combinedNow = isCombined(data, thisMonth);
+  const sites = new Set(data.history.sites.flatMap((v) => Object.keys(v.value))).size;
+  return (
+    <>
+      <PageHeader title="Settings" />
+
+      <h2 className="section-title">Your name</h2>
+      <section className="card">
+        <label>Name on payslips and timesheets
+          <input aria-label="Your name" value={data.userName ?? userNameOf(data)} onChange={(e) => update((d) => ({ ...d, userName: e.target.value }))} />
+        </label>
+      </section>
+
+      <h2 className="section-title">Appearance</h2>
+      <section className="card">
+        <div className="segmented three" role="group" aria-label="Theme">
+          {([["system", "System"], ["light", "Light"], ["dark", "Dark"]] as Array<[ThemePref, string]>).map(([id, label]) => (
+            <button key={id} aria-pressed={theme === id} className={theme === id ? "on" : ""} onClick={() => setTheme(id)}>{label}</button>
+          ))}
+        </div>
+        <p className="muted small">System follows your phone's light or dark setting.</p>
+      </section>
+
+      <h2 className="section-title">How tax is worked out</h2>
+      <section className="card">
+        <div className="segmented" role="group" aria-label="Tax method">
+          <button aria-pressed={!combinedNow} className={!combinedNow ? "on" : ""} onClick={() => update((d) => setTaxModeFrom(d, thisMonth, false))}>Split</button>
+          <button aria-pressed={combinedNow} className={combinedNow ? "on" : ""} onClick={() => update((d) => setTaxModeFrom(d, thisMonth, true))}>Combined</button>
+        </div>
+        <p className="muted small">
+          {combinedNow
+            ? "Combined: one gross, one PAYE, one NIS and one health surcharge on everything."
+            : "Split: Point Lisas / other and Atlantic each pay their own PAYE, NIS and health surcharge. The totals add them together, with each place shown in small print."}
+          {" "}Applies from {thisMonth} onwards. <button className="link" onClick={() => open({ page: "payslips" })}>Choose another month</button>
+        </p>
+      </section>
+
+      <h2 className="section-title">Your work</h2>
+      <ul className="menu">
+        <li>
+          <button onClick={() => open({ page: "sites" })}>
+            <MapPinIcon />
+            <span><strong>Site locations &amp; rates</strong><small>{sites} site{sites === 1 ? "" : "s"}, roles and pay rates</small></span>
+            <ChevronRight />
+          </button>
+        </li>
+        <li>
+          <button onClick={() => open({ page: "tax" })}>
+            <ShieldIcon />
+            <span><strong>NIS &amp; tax</strong><small>NIS table, PAYE, and when the rules change</small></span>
+            <ChevronRight />
+          </button>
+        </li>
+        <li>
+          <button onClick={() => open({ page: "payslips" })}>
+            <UsersIcon />
+            <span><strong>Payslips</strong><small>{Object.keys(data.payerNames).length} payslip{Object.keys(data.payerNames).length === 1 ? "" : "s"}</small></span>
+            <ChevronRight />
+          </button>
+        </li>
+        <li>
+          <button onClick={() => open({ page: "timesheet" })}>
+            <FileIcon />
+            <span><strong>Timesheet</strong><small>{data.timesheet?.rules.length ? `${data.timesheet.rules.length} job rule${data.timesheet.rules.length === 1 ? "" : "s"}` : "Name, jobs to include, template"}</small></span>
+            <ChevronRight />
+          </button>
+        </li>
+        <li>
+          <button onClick={() => open({ page: "holidays" })}>
+            <CalendarIcon />
+            <span><strong>Public holidays</strong><small>Shown in red on the calendar</small></span>
+            <ChevronRight />
+          </button>
+        </li>
+      </ul>
+
+      <h2 className="section-title">Your data</h2>
+      <ul className="menu">
+        <li>
+          <button onClick={() => open({ page: "backup" })}>
+            <SaveIcon />
+            <span><strong>Backup &amp; restore</strong><small>{data.lastBackupAt ? `Last backup ${new Date(data.lastBackupAt).toLocaleDateString()}` : "Not backed up yet"}</small></span>
+            <ChevronRight />
+          </button>
+        </li>
+      </ul>
+      <h2 className="section-title">Reset to default</h2>
+      <section className="card">
+        <p className="muted small">Put the app's settings back the way they were when you first installed it. Your logged days, site rates and name are kept.</p>
+        <button className="wide" onClick={() => setAsk("settings")}>Reset settings to default</button>
+        <p className="muted small">Clear the days and jobs you logged ({data.entries.length}, including other jobs and any payslip corrections) but keep your rates, settings and name. Good for starting a new year or testing.</p>
+        <button className="wide" disabled={data.entries.length === 0} onClick={() => setAsk("days")}>Reset days and jobs</button>
+        <p className="muted small">Or start completely fresh. This erases your days, rates, name and everything else on this phone.</p>
+        <button className="danger wide" onClick={() => setAsk("all")}>Erase everything</button>
+      </section>
+      {ask && (
+        <ConfirmDialog
+          title={ask === "settings" ? "Reset settings?" : ask === "days" ? "Reset days and jobs?" : "Erase everything?"}
+          message={ask === "days"
+            ? `All ${data.entries.length} logged days and jobs, other jobs, and payslip corrections are deleted. Your rates, settings and name stay. This cannot be undone, so back up first if you need them.`
+            : ask === "settings"
+            ? "Appearance, tax tables, the Split / Combined choice, public holiday edits and timesheet job rules go back to default. Your days, site rates and name stay."
+            : "All your days, rates, settings and your name are deleted from this phone. This cannot be undone. Back up first if you might need them."}
+          confirmLabel={ask === "settings" ? "Reset" : ask === "days" ? "Delete all days" : "Erase everything"}
+          cancelLabel="Keep"
+          onCancel={() => setAsk(null)}
+          onConfirm={() => {
+            if (ask === "days") {
+              update((d) => ({ ...d, entries: [], corrections: undefined }));
+            } else if (ask === "settings") {
+              setTheme("system");
+              update((d) => {
+                const fresh = newData();
+                return {
+                  ...d,
+                  history: { ...d.history, tax: fresh.history.tax },
+                  taxMode: undefined, holidays: undefined,
+                  timesheet: d.timesheet ? { ...d.timesheet, siteLabel: "ERT Offsite", rules: [] } : undefined,
+                };
+              });
+            } else {
+              replace(newData());
+              setTheme("system");
+              selectTab("home");
+            }
+            setAsk(null);
+          }}
+        />
+      )}
+      <p className="muted small pad">
+        Everything is saved on this phone only. There is no account and no server. {persistent ? "The browser has agreed to keep your data." : "Back up regularly so a cleared browser or lost phone does not lose your entries."}
+      </p>
+    </>
+  );
+}
