@@ -678,3 +678,10 @@ table.bands .row-no { width: 34px; text-align: center; color: var(--muted); font
 button.primary, button.secondary-lift { box-shadow: var(--lift-sm); }
 .cal-cell { box-shadow: var(--lift-sm); }
 .tabs { box-shadow: 0 -4px 16px rgba(16,24,40,.12); }
+/* Same lift on every tab: lists, settings menus, site and payslip boxes, notices */
+.menu, .entry, .site, .slip, .notice, .welcome-install, .days { box-shadow: var(--shadow); }
+button { box-shadow: var(--lift-sm); }
+.segmented button:not(.on), .tabs button, button.icon, .cal-cell.selected { box-shadow: none; }
+button.icon.gear, .bar.page button.icon[aria-label="Back"] { box-shadow: 0 1px 2px rgba(16,24,40,.14), 0 4px 10px rgba(16,24,40,.16); }
+.segmented button.on { box-shadow: var(--shadow); }
+:root[data-theme="dark"] .menu, :root[data-theme="dark"] .days { box-shadow: none; }
