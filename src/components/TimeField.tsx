@@ -3,12 +3,14 @@ import { createPortal } from "react-dom";
 import { parseTimeInput, toMinutes } from "../engine";
 import { BottomSheet } from "./BottomSheet";
 import { useNav } from "../nav";
+import { Wheel } from "./Wheel";
 
-const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const MINUTE_ITEMS = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
+const HOUR_ITEMS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
+const AMPM = ["AM", "PM"];
 const two = (n: number) => String(n).padStart(2, "0");
 
-/** The time picker: quick times, hour (0-23) and minute dials, or type it. Saved as 24-hour "HH:MM". */
+/** The time picker: quick times, then AM/PM, hour and minute wheels (like the phone's own), or type it. Always saved as 24-hour "HH:MM". */
 function TimeSheet({ title, value, quick, onSet, onCancel }: {
   title: string; value: string | undefined; quick: string[];
   onSet: (v: string | undefined) => void; onCancel: () => void;
@@ -19,7 +21,10 @@ function TimeSheet({ title, value, quick, onSet, onCancel }: {
   const first = useRef<HTMLButtonElement>(null);
   const mins = toMinutes(current) ?? 7 * 60;
   const hour = Math.floor(mins / 60), minute = mins % 60;
-  const minuteOptions = MINUTES.includes(minute) ? MINUTES : [...MINUTES, minute].sort((a, b) => a - b);
+  // The wheels show a 12-hour clock; the value stays 24-hour.
+  const pm = hour >= 12;
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  const to24 = (isPm: boolean, h12: number) => (h12 % 12) + (isPm ? 12 : 0);
 
   useEffect(() => first.current?.focus(), []);
 
@@ -49,17 +54,16 @@ function TimeSheet({ title, value, quick, onSet, onCancel }: {
           </>
         )}
 
-        <div className="dials">
-          <label>Hour
-            <select value={hour} onChange={(e) => setCurrent(`${two(Number(e.target.value))}:${two(minute)}`)}>
-              {HOURS.map((h) => <option key={h} value={h}>{two(h)}</option>)}
-            </select>
-          </label>
-          <label>Minute
-            <select value={minute} onChange={(e) => setCurrent(`${two(hour)}:${two(Number(e.target.value))}`)}>
-              {minuteOptions.map((m) => <option key={m} value={m}>{two(m)}</option>)}
-            </select>
-          </label>
+        <div className="wheels">
+          <div className="wheel-col"><span className="wheel-label">AM / PM</span>
+            <Wheel label="AM or PM" items={AMPM} index={pm ? 1 : 0} onIndex={(i) => setCurrent(`${two(to24(i === 1, hour12))}:${two(minute)}`)} />
+          </div>
+          <div className="wheel-col"><span className="wheel-label">Hour</span>
+            <Wheel label="Hour" items={HOUR_ITEMS} index={hour12 - 1} onIndex={(i) => setCurrent(`${two(to24(pm, i + 1))}:${two(minute)}`)} />
+          </div>
+          <div className="wheel-col"><span className="wheel-label">Minute</span>
+            <Wheel label="Minute" items={MINUTE_ITEMS} index={minute} onIndex={(i) => setCurrent(`${two(hour)}:${two(i)}`)} />
+          </div>
         </div>
 
         <label className="typed">

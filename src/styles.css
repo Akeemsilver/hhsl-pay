@@ -826,3 +826,19 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .tj-check span { color: var(--text); }
 .tj-roles > summary { min-height: 34px; }
 .tj-site { padding: 2px 0; }
+.sheet .time-head, .sheet .sheet-head, .sheet > h2:first-of-type { touch-action: none; }
+
+/* Time wheels */
+.wheels { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin: 10px 0 4px; }
+.wheel-col { display: grid; gap: 4px; justify-items: center; }
+.wheel-label { font-size: 0.78rem; color: var(--muted); }
+.wheel { position: relative; width: 100%; border-radius: 14px; background: var(--card); border: 1px solid var(--edge); overflow: hidden; outline: none; }
+.wheel:focus-visible { box-shadow: 0 0 0 3px var(--accent); }
+.wheel-band { position: absolute; left: 6px; right: 6px; top: 88px; height: 44px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 14%, var(--card)); pointer-events: none; }
+.wheel-scroll { position: relative; overflow-y: scroll; scroll-snap-type: y mandatory; overscroll-behavior: contain; scrollbar-width: none; touch-action: pan-y; -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 28%, #000 72%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 28%, #000 72%, transparent 100%); }
+.wheel-scroll::-webkit-scrollbar { display: none; }
+.wheel-item { display: flex; align-items: center; justify-content: center; scroll-snap-align: center; font-variant-numeric: tabular-nums; font-size: 1.35rem; color: var(--muted); cursor: pointer; transition: font-size 0.12s, color 0.12s; user-select: none; }
+.wheel-item.d1 { opacity: 0.75; }
+.wheel-item.d2 { opacity: 0.5; }
+.wheel-item.d3 { opacity: 0.3; }
+.wheel-item.d0 { color: var(--text); font-size: 1.9rem; font-weight: 600; }
