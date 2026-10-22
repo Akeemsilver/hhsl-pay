@@ -708,3 +708,9 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .view-choices button { min-height: 56px; font-size: 1.05rem; }
 .pdf-pages { display: grid; gap: 10px; justify-items: center; }
 .pdf-page { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.25); max-width: none; }
+/* Header: four buttons and the title always share one line */
+.bar.top .top-actions { gap: 4px; flex-shrink: 0; }
+.bar.top button.icon.gear { width: 32px; min-width: 32px; height: 32px; min-height: 32px; }
+.bar.top button.icon.gear svg { width: 18px; height: 18px; }
+.bar.top h1 { font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 340px) { .bar.top h1 { font-size: 1.02rem; } .bar.top .top-actions { gap: 2px; } }
