@@ -726,3 +726,7 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .bar.top { align-items: flex-start; }
 .bar.top .titles h1 { line-height: 32px; margin: 0; }
 .bar.top .top-actions { align-items: flex-start; }
+.slide-clip { overflow: hidden; }
+.cal-slide, .slide-clip > .days { will-change: transform; }
+.days-clip { border-radius: 12px; box-shadow: var(--shadow); }
+.days-clip > .days { box-shadow: none; }

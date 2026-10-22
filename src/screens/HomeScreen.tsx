@@ -4,6 +4,7 @@ import { MONTHS, WEEKDAYS, daysOfMonth, hoursText, money, shiftMonth, todayISO }
 import { useInstall } from "../install";
 import { useSiteFilter } from "../filter";
 import { useMonth, useYear } from "../hooks";
+import { useMonthSlide } from "../slide";
 import { useNav } from "../nav";
 import { isOther, othersByDate } from "../model";
 import { useStore } from "../store";
@@ -43,6 +44,7 @@ export function HomeScreen() {
   const thisMonth = useMonth(month);
   const lastMonth = useMonth(prevMonth);
   const shownResult = useMonth(shown);
+  const slide = useMonthSlide(shown, (by) => setShown(shiftMonth(shown, by)));
   const months = useYear(year);
   const prevYearMonths = useYear(year - 1);
 
@@ -145,11 +147,11 @@ export function HomeScreen() {
 
       <div className="home-cal">
         <div className="monthbar">
-          <button className="icon" onClick={() => setShown(shiftMonth(shown, -1))} aria-label="Previous month"><BackIcon /></button>
+          <button className="icon" onClick={() => slide.go(-1)} aria-label="Previous month"><BackIcon /></button>
           <h2 className="monthname">{MONTHS[Number(shown.slice(5)) - 1]}{shown.slice(0, 4) !== String(year) ? ` ${shown.slice(0, 4)}` : ""}</h2>
-          <button className="icon" onClick={() => setShown(shiftMonth(shown, 1))} aria-label="Next month"><ForwardIcon /></button>
+          <button className="icon" onClick={() => slide.go(1)} aria-label="Next month"><ForwardIcon /></button>
         </div>
-        <CalendarGrid month={shown} days={daysOfMonth(shown)} result={shownResult} today={today} selected={loc.day ?? picked} onPick={(d) => { setPicked(d); open({ day: d }); }} onShift={(by) => setShown(shiftMonth(shown, by))} />
+        <CalendarGrid month={shown} days={daysOfMonth(shown)} result={shownResult} today={today} selected={loc.day ?? picked} onPick={(d) => { setPicked(d); open({ day: d }); }} slide={slide} />
       </div>
 
       <section className="card">

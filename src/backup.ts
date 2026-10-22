@@ -189,21 +189,28 @@ export async function deliver(fileName: string, content: string | Uint8Array, ty
 
 /**
  * Open the phone's share menu (WhatsApp, Gmail, ...) with the file attached. Never downloads.
- * "unsupported" means this browser cannot share files; "failed" means the menu could not be opened.
+ * Some phones refuse a .json file under one file type but accept another, so it tries a few. "unsupported" means this
+ * browser cannot share files at all; "failed" means every attempt failed (`error` names the last reason).
  */
-export async function shareFile(fileName: string, content: string | Uint8Array, type = "application/json"): Promise<"shared" | "cancelled" | "unsupported" | "failed"> {
+export async function shareFile(fileName: string, content: string | Uint8Array, type = "application/json"): Promise<{ result: "shared" | "cancelled" | "unsupported" | "failed"; error?: string }> {
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-  if (!nav.share || !nav.canShare) return "unsupported";
-  // Some phones refuse to share a .json file as application/json but accept it as plain text.
-  const candidates = [type, "text/plain"].map((t) => new File([content as BlobPart], fileName, { type: t }));
-  const file = candidates.find((f) => nav.canShare!({ files: [f] }));
-  if (!file) return "unsupported";
-  try {
-    await nav.share({ files: [file], title: fileName });
-    return "shared";
-  } catch (e) {
-    return (e as DOMException)?.name === "AbortError" ? "cancelled" : "failed";
+  if (!nav.share) return { result: "unsupported" };
+  const types = [type, "text/plain", "application/octet-stream"];
+  const files = types.map((t) => new File([content as BlobPart], fileName, { type: t })).filter((f) => !nav.canShare || nav.canShare({ files: [f] }));
+  if (files.length === 0) return { result: "unsupported" };
+  let error = "";
+  for (const file of files) {
+    for (const withTitle of [true, false]) {
+      try {
+        await nav.share(withTitle ? { files: [file], title: fileName } : { files: [file] });
+        return { result: "shared" };
+      } catch (e) {
+        if ((e as DOMException)?.name === "AbortError") return { result: "cancelled" };
+        error = `${(e as DOMException)?.name ?? "Error"}${(e as Error)?.message ? `: ${(e as Error).message}` : ""}`;
+      }
+    }
   }
+  return { result: "failed", error };
 }
 
 /** Save the file to the phone's Downloads without opening the share sheet. */

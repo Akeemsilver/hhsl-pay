@@ -52,10 +52,10 @@ export function SettingsHub() {
   }, [data.history, data.payerNames, data.siteColors, data.timesheet, data.otherPayer, data.taxMode, data.holidays, sitesCount]);
   const shareKit = async () => {
     if (!kit) { setKitMessage("Getting the starter kit ready, try again in a moment."); return; }
-    const result = await shareFile(backupFileName("rates", false), kit);
+    const { result, error } = await shareFile(backupFileName("rates", false), kit);
     if (result === "shared") setKitMessage("Starter kit shared.");
     else if (result === "unsupported") setKitMessage("This browser cannot open the share menu. Use “Download starter kit” and send the file from your Downloads.");
-    else if (result === "failed") setKitMessage("The share menu could not open. Use “Download starter kit” instead.");
+    else if (result === "failed") setKitMessage(`The share menu could not open (${error}). Use “Download starter kit” instead.`);
     else setKitMessage(null);
   };
   const saveKit = async () => {
