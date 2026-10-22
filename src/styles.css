@@ -644,3 +644,6 @@ table.bands .row-no { width: 34px; text-align: center; color: var(--muted); font
 .install-help details { border-top: 1px solid var(--edge); padding: 4px 0; }
 .install-help details:first-child { border-top: 0; }
 .install-help summary { font-weight: 700; padding: 10px 0; cursor: pointer; }
+
+.welcome-install { margin-top: 8px; padding: 6px 12px; border: 1px solid var(--edge); border-radius: 14px; background: var(--card); }
+.welcome-install > summary { font-weight: 700; padding: 10px 0; cursor: pointer; }

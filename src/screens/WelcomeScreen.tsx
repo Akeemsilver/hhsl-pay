@@ -2,6 +2,8 @@ import { useRef, useState } from "react";
 import { useNav } from "../nav";
 import { readKit } from "../kit";
 import { useStore } from "../store";
+import { InstallHelp } from "../components/InstallHelp";
+import { isInstalledApp } from "../install";
 import { userNameOf } from "../model";
 
 /** First start. Step 1: your name (printed on payslips and timesheets). Step 2: get the starter kit with the pay rates. */
@@ -13,6 +15,14 @@ export function WelcomeScreen() {
   const [busy, setBusy] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const hasName = !!userNameOf(data);
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  // Not installed yet: show how to put the app on the home screen, with the iPhone steps open on an iPhone.
+  const installGuide = isInstalledApp() ? null : (
+    <details className="welcome-install" open={ios}>
+      <summary>Put this app on your home screen</summary>
+      <InstallHelp open={ios ? "iphone" : undefined} />
+    </details>
+  );
 
   if (!hasName) {
     const ok = name.trim().length > 0;
@@ -29,6 +39,7 @@ export function WelcomeScreen() {
           <button type="submit" className="primary" disabled={!ok}>Continue</button>
         </form>
         <button className="link" onClick={() => open({ page: "backup" })}>Restore a backup instead</button>
+        {installGuide}
       </div>
     );
   }
@@ -64,6 +75,7 @@ export function WelcomeScreen() {
       {message && <p className="notice warn" role="alert">{message}</p>}
       <button className="link" onClick={() => open({ page: "backup" })}>I have a yearly spreadsheet instead</button>
       <button className="link" onClick={() => update((d) => ({ ...d, setupSkipped: true }))}>Skip for now, I will add sites myself</button>
+      {installGuide}
     </div>
   );
 }
