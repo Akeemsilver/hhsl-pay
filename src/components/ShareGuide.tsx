@@ -17,7 +17,8 @@ export function ShareGuide({ link }: { link: string }) {
     } catch { /* cancelled */ }
   };
   return (
-    <div className="share-guide">
+    <details className="share-guide">
+      <summary className="guide-toggle"><span>Sharing guide</span><span aria-hidden="true">▾</span></summary>
       <h3 className="section-title">Message to send</h3>
       <p className="muted small">Send this first. It has the link and tells your colleague what to do. Then send the starter kit file with the button above.</p>
       <textarea readOnly aria-label="Message to send" rows={17} value={message} onFocus={(e) => e.currentTarget.select()} />
@@ -60,6 +61,6 @@ export function ShareGuide({ link }: { link: string }) {
       </details>
 
       <p className="muted small">Why a file? The app's code is public, and company rates must never be put in public code. Only send the starter kit to colleagues who should have these rates.</p>
-    </div>
+    </details>
   );
 }
