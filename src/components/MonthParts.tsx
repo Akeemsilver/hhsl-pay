@@ -132,7 +132,7 @@ export function DayList({ days, result, today, onPick, slide }: { days: string[]
                     {entry.site}
                     {entry.hours > 0 && ` · ${hoursText(entry.hours)} h`}
                     {entry.lead && " · lead"}
-                    {entry.holiday && " · hol"}
+                    {entry.holiday && " · HOL/TAR"}
                     {pay.total === 0 && " ⚠"}
                   </span>
                 ))}
