@@ -722,3 +722,7 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .share-guide { border-top: 0; padding-top: 0; }
 .share-guide > summary.guide-toggle { min-height: 48px; padding: 0 14px; border: 1px solid var(--edge); border-radius: 10px; background: var(--card); box-shadow: var(--lift-sm); font-weight: 600; display: flex; align-items: center; justify-content: space-between; }
 .share-guide[open] > summary.guide-toggle { margin-bottom: 10px; }
+/* The four buttons sit in exactly the same spot on every tab, whether or not the title has a line under it */
+.bar.top { align-items: flex-start; }
+.bar.top .titles h1 { line-height: 32px; margin: 0; }
+.bar.top .top-actions { align-items: flex-start; }
