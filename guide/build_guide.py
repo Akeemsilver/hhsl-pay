@@ -37,7 +37,7 @@ def pic(path, width_mm):
     w, h = PI.open(path).size
     return RLImage(path, width=width_mm*mm, height=width_mm*mm*h/w)
 
-IMGW = 56
+IMGW = 48
 def steps(items):
     """items: (text, image path or None, width mm)"""
     rows = []; ts = [("VALIGN", (0,0), (-1,-1), "TOP"), ("TOPPADDING", (0,0), (-1,-1), 3), ("BOTTOMPADDING", (0,0), (-1,-1), 6), ("LEFTPADDING", (0,0), (-1,-1), 0), ("RIGHTPADDING", (1,0), (1,-1), 8)]
@@ -87,20 +87,29 @@ toc = Table([[Paragraph(go("p1", "<b>1. Install the app</b>"), body), Paragraph(
              [Paragraph(go("p7", "<b>7. Share the app</b>"), body), ""]], colWidths=[CW/2, CW/2])
 toc.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,-1), SOFT), ("LEFTPADDING", (0,0), (-1,-1), 10), ("TOPPADDING", (0,0), (-1,-1), 4), ("BOTTOMPADDING", (0,0), (-1,-1), 0)]))
 s.append(Paragraph(f"Guide updated {STAMP}", small)); s.append(Paragraph("<b>Tap a part to jump to it:</b>", small)); s.append(toc); s.append(Spacer(1, 6))
-s.append(callout("The app link (tap it on your phone)", [f'<font size=12><b>{lk(LINK)}</b></font>', "Open it in <b>Chrome</b> (Android) or <b>Safari</b> (iPhone). The pictures show how each screen looks; yours may look a little different."]))
+s.append(callout("The app link (tap it on your phone)", [f'<font size=12><b>{lk(LINK)}</b></font>', "Open it in <b>Chrome</b> (Android) or <b>Safari</b> (iPhone). The screens of the app are real pictures. The Chrome, Safari, WhatsApp and Google Sheets pictures are drawings: your phone's menus may be arranged a little differently, but the button names are the same."]))
 
+s.append(Spacer(1, 6))
+s.append(Paragraph("Before you start", h2))
+s.append(Paragraph("You need these four things. Everything else is explained step by step.", body))
+s.append(steps([
+ ("<b>A smartphone</b> with a web browser: <b>Chrome</b> on Android, or <b>Safari</b> on iPhone.", None),
+ ("<b>WhatsApp</b> on the same phone, to receive the starter kit file.", None),
+ ("The <b>starter kit file</b> and <b>this guide</b>, sent to you by the person who gave you the app.", None),
+ ("Only if you already keep your days in a spreadsheet: the <b>Google Sheets app</b>.", None)]))
+s.append(PageBreak())
 s.append(Paragraph('<a name="p1"/>Part 1. Install the app', h1))
 s.append(Paragraph("Android (Chrome)", h2))
 s.append(steps([
- (f"Tap this link in <b>Chrome</b>: {lk(LINK, 'open the app')}. Do not open it inside WhatsApp, and do not use a private tab.", None),
+ (f"Tap this link: {lk(LINK, 'open the app')}. It must open in <b>Chrome</b>, not inside WhatsApp, Gmail or another app, and not in a private tab. If it opens inside another app, tap the three dots there and choose <b>Open in Chrome</b>, or copy the link and paste it into Chrome.", None),
  ("Tap the <b>three dots</b> at the top right, then <b>Install app</b> (or <b>Add to Home screen</b>). The app's own <b>Install app</b> button on the Home screen does the same.", I("chrome-menu")),
- ("Tap <b>Install</b>. The app icon appears on your home screen.", I("chrome-install")),
+ ("Tap <b>Install</b> (or <b>Add</b>, if Chrome says Add to Home screen). The app icon appears on your home screen.", I("chrome-install")),
  ("Open the app from this icon. It runs full screen like any other app.", os.path.join(HERE, "assets", "logo.png"), 24)]))
 s.append(Paragraph("iPhone or iPad (Safari)", h2))
 s.append(steps([
- (f"Tap this link in <b>Safari</b>: {lk(LINK, 'open the app')}.", None),
- ("Tap the <b>Share</b> button (the square with an arrow pointing up) at the bottom of the screen.", I("safari-share")),
- ("Scroll down and tap <b>Add to Home Screen</b>, then <b>Add</b> at the top right.", I("safari-add")),
+ (f"Tap this link: {lk(LINK, 'open the app')}. It must open in <b>Safari</b>. If it opens inside another app (WhatsApp, Mail), tap the compass or Share icon there and choose <b>Open in Safari</b>, or copy the link and paste it into Safari.", None),
+ ("Tap the <b>Share</b> button (the square with an arrow pointing up). On an iPhone it is in the bar at the bottom of the screen (on an iPad, at the top). If you cannot see it, tap the <b>three dots</b> menu in Safari: Share is in there.", I("safari-share")),
+ ("Scroll down the list and tap <b>Add to Home Screen</b> (tap <b>More</b> or scroll to the end of the list if you do not see it). Leave <b>Open as Web App</b> switched on if it is shown, then tap <b>Add</b> at the top right.", I("safari-add")),
  ("Open the app from the icon on your home screen, not from Safari.", os.path.join(HERE, "assets", "logo.png"), 24)]))
 s.append(Paragraph("iPhone note: Safari can clear data for websites you have not opened in a while. Opening the app from its icon and making a backup now and then (Settings, Backup &amp; restore) keeps your days safe.", small))
 
@@ -144,7 +153,7 @@ s.append(steps([
  ("Tap <b>Add job</b>. Pick the site, then type the start and end time, or switch to <b>Simple</b> and type the hours.", A("a-day"), 50),
  ("Tap a time to set it. Turn the three wheels (AM/PM, hour, minute) or type the time, then tap <b>Set</b>.", Bs("b-time"), 50),
  ("<b>Home</b> shows the month so far: gross, net, PAYE, days and paid hours, with each site underneath. Swipe the calendar left or right to change month. <b>Year</b> and <b>Charts</b> show the whole year.", None),
- ("<b>Time sheet:</b> tap the download icon at the top of any screen, choose <b>Send to payroll</b>, then <b>Download and share</b>, and pick Gmail or WhatsApp.", I("download-sheet")),
+ ("<b>Time sheet:</b> tap the download icon at the top of any screen, choose <b>Send to payroll</b>, then <b>Download and share</b>, and pick Gmail or WhatsApp.", Bs("b-download"), 50),
  ("<b>Payslips:</b> in the same screen, switch to <b>Payslip</b>. The eye icon lets you look at them first.", None)]))
 s.append(Spacer(1, 3))
 s.append(callout("Back up now and then", ["Your days live only on your phone. If it is lost or its browser data is cleared, they are gone. Go to <b>Settings, Backup &amp; restore</b> and save a backup file every month or so, somewhere safe such as " + lk("https://drive.google.com/", "Google Drive") + "."]))

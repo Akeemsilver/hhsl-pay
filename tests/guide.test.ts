@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const decode = (t: string) => t.replace(/&amp;/g, "&");
@@ -19,5 +19,15 @@ describe("the mobile guide", () => {
   it("is shipped with the app", () => {
     expect(existsSync("public/HHSL-pay-app-mobile-guide.pdf")).toBe(true);
     expect(existsSync("guide/assets/logo.png")).toBe(true);
+  });
+
+  it("is mobile only: phone-width screenshots and no computer steps", () => {
+    const dir = "guide/assets/shots";
+    for (const f of readdirSync(dir).filter((n) => n.endsWith(".png"))) {
+      const width = readFileSync(`${dir}/${f}`).readUInt32BE(16); // PNG header: width
+      expect(width, `${f} is not a phone screenshot (390 px at 2x = 780 px wide)`).toBe(780);
+    }
+    expect(readdirSync("guide/assets/ill")).not.toContain("sheets-pc.png");
+    expect(guide).not.toMatch(/computer|desktop|laptop/i);
   });
 });
