@@ -8,8 +8,8 @@ const DISMISS_DISTANCE = 110;
  * or pull it down. Pulling down only starts when the content is scrolled to the top, so scrolling still works.
  * The owner decides what "close" means, for example asking to discard unsaved changes.
  */
-export function BottomSheet({ label, onRequestClose, onPullDismiss, top, children }: {
-  label: string; onRequestClose: () => void; /** What pulling the sheet down does; closing straight away by default is the same as onRequestClose. */ onPullDismiss?: () => void; top?: boolean; children: ReactNode;
+export function BottomSheet({ label, onRequestClose, onPullDismiss, top, fromTop, children }: {
+  label: string; onRequestClose: () => void; /** What pulling the sheet down does; closing straight away by default is the same as onRequestClose. */ onPullDismiss?: () => void; top?: boolean; /** Dock the sheet to the top of the screen (for search boxes, so the keyboard never covers it). It cannot be pulled down. */ fromTop?: boolean; children: ReactNode;
 }) {
   const sheet = useRef<HTMLDivElement>(null);
   const close = useRef(onRequestClose);
@@ -20,7 +20,7 @@ export function BottomSheet({ label, onRequestClose, onPullDismiss, top, childre
 
   useEffect(() => {
     const el = sheet.current;
-    if (!el) return;
+    if (!el || fromTop) return;
     let startY = 0, dy = 0, tracking = false, dragging = false;
 
     const move = (to: number) => {
@@ -83,9 +83,9 @@ export function BottomSheet({ label, onRequestClose, onPullDismiss, top, childre
   }, []);
 
   return (
-    <div className={`sheet-backdrop ${top ? "top" : ""}`} onClick={() => close.current()}>
+    <div className={`sheet-backdrop ${top ? "top" : ""} ${fromTop ? "from-top" : ""}`} onClick={() => close.current()}>
       <div ref={sheet} className="sheet" role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.stopPropagation()}>
-        <div className="grabber" aria-hidden="true" />
+        {!fromTop && <div className="grabber" aria-hidden="true" />}
         {children}
       </div>
     </div>
