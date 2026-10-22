@@ -54,7 +54,7 @@ describe("year report", () => {
   });
 
   it("when tax is worked out combined, a group's own tax is unknown but its income and hours are not", () => {
-    const { data, months } = setup(entries, { taxMode: [{ effectiveFrom: "2026-07", combined: true }] });
+    const { data, months } = setup(entries, { combinedTax: true });
     const r = yearReport(months, data);
     const alpha = r.groups.find((g) => g.id === "alpha")!.months[6]!;
     expect(alpha.net).toBeNull();

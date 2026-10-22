@@ -1,5 +1,5 @@
 import type { RuleHistory } from "./engine";
-import type { AppData } from "./model";
+import { isCombined, type AppData } from "./model";
 import type { TimesheetRule } from "./timesheet";
 import { allSiteColors } from "./siteColor";
 
@@ -17,6 +17,8 @@ export interface RatesKit extends RuleHistory {
   otherPayer?: string;
   /** Split or combined tax, and from which month. */
   taxMode?: AppData["taxMode"];
+  /** Split (false) or combined (true) tax for the whole app. */
+  combinedTax?: boolean;
   /** Public holiday edits (for example Divali). */
   holidays?: AppData["holidays"];
   /** Calendar colour per site (0–11), keyed by lower-case site name. */
@@ -43,7 +45,7 @@ export function ratesKitOf(data: AppData, template?: { name: string; bytes: Arra
     siteLabel: data.timesheet?.siteLabel,
     payrollEmail: data.timesheet?.payrollEmail,
     otherPayer: data.otherPayer,
-    taxMode: data.taxMode,
+    combinedTax: isCombined(data),
     holidays: data.holidays,
     siteColors: allSiteColors(data),
   };
@@ -56,7 +58,8 @@ export function applyKit(data: AppData, kit: RatesKit): AppData {
     history: { sites: kit.sites, tax: kit.tax },
     payerNames: { ...data.payerNames, ...(kit.payerNames ?? {}) },
     otherPayer: kit.otherPayer ?? data.otherPayer,
-    taxMode: kit.taxMode ?? data.taxMode,
+    combinedTax: kit.combinedTax ?? (kit.taxMode ? isCombined({ taxMode: kit.taxMode }) : data.combinedTax),
+    taxMode: kit.combinedTax !== undefined || kit.taxMode ? undefined : data.taxMode,
     holidays: kit.holidays ?? data.holidays,
     siteColors: kit.siteColors ? { ...data.siteColors, ...kit.siteColors } : data.siteColors,
     timesheet: kit.timesheetRules || kit.siteLabel || kit.payrollEmail

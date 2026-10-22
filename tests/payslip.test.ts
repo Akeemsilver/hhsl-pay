@@ -119,24 +119,25 @@ describe("combined payslip", () => {
 });
 
 describe("split and combined tax", () => {
-  it("defaults to split and applies from the chosen month", async () => {
-    const { isCombined, setTaxModeFrom, setTaxModeForMonth } = await import("../src/model");
+  it("is one choice for the whole app: split by default", async () => {
+    const { isCombined, setCombinedTax } = await import("../src/model");
     let d = data([]);
+    expect(isCombined(d)).toBe(false);
+    d = setCombinedTax(d, true);
+    for (const m of ["2026-01", "2026-07", "2027-01"]) expect(isCombined(d, m)).toBe(true);
+    d = setCombinedTax(d, false);
     expect(isCombined(d, "2026-07")).toBe(false);
-    d = setTaxModeFrom(d, "2026-08", true);
-    expect(isCombined(d, "2026-07")).toBe(false);
-    expect(isCombined(d, "2026-08")).toBe(true);
-    expect(isCombined(d, "2027-01")).toBe(true);
-    d = setTaxModeForMonth(d, "2026-10", false);
-    expect(isCombined(d, "2026-10")).toBe(false);
-    expect(isCombined(d, "2026-09")).toBe(true);
-    expect(isCombined(d, "2026-11")).toBe(true);
+  });
+  it("an older month-by-month choice still counts, as its latest value", async () => {
+    const { isCombined } = await import("../src/model");
+    const d = data([], { taxMode: [{ effectiveFrom: "2026-03-01", combined: true }, { effectiveFrom: "2026-10-01", combined: false }] });
+    expect(isCombined(d, "2026-05")).toBe(false);
   });
   it("taxes everything once when combined, with one payslip", async () => {
-    const { setTaxModeFrom } = await import("../src/model");
+    const { setCombinedTax } = await import("../src/model");
     const entries = [e("1", "2026-07-01", "Alpha"), e("4", "2026-07-06", "Beta"), e("5", "2026-07-07", "Rig", { hours: 14 })];
     const split = buildPayslips("2026-07", data(entries), "T");
-    const comb = buildPayslips("2026-07", setTaxModeFrom(data(entries), "2026-07", true), "T");
+    const comb = buildPayslips("2026-07", setCombinedTax(data(entries), true), "T");
     expect(split.length).toBeGreaterThan(1);
     expect(comb).toHaveLength(1);
     expect(comb[0]!.gross).toBeCloseTo(split.reduce((s, p) => s + p.gross, 0), 2);

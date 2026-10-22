@@ -62,8 +62,10 @@ export interface AppData {
   setupSkipped?: boolean;
   /** Which payslip group other jobs are paid on and taxed with. */
   otherPayer?: string;
-  /** Whether PAYE, NIS and the surcharge are worked out per payslip group (split) or on everything together, from a month on. */
+  /** Older versions chose split or combined month by month; the latest of those still counts until a choice is made. */
   taxMode?: Array<{ effectiveFrom: string; combined: boolean }>;
+  /** Tax worked out on everything together (true) or per payslip group (false or unset), for the whole app. */
+  combinedTax?: boolean;
   /** Chosen calendar colour (0–11) per site, keyed by lower-case site name. Sites without one get an automatic colour. */
   siteColors?: Record<string, number>;
   lastBackupAt?: string;
@@ -170,38 +172,16 @@ export function timesheetSettingsOf(data: Pick<AppData, "userName" | "timesheet"
   return { ...t, name: userNameOf(data) };
 }
 
-/** Is tax worked out on all income together in this month? Split is the default. */
-export function isCombined(data: Pick<AppData, "taxMode">, month: string): boolean {
-  const on = `${month}-01`;
-  let result = false;
-  let best = "";
-  for (const t of data.taxMode ?? []) {
-    if (t.effectiveFrom <= on && t.effectiveFrom >= best) { best = t.effectiveFrom; result = t.combined; }
-  }
-  return result;
+/** Is tax worked out on all income together? One choice for the whole app; split is the default. */
+export function isCombined(data: Pick<AppData, "taxMode" | "combinedTax">, _month?: string): boolean {
+  if (data.combinedTax !== undefined) return data.combinedTax;
+  const old = [...(data.taxMode ?? [])].sort((a, b) => a.effectiveFrom.localeCompare(b.effectiveFrom)).pop();
+  return old?.combined ?? false;
 }
 
-const nextMonth = (month: string): string => {
-  const [y, m] = month.split("-").map(Number) as [number, number];
-  return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, "0")}`;
-};
-
-/** Use split or combined tax from this month onwards. */
-export function setTaxModeFrom(data: AppData, month: string, combined: boolean): AppData {
-  const list = (data.taxMode ?? []).filter((t) => t.effectiveFrom !== `${month}-01`);
-  list.push({ effectiveFrom: `${month}-01`, combined });
-  list.sort((a, b) => a.effectiveFrom.localeCompare(b.effectiveFrom));
-  return { ...data, taxMode: list };
-}
-
-/** Use split or combined tax for just this one month; later months keep what they had. */
-export function setTaxModeForMonth(data: AppData, month: string, combined: boolean): AppData {
-  const before = isCombined(data, nextMonth(month));
-  const next = nextMonth(month);
-  const hasNext = (data.taxMode ?? []).some((t) => t.effectiveFrom === `${next}-01`);
-  let out = setTaxModeFrom(data, month, combined);
-  if (!hasNext) out = setTaxModeFrom(out, next, before);
-  return out;
+/** Choose split (false) or combined (true) tax for the whole app, every month. */
+export function setCombinedTax(data: AppData, combined: boolean): AppData {
+  return { ...data, combinedTax: combined, taxMode: undefined };
 }
 
 /** The payslip group other jobs belong to: the chosen one, else "main", else the first group. */

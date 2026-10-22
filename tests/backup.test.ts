@@ -80,12 +80,12 @@ describe("starter kit settings", () => {
     const { newData } = await import("../src/model");
     const src = newData();
     src.otherPayer = "main";
-    src.taxMode = [{ effectiveFrom: "2026-11-01", combined: true }];
+    src.combinedTax = true;
     src.holidays = { added: [{ date: "2026-11-08", name: "Divali" }], removed: [] };
     src.timesheet = { name: "X", siteLabel: "ERT Offsite", rules: [], payrollEmail: "pay@example.com" };
     const out = applyKit({ ...newData(), userName: "Me" }, ratesKitOf(src));
     expect(out.otherPayer).toBe("main");
-    expect(out.taxMode).toEqual([{ effectiveFrom: "2026-11-01", combined: true }]);
+    expect(out.combinedTax).toBe(true);
     expect(out.holidays?.added[0]?.name).toBe("Divali");
     expect(out.timesheet?.payrollEmail).toBe("pay@example.com");
     expect(out.userName).toBe("Me");

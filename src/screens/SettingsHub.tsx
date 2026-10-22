@@ -6,7 +6,8 @@ import { backupFileName, download, ratesKitOf, serialize, SHARE_TYPES, shareFile
 import { useNav } from "../nav";
 import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { newData, isCombined, setTaxModeFrom, userNameOf } from "../model";
+import { newData, isCombined, userNameOf } from "../model";
+import { TaxSegment } from "../components/TaxMode";
 import { todayISO } from "../format";
 import { useStore } from "../store";
 import { useTheme, type ThemePref } from "../theme";
@@ -20,7 +21,7 @@ export function SettingsHub() {
 
   const [theme, setTheme] = useTheme();
   const thisMonth = todayISO().slice(0, 7);
-  const combinedNow = isCombined(data, thisMonth);
+  const combinedNow = isCombined(data);
   const link = appLink();
   const sitesCount = siteCount(data);
   const [copied, setCopied] = useState(false);
@@ -50,7 +51,7 @@ export function SettingsHub() {
     if (sitesCount > 0) void kitText().then((t) => live && setKit(t));
     return () => { live = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.history, data.payerNames, data.siteColors, data.timesheet, data.otherPayer, data.taxMode, data.holidays, sitesCount]);
+  }, [data.history, data.payerNames, data.siteColors, data.timesheet, data.otherPayer, data.taxMode, data.combinedTax, data.holidays, sitesCount]);
   // Each tap makes one attempt (the phone allows one per tap); a refused attempt moves on to the next file type.
   const attempt = useRef(0);
   const shareKit = async () => {
@@ -120,15 +121,12 @@ export function SettingsHub() {
 
       <h2 className="section-title">How tax is worked out</h2>
       <section className="card">
-        <div className="segmented" role="group" aria-label="Tax method">
-          <button aria-pressed={!combinedNow} className={!combinedNow ? "on" : ""} onClick={() => update((d) => setTaxModeFrom(d, thisMonth, false))}>Split</button>
-          <button aria-pressed={combinedNow} className={combinedNow ? "on" : ""} onClick={() => update((d) => setTaxModeFrom(d, thisMonth, true))}>Combined</button>
-        </div>
+        <TaxSegment />
         <p className="muted small">
           {combinedNow
             ? "Combined: one gross, one PAYE, one NIS and one health surcharge on everything."
             : "Split: Point Lisas / other and Atlantic each pay their own PAYE, NIS and health surcharge. The totals add them together, with each place shown in small print."}
-          {" "}Applies from {thisMonth} onwards. <button className="link" onClick={() => open({ page: "payslips" })}>Choose another month</button>
+          {" "}This applies to the whole app. <button className="link" onClick={() => open({ page: "payslips" })}>Open settings</button>
         </p>
       </section>
 
@@ -211,7 +209,7 @@ export function SettingsHub() {
                 return {
                   ...d,
                   history: { ...d.history, tax: fresh.history.tax },
-                  taxMode: undefined, holidays: undefined,
+                  taxMode: undefined, combinedTax: undefined, holidays: undefined,
                   timesheet: d.timesheet ? { ...d.timesheet, siteLabel: "ERT Offsite", rules: [] } : undefined,
                 };
               });

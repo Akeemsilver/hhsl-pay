@@ -46,7 +46,7 @@ export interface YearReport {
 const emptyMonth = (month: string): YearMonth => ({ month, gross: 0, net: 0, paye: 0, nis: 0, surcharge: 0, days: 0, hours: 0, weighted: 0, topSite: null });
 
 /** The payslip group of one job, from the sites as they were on its day. */
-function groupOf(data: AppData, e: Entry): string {
+export function groupOf(data: AppData, e: Entry): string {
   return findSite(valueOn(data.history.sites, e.date), e.site)?.payer ?? "main";
 }
 
