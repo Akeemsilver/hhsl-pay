@@ -22,6 +22,11 @@ function CapsRow({ label, caps, onChange, withX3 }: { label: string; caps: TierC
   );
 }
 
+function pickTemplate(id: string) {
+  const t = templateById(id)!;
+  return { weekday: { ...t.weekday }, weekend: { ...t.weekend }, holiday: { ...t.holiday } };
+}
+
 function RoleCard({ name, role, site, builtIn, onChange, onRename, onRemove }: {
   name: string; role: RoleRates; site: SiteRates; builtIn: boolean; onChange: (r: RoleRates) => void; onRename: (n: string) => void; onRemove: () => void;
 }) {
@@ -45,13 +50,20 @@ function RoleCard({ name, role, site, builtIn, onChange, onRename, onRemove }: {
       </button>
       {more && (
         <div className="more-panel">
-          <label className="check">
-            <input type="checkbox" aria-label={`${name} has its own overtime hours`} checked={own}
-              onChange={(e) => onChange(e.target.checked
-                ? { ...role, weekday: { ...site.weekday }, weekend: { ...site.weekend }, holiday: { ...site.holiday } }
-                : { ...role, weekday: undefined, weekend: undefined, holiday: undefined })} />
-            {" "}Different hours for {name} than the rest of the site
+          <label>Hours at 1x, 1.5x, 2x, 3x
+            <select aria-label={`${name} hours template`} value={own ? (detectTemplate(role as Pick<SiteRates, "weekday" | "weekend" | "holiday"> & RoleRates) ?? "custom") : "site"}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "site") onChange({ ...role, weekday: undefined, weekend: undefined, holiday: undefined });
+                else if (v === "custom") onChange({ ...role, weekday: role.weekday ?? { ...site.weekday }, weekend: role.weekend ?? { ...site.weekend }, holiday: role.holiday ?? { ...site.holiday } });
+                else onChange({ ...role, ...pickTemplate(v) });
+              }}>
+              <option value="site">Same as the rest of the site</option>
+              {HOURS_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              <option value="custom">Custom hours…</option>
+            </select>
           </label>
+          {own && templateById(detectTemplate(role as Pick<SiteRates, "weekday" | "weekend" | "holiday"> & RoleRates)) && <p className="muted small">{templateById(detectTemplate(role as Pick<SiteRates, "weekday" | "weekend" | "holiday"> & RoleRates))!.description}</p>}
           {own ? (
             <>
               <div className="caps">
