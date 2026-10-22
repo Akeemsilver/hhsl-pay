@@ -7,7 +7,10 @@ import { computeDay, computeMonth, monthTax, mondaysInMonth, type RuleHistory, t
 const dir = new URL("../private-fixtures/", import.meta.url);
 const have = existsSync(new URL("fixtures.json", dir)) && existsSync(new URL("settings.json", dir));
 
-describe.skipIf(!have)("parity with the spreadsheet", () => {
+// Without the private files the suite is registered as a single skipped test. (describe.skipIf still runs its body, which would read missing files.)
+const parity = (body: () => void) => (have ? describe("parity with the spreadsheet", body) : describe.skip("parity with the spreadsheet", () => { it("needs private-fixtures/", () => {}); }));
+
+parity(() => {
   const read = (f: string) => JSON.parse(readFileSync(new URL(f, dir), "utf8"));
   const settings = read("settings.json");
   const fixtures = read("fixtures.json") as Record<string, any>;
