@@ -60,3 +60,16 @@ describe("starter kit (rates file)", () => {
     expect(out.entries).toHaveLength(1);
   });
 });
+
+describe("starter kit with the timesheet form", () => {
+  it("carries the form as base64 and leaves it out when there is none", async () => {
+    const { ratesKitOf, fromB64, toB64 } = await import("../src/backup");
+    const { newData } = await import("../src/model");
+    const bytes = new Uint8Array([80, 75, 3, 4, 1, 2, 3]);
+    const kit = ratesKitOf(newData(), { name: "form.xlsx", bytes: bytes.buffer });
+    expect(kit.timesheetTemplate?.name).toBe("form.xlsx");
+    expect([...fromB64(kit.timesheetTemplate!.data)]).toEqual([...bytes]);
+    expect(toB64(bytes)).toBe(kit.timesheetTemplate!.data);
+    expect(ratesKitOf(newData(), null).timesheetTemplate).toBeUndefined();
+  });
+});

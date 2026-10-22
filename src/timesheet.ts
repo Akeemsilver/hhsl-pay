@@ -17,6 +17,8 @@ export interface TimesheetSettings {
   /** The SITE line in the header, e.g. "ERT Offsite". */
   siteLabel: string;
   rules: TimesheetRule[];
+  /** List other jobs (pickups, deliveries) on the timesheet. On unless turned off. */
+  includeOther?: boolean;
   /** Where "Send to payroll" addresses the email. */
   payrollEmail?: string;
 }
@@ -43,9 +45,9 @@ export const CLIENT_MEDIC = "Client medic";
 
 const same = (a: string | undefined, b: string | undefined) => (a ?? "").trim().toLowerCase() === (b ?? "").trim().toLowerCase();
 
-export function matchRule(entry: Entry, rules: TimesheetRule[]): TimesheetRule | undefined {
-  // Other jobs always go on the timesheet, named by what they were.
-  if (isOther(entry)) return { site: "", label: `Other job${entry.description?.trim() ? ` - ${entry.description.trim()}` : ""}` };
+export function matchRule(entry: Entry, rules: TimesheetRule[], includeOther = true): TimesheetRule | undefined {
+  // Other jobs go on the timesheet (unless turned off), named by what they were.
+  if (isOther(entry)) return !includeOther ? undefined : { site: "", label: `Other job${entry.description?.trim() ? ` - ${entry.description.trim()}` : ""}` };
   // A specific role rule wins over an "any role" rule for the same site.
   const roleMatch = rules.find((r) => r.role && same(r.site, entry.site) && same(r.role, entry.role));
   const siteMatch = roleMatch ?? rules.find((r) => !r.role && same(r.site, entry.site));
@@ -58,12 +60,12 @@ export function matchRule(entry: Entry, rules: TimesheetRule[]): TimesheetRule |
 const dayLabel = (iso: string) => `${Number(iso.slice(8))} ${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][Number(iso.slice(5, 7)) - 1]}`;
 
 /** The timesheet rows for a month: one row per day that has a matching job. */
-export function buildTimesheet(month: string, entries: Entry[], history: RuleHistory, rules: TimesheetRule[]): TimesheetBuild {
+export function buildTimesheet(month: string, entries: Entry[], history: RuleHistory, rules: TimesheetRule[], includeOther = true): TimesheetBuild {
   const warnings: string[] = [];
   const byDate = new Map<string, Array<{ entry: Entry; rule: TimesheetRule }>>();
   for (const entry of entries) {
     if (!entry.date.startsWith(month)) continue;
-    const rule = matchRule(entry, rules);
+    const rule = matchRule(entry, rules, includeOther);
     if (rule) byDate.set(entry.date, [...(byDate.get(entry.date) ?? []), { entry, rule }]);
   }
 

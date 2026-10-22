@@ -11,6 +11,8 @@ export interface RatesKit extends RuleHistory {
   payerNames?: Record<string, string>;
   timesheetRules?: TimesheetRule[];
   siteLabel?: string;
+  /** The company time sheet form (.xlsx), so a colleague does not have to find it. Sent inside the kit, never kept in the app's public code. */
+  timesheetTemplate?: { name: string; data: string };
 }
 
 export interface Parsed {
@@ -21,8 +23,9 @@ export interface Parsed {
 }
 
 /** The starter kit for this phone's current setup. */
-export function ratesKitOf(data: AppData): RatesKit {
+export function ratesKitOf(data: AppData, template?: { name: string; bytes: ArrayBuffer } | null): RatesKit {
   return {
+    ...(template ? { timesheetTemplate: { name: template.name, data: toB64(new Uint8Array(template.bytes)) } } : {}),
     sites: data.history.sites,
     tax: data.history.tax,
     payerNames: data.payerNames,
@@ -55,12 +58,12 @@ interface Envelope {
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
-function toB64(bytes: Uint8Array): string {
+export function toB64(bytes: Uint8Array): string {
   let s = "";
   for (const b of bytes) s += String.fromCharCode(b);
   return btoa(s);
 }
-function fromB64(text: string): Uint8Array {
+export function fromB64(text: string): Uint8Array {
   const s = atob(text);
   const out = new Uint8Array(s.length);
   for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);

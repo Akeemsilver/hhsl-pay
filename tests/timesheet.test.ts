@@ -191,3 +191,11 @@ describe("filling the template", () => {
     expect(timesheetFileName("", "2026-10")).toBe("HHSL-Time-Sheet-2026-10.xlsx");
   });
 });
+
+describe("other jobs on the timesheet can be turned off", () => {
+  it("leaves them out when asked", () => {
+    const entries: Entry[] = [{ id: "1", date: "2026-10-05", kind: "other", site: "", hours: 0, description: "Pickup", startTime: "08:00", endTime: "09:00" }];
+    expect(buildTimesheet("2026-10", entries, history, rules, true).rows).toHaveLength(1);
+    expect(buildTimesheet("2026-10", entries, history, rules, false).rows).toHaveLength(0);
+  });
+});

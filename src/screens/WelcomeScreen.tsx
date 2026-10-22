@@ -50,7 +50,7 @@ export function WelcomeScreen() {
     <div className="welcome">
       <p className="muted small">Step 2 of 2</p>
       <h1>Get your starter kit</h1>
-      <p className="muted">The starter kit is a small file with the pay rates for each site, so you do not have to type them in. It has no pay or personal information in it.</p>
+      <p className="muted">The starter kit is a small file with the pay rates for each site and the timesheet form, so you do not have to type rates in or find the form. It has no pay or personal information in it.</p>
       <p className="muted small">Why a file? The rates belong to the company, so they are kept out of the app itself, which is public. Sharing them as a file between colleagues is how company rates stay out of public code.</p>
       <ol className="steps">
         <li>Ask the person who sent you the link to this app to send you the <strong>starter kit file</strong>. They find it in the app under Settings, Share this app.</li>

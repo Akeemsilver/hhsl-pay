@@ -1,3 +1,4 @@
+import { loadTemplate } from "../storage";
 import { InstallHelp } from "../components/InstallHelp";
 import { appLink, siteCount } from "../kit";
 import { backupFileName, deliver, download, ratesKitOf, serialize } from "../backup";
@@ -38,7 +39,7 @@ export function SettingsHub() {
       else await copyLink();
     } catch { /* cancelled */ }
   };
-  const kitText = () => serialize("rates", ratesKitOf(data));
+  const kitText = async () => serialize("rates", ratesKitOf(data, await loadTemplate()));
   const shareKit = async () => {
     try {
       const how = await deliver(backupFileName("rates", false), await kitText());
@@ -69,7 +70,7 @@ export function SettingsHub() {
           <button onClick={copyLink}>{copied ? "Copied ✓" : "Copy link"}</button>
           <button onClick={() => void shareLink()}>Share link</button>
         </div>
-        <p className="muted small">Starter kit: your sites, rates and tax rules (no days, no pay, no name). It has to be sent as a file because this app's code is public, and company rates must never be put in public code. Only send it to colleagues.</p>
+        <p className="muted small">Starter kit: your sites, rates, tax rules and the timesheet form (no days, no pay, no name). It has to be sent as a file because this app's code is public, and company rates must never be put in public code. Only send it to colleagues.</p>
         <div className="row">
           <button className="primary" disabled={sitesCount === 0} onClick={() => void shareKit()}>Share starter kit</button>
           <button disabled={sitesCount === 0} onClick={saveKit}>Download starter kit</button>

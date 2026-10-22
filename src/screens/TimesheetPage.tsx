@@ -51,6 +51,15 @@ export function TimesheetPage() {
       </section>
 
       <section className="card">
+        <h2>Other jobs</h2>
+        <label className="check">
+          <input type="checkbox" aria-label="List other jobs on the timesheet" checked={settings.includeOther !== false} onChange={(e) => setSettings({ includeOther: e.target.checked })} />
+          {" "}List other jobs (pickups, deliveries) on the timesheet
+        </label>
+        <p className="muted small">Each one appears as its own row, named “Other job - what it was”, with the hours from its start and end time. They are also paid and listed on the payslip once you enter their amount.</p>
+      </section>
+
+      <section className="card">
         <h2>Jobs that go on the timesheet</h2>
         <p className="muted small">Only these jobs are listed when you download. Client medic jobs at any site are always included automatically (named “Site Medic”, e.g. “PLNL Medic”). Everything else stays off the form.</p>
         {settings.rules.length === 0 ? <p className="muted">None yet. Add your first below.</p> : (
