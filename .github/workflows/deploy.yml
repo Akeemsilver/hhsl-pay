@@ -27,8 +27,9 @@ jobs:
       - run: npm test
       - run: npm run build
         env:
+          # The web address follows the repository name, so renaming the repository renames the link.
           # Set the repository variable BASE_PATH to "/" if you move to a custom domain.
-          BASE_PATH: ${{ vars.BASE_PATH }}
+          BASE_PATH: ${{ vars.BASE_PATH || format('/{0}/', github.event.repository.name) }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

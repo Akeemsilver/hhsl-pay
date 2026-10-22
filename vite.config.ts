@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
 // GitHub Pages serves a project site under /<repo>/. Set BASE_PATH=/ when moving to a custom domain.
-const base = process.env.BASE_PATH ?? "/hhsl-salary-tracker/";
+const base = process.env.BASE_PATH || "/hhsl-salary-tracker/";
 
 export default defineConfig(({ command }) => ({
   base: command === "build" ? base : "/",
