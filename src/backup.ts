@@ -63,7 +63,7 @@ export function applyKit(data: AppData, kit: RatesKit): AppData {
     holidays: kit.holidays ?? data.holidays,
     siteColors: kit.siteColors ? { ...data.siteColors, ...kit.siteColors } : data.siteColors,
     timesheet: kit.timesheetRules || kit.siteLabel || kit.payrollEmail
-      ? { name: data.timesheet?.name ?? "", siteLabel: kit.siteLabel ?? data.timesheet?.siteLabel ?? "ERT Offsite", rules: kit.timesheetRules ?? data.timesheet?.rules ?? [], payrollEmail: kit.payrollEmail ?? data.timesheet?.payrollEmail, includeOther: data.timesheet?.includeOther }
+      ? { name: data.timesheet?.name ?? "", siteLabel: kit.siteLabel ?? data.timesheet?.siteLabel ?? "ERT Offsite", rules: kit.timesheetRules ?? data.timesheet?.rules ?? [], payrollEmail: kit.payrollEmail ?? data.timesheet?.payrollEmail, includeOther: data.timesheet?.includeOther, medicEverywhere: data.timesheet?.medicEverywhere }
       : data.timesheet,
   };
 }

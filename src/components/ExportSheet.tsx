@@ -64,7 +64,7 @@ export function ExportSheet({ month }: { month: string }) {
   const settings = timesheetSettingsOf(data);
   const rules = settings.rules;
   const name = settings.name;
-  const { rows, warnings } = useMemo(() => buildTimesheet(month, data.entries, data.history, rules, settings.includeOther !== false), [month, data, rules, settings.includeOther]);
+  const { rows, warnings } = useMemo(() => buildTimesheet(month, data.entries, data.history, rules, settings.includeOther !== false, settings.medicEverywhere !== false), [month, data, rules, settings.includeOther, settings.medicEverywhere]);
   const slips = useMemo(() => buildPayslips(month, data, name), [month, data, name]);
   const total = rows.reduce((s, r) => ({ t: s.t + r.hours.t, t15: s.t15 + r.hours.t15, t2: s.t2 + r.hours.t2, t3: s.t3 + r.hours.t3 }), { t: 0, t15: 0, t2: 0, t3: 0 });
   const monthName = `${MONTHS[Number(month.slice(5)) - 1]} ${month.slice(0, 4)}`;

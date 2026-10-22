@@ -13,7 +13,7 @@ export async function makeTimesheetXlsx(
   entries: Entry[],
   history: RuleHistory,
 ): Promise<{ bytes: Uint8Array; fileName: string; rows: ReturnType<typeof buildTimesheet>["rows"]; warnings: string[] }> {
-  const { rows, warnings } = buildTimesheet(month, entries, history, settings?.rules ?? [], settings?.includeOther !== false);
+  const { rows, warnings } = buildTimesheet(month, entries, history, settings?.rules ?? [], settings?.includeOther !== false, settings?.medicEverywhere !== false);
   const name = settings?.name ?? "";
   const bytes = await fillTimesheet(template, { name, siteLabel: settings?.siteLabel || "ERT Offsite", month, rows });
   return { bytes, fileName: timesheetFileName(name, month), rows, warnings };

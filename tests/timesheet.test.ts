@@ -207,3 +207,11 @@ describe("other job hours", () => {
     expect(rows[0]).toMatchObject({ client: "Other job", hours: { t: 3.5, t15: 0, t2: 0, t3: 0 } });
   });
 });
+
+import { timesheetSummary as _sum } from "../src/timesheet";
+describe("timesheetSummary", () => {
+  it("reads out whole sites, single roles and what stays off", () => {
+    const t = _sum([{ site: "HHSL Compound", label: "HHSL" }, { site: "PLNL", role: "Client medic", label: "PLNL Medic" }], ["HHSL Compound", "PLNL", "Atlantic"], true, false);
+    expect(t).toBe("On your timesheet: every day at HHSL Compound; client medic days at PLNL; other jobs. Other work at Atlantic stays off.");
+  });
+});

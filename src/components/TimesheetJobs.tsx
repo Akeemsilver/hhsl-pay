@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { DEFAULT_ROLES } from "../model";
-import { emptyTimesheetSettings, type TimesheetRule } from "../timesheet";
+import { emptyTimesheetSettings, timesheetSummary, type TimesheetRule } from "../timesheet";
 import { useStore } from "../store";
 
 const key = (r: { site: string; role?: string }) => `${r.site.toLowerCase()}|${(r.role ?? "").toLowerCase()}`;
@@ -15,6 +15,7 @@ export function TimesheetJobs() {
   const settings = data.timesheet ?? emptyTimesheetSettings();
   const [rules, setRules] = useState<TimesheetRule[]>(settings.rules);
   const [other, setOther] = useState(settings.includeOther !== false);
+  const [medic, setMedic] = useState(settings.medicEverywhere !== false);
 
   // Every site, with the roles it can have (the standard ones and any it has its own pay for).
   const sites = new Map<string, Set<string>>();
@@ -33,9 +34,9 @@ export function TimesheetJobs() {
   const relabel = (site: string, role: string | undefined, label: string) =>
     setRules((list) => list.map((r) => (key(r) === key({ site, role }) ? { ...r, label } : r)));
 
-  const dirty = JSON.stringify(rules) !== JSON.stringify(settings.rules) || other !== (settings.includeOther !== false);
-  const save = () => update((d) => ({ ...d, timesheet: { ...(d.timesheet ?? emptyTimesheetSettings()), rules: rules.map((r) => ({ ...r, label: r.label.trim() || suggested(r.site, r.role) })), includeOther: other } }));
-  const cancel = () => { setRules(settings.rules); setOther(settings.includeOther !== false); };
+  const dirty = JSON.stringify(rules) !== JSON.stringify(settings.rules) || other !== (settings.includeOther !== false) || medic !== (settings.medicEverywhere !== false);
+  const save = () => update((d) => ({ ...d, timesheet: { ...(d.timesheet ?? emptyTimesheetSettings()), rules: rules.map((r) => ({ ...r, label: r.label.trim() || suggested(r.site, r.role) })), includeOther: other, medicEverywhere: medic } }));
+  const cancel = () => { setRules(settings.rules); setOther(settings.includeOther !== false); setMedic(settings.medicEverywhere !== false); };
 
   const row = (site: string, role?: string) => {
     const rule = find(site, role);
@@ -57,7 +58,15 @@ export function TimesheetJobs() {
   return (
     <section className="card tj">
       <h2>Jobs that go on the timesheet</h2>
-      <p className="muted small">Tick every job that should be on your payroll timesheet, then press Save. Client medic jobs at any site are always included, named “Site Medic”. Anything not ticked stays off the form.</p>
+      <p className="tj-summary" aria-live="polite">{timesheetSummary(rules, siteNames, other, medic)}</p>
+      <p className="muted small">Tick a site to put every day there on the timesheet. Or leave the site unticked and tick only a role under it, such as Client medic, to put just those days on.</p>
+
+      <div className="tj-row">
+        <label className="tj-check">
+          <input type="checkbox" checked={medic} onChange={(e) => setMedic(e.target.checked)} />
+          <span>Client medic at every site <small className="muted">(named “Site Medic”)</small></span>
+        </label>
+      </div>
 
       <div className="tj-row">
         <label className="tj-check">
@@ -74,10 +83,10 @@ export function TimesheetJobs() {
         return (
           <div className="tj-site" key={site}>
             {row(site)}
-            <details className="tj-roles">
-              <summary>Roles{ticked > 0 ? ` · ${ticked} ticked` : ""}</summary>
+            <div className="tj-roles">
+              <span className="muted small">{find(site) ? "Roles are already included" : "Or only these roles"}{ticked > 0 && !find(site) ? ` · ${ticked} ticked` : ""}</span>
               {roles.map((r) => row(site, r))}
-            </details>
+            </div>
           </div>
         );
       })}
