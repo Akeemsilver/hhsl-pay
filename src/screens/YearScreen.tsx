@@ -10,6 +10,7 @@ import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
 import { BackIcon, ForwardIcon } from "../components/Icons";
 import { YearByPayslip, YearSites } from "../components/YearParts";
+import { AverageLine } from "../components/AverageLine";
 import { yearReport } from "../yearReport";
 
 export function YearScreen() {
@@ -52,6 +53,7 @@ export function YearScreen() {
           <div><dt><i className="dot dot-nis" />NIS</dt><dd className="c-nis">{money(nis)}</dd></div>
           <div><dt><i className="dot dot-sur" />Surcharge</dt><dd className="c-sur">{money(total((m) => m.surcharge))}</dd></div>
         </dl>
+        <AverageLine gross={months.map((m) => m.gross)} net={months.map((m) => m.net)} index={year === Number(todayISO().slice(0, 4)) ? Number(todayISO().slice(5, 7)) - 1 : 11} />
         <PayerTax payers={yearPayers} />
       </section>
 
@@ -63,7 +65,7 @@ export function YearScreen() {
 
       <section className="card">
         <h2>By payslip, month by month</h2>
-        <p className="muted small">Income, taxes, hours and days for each month, laid out like your yearly spreadsheet. Slide the table sideways for all the months.</p>
+        <p className="muted small">Income, taxes, year to date, and hours and days for each month, down the page like your yearly spreadsheet.</p>
         <YearByPayslip report={report} />
       </section>
 

@@ -11,6 +11,7 @@ import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
 import { BackIcon, CalendarIcon, ForwardIcon } from "../components/Icons";
 import { MonthPicker } from "../components/MonthPicker";
+import { AverageLine } from "../components/AverageLine";
 import { CalendarGrid, PayerTax } from "../components/MonthParts";
 
 const DAY_MS = 86_400_000;
@@ -42,6 +43,7 @@ export function HomeScreen() {
   const { site: filterSite } = useSiteFilter();
   const install = useInstall();
   const shownResult = useMonth(shown);
+  const shownYear = useYear(Number(shown.slice(0, 4)));
   const prevShown = shiftMonth(shown, -1);
   const lastMonth = useMonth(prevShown);
   const slide = useMonthSlide(shown, (by) => setShown(shiftMonth(shown, by)));
@@ -137,6 +139,7 @@ export function HomeScreen() {
           <div><span>Days</span><strong>{worked.size}</strong></div>
           <div><span>Hours</span><strong>{hoursText(hours)} h</strong></div>
         </div>
+        <AverageLine gross={shownYear.map((m) => m.gross)} net={shownYear.map((m) => m.net)} index={Number(shown.slice(5)) - 1} />
         <PayerTax payers={shownResult.payers} />
       </section>
 

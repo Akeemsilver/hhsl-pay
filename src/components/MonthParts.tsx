@@ -5,6 +5,8 @@ import { holidayMap } from "../holidays";
 import { useStore } from "../store";
 import { SITE_COLORS, siteColorIndex } from "../siteColor";
 import type { MonthSlide } from "../slide";
+import { AverageLine } from "./AverageLine";
+import { useYear } from "../hooks";
 import type { MonthResult } from "../engine";
 import type { Entry } from "../model";
 
@@ -26,6 +28,7 @@ export function PayerTax({ payers }: { payers: Array<{ payer: string; paye: numb
 
 export function MonthSummary({ result, label }: { result: MonthResult<Entry>; label: string }) {
   const { data } = useStore();
+  const yearMonths = useYear(Number(label.slice(0, 4)));
   return (
     <section className="card summary" aria-label={`${label} summary`}>
       <div className="big">
@@ -38,6 +41,7 @@ export function MonthSummary({ result, label }: { result: MonthResult<Entry>; la
         <div><dt><i className="dot dot-nis" />NIS</dt><dd className="c-nis">{money(result.nis)}</dd></div>
         <div><dt><i className="dot dot-sur" />Surcharge</dt><dd className="c-sur">{money(result.surcharge)}</dd></div>
       </dl>
+      <AverageLine gross={yearMonths.map((m) => m.gross)} net={yearMonths.map((m) => m.net)} index={Number(label.slice(5)) - 1} />
       <PayerTax payers={result.payers} />
       {result.payers.length > 1 && (
         <ul className="payers">

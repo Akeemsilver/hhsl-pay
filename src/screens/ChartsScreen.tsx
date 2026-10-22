@@ -6,6 +6,7 @@ import { useStore } from "../store";
 import { payerLabel } from "../model";
 import { TopBar } from "../components/TopBar";
 import { BackIcon, ForwardIcon } from "../components/Icons";
+import { AverageLine } from "../components/AverageLine";
 import { ChartCard, HBars, MonthColumns, SplitBar, TipRow, fullMoney } from "../components/charts";
 
 const C = { gross: "var(--gross)", net: "var(--net)", paye: "var(--paye)", nis: "var(--nis)" };
@@ -62,6 +63,7 @@ export function ChartsScreen() {
         <button className="icon" onClick={() => setYear(year + 1)} aria-label="Next year"><ForwardIcon /></button>
       </div>
 
+      {hasData && <AverageLine gross={gross} net={net} index={year === Number(todayISO().slice(0, 4)) ? Number(todayISO().slice(5, 7)) - 1 : 11} />}
       {!hasData && <p className="notice">No income logged for {year} yet. Charts appear once you log some days.</p>}
 
       <ChartCard

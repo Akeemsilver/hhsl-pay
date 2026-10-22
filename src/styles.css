@@ -769,3 +769,16 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .ysite-name .muted { margin-left: 6px; }
 .yt-scroll { scroll-snap-type: x proximity; scroll-padding-left: 138px; }
 .yt-scroll thead th:not(:first-child) { scroll-snap-align: start; }
+.avg-line { margin: 8px 0 0; font-size: 0.74rem; color: var(--muted); line-height: 1.4; }
+.hero .avg-line { margin: 10px 0 0; }
+.ytable > h3 { margin: 14px 12px 4px; font-size: 0.95rem; color: var(--accent); font-weight: 800; }
+.ym { width: calc(100% - 16px); margin: 0 8px; border-collapse: collapse; font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.ym th, .ym td { padding: 4px 2px; text-align: right; white-space: nowrap; }
+.ym thead th { color: var(--muted); font-weight: 600; font-size: 0.72rem; }
+.ym th:first-child, .ym td:first-child { text-align: left; }
+.ym tbody th { font-weight: 500; }
+.ym tbody tr + tr td, .ym tbody tr + tr th { border-top: 1px solid var(--line); }
+.ym tr.idle td, .ym tr.idle th { color: var(--muted); }
+.ym tfoot th, .ym tfoot td { font-weight: 800; border-top: 2px solid var(--text); }
+.ym td.strong { font-weight: 700; }
+.ym td.site { text-align: right; font-size: 0.7rem; max-width: 84px; overflow: hidden; text-overflow: ellipsis; }
