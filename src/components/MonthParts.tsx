@@ -4,7 +4,9 @@ import { useSiteFilter } from "../filter";
 import { holidayMap } from "../holidays";
 import { useStore } from "../store";
 import { SITE_COLORS, siteColorIndex } from "../siteColor";
-import { useSwipe } from "../swipe";
+import type { MonthSlide } from "../slide";
+import { AverageLine } from "./AverageLine";
+import { useYear } from "../hooks";
 import type { MonthResult } from "../engine";
 import type { Entry } from "../model";
 
@@ -26,6 +28,7 @@ export function PayerTax({ payers }: { payers: Array<{ payer: string; paye: numb
 
 export function MonthSummary({ result, label }: { result: MonthResult<Entry>; label: string }) {
   const { data } = useStore();
+  const yearMonths = useYear(Number(label.slice(0, 4)));
   return (
     <section className="card summary" aria-label={`${label} summary`}>
       <div className="big">
@@ -38,6 +41,7 @@ export function MonthSummary({ result, label }: { result: MonthResult<Entry>; la
         <div><dt><i className="dot dot-nis" />NIS</dt><dd className="c-nis">{money(result.nis)}</dd></div>
         <div><dt><i className="dot dot-sur" />Surcharge</dt><dd className="c-sur">{money(result.surcharge)}</dd></div>
       </dl>
+      <AverageLine gross={yearMonths.map((m) => m.gross)} net={yearMonths.map((m) => m.net)} index={Number(label.slice(5)) - 1} />
       <PayerTax payers={result.payers} />
       {result.payers.length > 1 && (
         <ul className="payers">
@@ -93,14 +97,14 @@ export function CorrectionBox({ month, result }: { month: string; result: MonthR
   );
 }
 
-export function DayList({ days, result, today, onPick, onShift }: { days: string[]; result: MonthResult<Entry>; today: string; onPick: (d: string) => void; onShift?: (by: -1 | 1) => void }) {
+export function DayList({ days, result, today, onPick, slide }: { days: string[]; result: MonthResult<Entry>; today: string; onPick: (d: string) => void; slide?: MonthSlide }) {
   const { data } = useStore();
-  const swipe = useSwipe(() => onShift?.(-1), () => onShift?.(1));
   const hol = holidayMap(days.map((d) => Number(d.slice(0, 4))), data);
   const { site: fsite } = useSiteFilter();
   const others = fsite ? new Map<string, Entry[]>() : othersByDate(data.entries, (days[0] ?? "").slice(0, 7));
   return (
-    <ul className="days" {...(onShift ? swipe : {})}>
+    <div className="slide-clip days-clip" {...(slide ? slide.bind : {})}>
+    <ul className="days" ref={slide ? (slide.ref as unknown as React.RefObject<HTMLUListElement>) : undefined}>
       {days.map((date) => {
         const wd = new Date(`${date}T00:00:00Z`).getUTCDay();
         const priced = result.entries.filter((e) => e.entry.date === date);
@@ -140,24 +144,25 @@ export function DayList({ days, result, today, onPick, onShift }: { days: string
         );
       })}
     </ul>
+    </div>
   );
 }
 
 /** Month grid, Sunday first. Each cell shows the day's total and the site(s) worked, plus other jobs. */
-export function CalendarGrid({ month, days, result, today, onPick, selected, onShift }: {
+export function CalendarGrid({ month, days, result, today, onPick, selected, slide }: {
   month: string; days: string[]; result: MonthResult<Entry>; today: string; onPick: (d: string) => void; selected?: string | null;
-  /** Swipe left (+1) or right (-1) to change the month. */
-  onShift?: (by: -1 | 1) => void;
+  /** Swipe left or right to change the month (see useMonthSlide). */
+  slide?: MonthSlide;
 }) {
   const { data } = useStore();
-  const swipe = useSwipe(() => onShift?.(-1), () => onShift?.(1));
   const hol = holidayMap(days.map((d) => Number(d.slice(0, 4))), data);
   const { site: fsite } = useSiteFilter();
   const others = fsite ? new Map<string, Entry[]>() : othersByDate(data.entries, month);
   const legend = [...new Set(result.entries.map((e) => e.entry.site))];
   const lead = new Date(`${month}-01T00:00:00Z`).getUTCDay();
   return (
-    <section className="card calendar" aria-label="Calendar" {...(onShift ? swipe : {})}>
+    <section className="card calendar slide-clip" aria-label="Calendar" {...(slide ? slide.bind : {})}>
+      <div className="cal-slide" ref={slide?.ref}>
       <div className="cal-head" aria-hidden="true">
         {WEEKDAYS.map((w) => <span key={w} className={w === "Sun" || w === "Sat" ? "red" : ""}>{w.slice(0, 2)}</span>)}
       </div>
@@ -208,10 +213,11 @@ export function CalendarGrid({ month, days, result, today, onPick, selected, onS
         })}
       </div>
       {legend.length > 0 && (
-        <p className="legend">
+        <p className="cal-legend">
           {legend.map((n) => <span key={n} className="k"><i style={{ background: SITE_COLORS[siteColorIndex(data, n)]!.hex }} />{n}</span>)}
         </p>
       )}
+      </div>
     </section>
   );
 }

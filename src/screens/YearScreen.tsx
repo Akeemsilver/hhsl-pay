@@ -1,4 +1,5 @@
 import { useYear } from "../hooks";
+import { useSessionState } from "../session";
 import { useSiteFilter } from "../filter";
 import { PayerTax } from "../components/MonthParts";
 import { useMemo, useState } from "react";
@@ -8,10 +9,13 @@ import { isCombined, overridesFor } from "../model";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
 import { BackIcon, ForwardIcon } from "../components/Icons";
+import { YearByPayslip, YearSites } from "../components/YearParts";
+import { AverageLine } from "../components/AverageLine";
+import { yearReport } from "../yearReport";
 
 export function YearScreen() {
   const { data } = useStore();
-  const [year, setYear] = useState(Number(todayISO().slice(0, 4)));
+  const [year, setYear] = useSessionState("year-year", Number(todayISO().slice(0, 4)));
 
   const months = useYear(year);
   const { site: filterSite } = useSiteFilter();
@@ -28,6 +32,7 @@ export function YearScreen() {
     byPayer.set(p.payer, t);
   }
   const yearPayers = [...byPayer.values()];
+  const report = useMemo(() => yearReport(months, data, !filterSite), [months, data, filterSite]);
   const max = Math.max(1, ...months.map((m) => m.gross));
   const progress = Math.min(1, gross / rules.annualThreshold);
 
@@ -48,8 +53,16 @@ export function YearScreen() {
           <div><dt><i className="dot dot-nis" />NIS</dt><dd className="c-nis">{money(nis)}</dd></div>
           <div><dt><i className="dot dot-sur" />Surcharge</dt><dd className="c-sur">{money(total((m) => m.surcharge))}</dd></div>
         </dl>
+        <AverageLine gross={months.map((m) => m.gross)} net={months.map((m) => m.net)} index={year === Number(todayISO().slice(0, 4)) ? Number(todayISO().slice(5, 7)) - 1 : 11} />
         <PayerTax payers={yearPayers} />
       </section>
+
+      <section className="card">
+        <h2>By site</h2>
+        <p className="muted small">Days, hours worked and hours paid for (overtime counted at its multiple) at each site this year. Tap a site for the months.</p>
+        <YearSites sites={report.sites} year={year} />
+      </section>
+
 
       {!filterSite && (
       <section className="card">
@@ -101,6 +114,14 @@ export function YearScreen() {
           <tfoot><tr><td>Total</td><td className="c-gross">{money(gross)}</td><td className="c-paye">{money(paye)}</td><td className="c-net">{money(total((m) => m.net))}</td></tr></tfoot>
         </table>
       </section>
+
+      {report.groups.length > 0 && (
+        <details className="card more-details">
+          <summary><span>More details</span><span aria-hidden="true">▾</span></summary>
+          <p className="muted small">Each payslip month by month: income, average a month, taxes, year to date, hours and days.</p>
+          <YearByPayslip report={report} />
+        </details>
+      )}
     </>
   );
 }

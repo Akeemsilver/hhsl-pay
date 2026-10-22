@@ -4,11 +4,14 @@ import { MONTHS, WEEKDAYS, daysOfMonth, hoursText, money, shiftMonth, todayISO }
 import { useInstall } from "../install";
 import { useSiteFilter } from "../filter";
 import { useMonth, useYear } from "../hooks";
+import { useMonthSlide } from "../slide";
 import { useNav } from "../nav";
 import { isOther, othersByDate } from "../model";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
-import { BackIcon, ForwardIcon, PlusIcon } from "../components/Icons";
+import { BackIcon, CalendarIcon, ForwardIcon } from "../components/Icons";
+import { MonthPicker } from "../components/MonthPicker";
+import { AverageLine } from "../components/AverageLine";
 import { CalendarGrid, PayerTax } from "../components/MonthParts";
 
 const DAY_MS = 86_400_000;
@@ -36,13 +39,14 @@ export function HomeScreen() {
   const [shown, setShown] = useState(today.slice(0, 7));
   const month = today.slice(0, 7);
   const year = Number(today.slice(0, 4));
-  const prevMonth = shiftMonth(month, -1);
 
   const { site: filterSite } = useSiteFilter();
   const install = useInstall();
-  const thisMonth = useMonth(month);
-  const lastMonth = useMonth(prevMonth);
   const shownResult = useMonth(shown);
+  const shownYear = useYear(Number(shown.slice(0, 4)));
+  const prevShown = shiftMonth(shown, -1);
+  const lastMonth = useMonth(prevShown);
+  const slide = useMonthSlide(shown, (by) => setShown(shiftMonth(shown, by)));
   const months = useYear(year);
   const prevYearMonths = useYear(year - 1);
 
@@ -51,11 +55,11 @@ export function HomeScreen() {
   const backupDue = data.entries.length > 0 && Date.now() - lastBackup > 30 * DAY_MS;
 
   const worked = new Set([
-    ...thisMonth.entries.filter((e) => e.pay.total > 0).map((e) => e.entry.date),
-    ...(filterSite ? [] : [...othersByDate(data.entries, month).keys()]),
+    ...shownResult.entries.filter((e) => e.pay.total > 0).map((e) => e.entry.date),
+    ...(filterSite ? [] : [...othersByDate(data.entries, shown).keys()]),
   ]);
-  const hours = thisMonth.entries.reduce((s, e) => s + e.entry.hours, 0);
-  const diff = thisMonth.gross - lastMonth.gross;
+  const hours = shownResult.entries.reduce((s, e) => s + e.entry.hours, 0);
+  const diff = shownResult.gross - lastMonth.gross;
 
   const rules = valueOn(data.history.tax, today);
   const ytdGross = months.reduce((s, m) => s + m.gross, 0);
@@ -121,35 +125,36 @@ export function HomeScreen() {
         </div>
       )}
 
-      <section className="hero" aria-label="This month">
+      <section className="hero" aria-label={`Totals for ${shown}`}>
         <div className="hero-top">
-          <span><i className="dot dot-gross" />Gross · {MONTHS[thisMonthIndex]} so far</span>
+          <span><i className="dot dot-gross" />Gross · {MONTHS[Number(shown.slice(5)) - 1]}{shown.slice(0, 4) !== String(year) ? ` ${shown.slice(0, 4)}` : ""}{shown === month ? " so far" : ""}</span>
           {lastMonth.gross > 0 && (
-            <span className="delta">{diff >= 0 ? "▲" : "▼"} {money(Math.abs(diff))} vs {MONTHS[Number(prevMonth.slice(5)) - 1]?.slice(0, 3)}</span>
+            <span className="delta">{diff >= 0 ? "▲" : "▼"} {money(Math.abs(diff))} vs {MONTHS[Number(prevShown.slice(5)) - 1]?.slice(0, 3)}</span>
           )}
         </div>
-        <div className="hero-value">{money(thisMonth.gross)}</div>
+        <div className="hero-value">{money(shownResult.gross)}</div>
         <div className="hero-stats">
-          <div><span><i className="dot dot-net" />Net</span><strong className="c-net">{money(thisMonth.net)}</strong></div>
-          <div><span><i className="dot dot-paye" />PAYE</span><strong className="c-paye">{money(thisMonth.paye)}</strong></div>
+          <div><span><i className="dot dot-net" />Net</span><strong className="c-net">{money(shownResult.net)}</strong></div>
+          <div><span><i className="dot dot-paye" />PAYE</span><strong className="c-paye">{money(shownResult.paye)}</strong></div>
           <div><span>Days</span><strong>{worked.size}</strong></div>
           <div><span>Hours</span><strong>{hoursText(hours)} h</strong></div>
         </div>
-        <PayerTax payers={thisMonth.payers} />
+        <AverageLine gross={shownYear.map((m) => m.gross)} net={shownYear.map((m) => m.net)} index={Number(shown.slice(5)) - 1} />
+        <PayerTax payers={shownResult.payers} />
       </section>
 
       <div className="actions">
-        <button className="primary" onClick={() => open({ day: today })}><PlusIcon /> Log today</button>
+        <button className="primary" disabled={shown === month} onClick={() => setShown(month)}><CalendarIcon /> {shown === month ? "This month" : `Back to ${MONTHS[Number(month.slice(5)) - 1]?.slice(0, 3)}`}</button>
         <button onClick={() => selectTab("calendar")}>Open calendar</button>
       </div>
 
       <div className="home-cal">
         <div className="monthbar">
-          <button className="icon" onClick={() => setShown(shiftMonth(shown, -1))} aria-label="Previous month"><BackIcon /></button>
-          <h2 className="monthname">{MONTHS[Number(shown.slice(5)) - 1]}{shown.slice(0, 4) !== String(year) ? ` ${shown.slice(0, 4)}` : ""}</h2>
-          <button className="icon" onClick={() => setShown(shiftMonth(shown, 1))} aria-label="Next month"><ForwardIcon /></button>
+          <button className="icon" onClick={() => slide.go(-1)} aria-label="Previous month"><BackIcon /></button>
+          <MonthPicker month={shown} onChange={setShown} />
+          <button className="icon" onClick={() => slide.go(1)} aria-label="Next month"><ForwardIcon /></button>
         </div>
-        <CalendarGrid month={shown} days={daysOfMonth(shown)} result={shownResult} today={today} selected={loc.day ?? picked} onPick={(d) => { setPicked(d); open({ day: d }); }} onShift={(by) => setShown(shiftMonth(shown, by))} />
+        <CalendarGrid month={shown} days={daysOfMonth(shown)} result={shownResult} today={today} selected={loc.day ?? picked} onPick={(d) => { setPicked(d); open({ day: d }); }} slide={slide} />
       </div>
 
       <section className="card">
@@ -193,7 +198,7 @@ export function HomeScreen() {
       <section className="card">
         <h2>Recent days</h2>
         {latest.length === 0 ? (
-          <p className="muted">Nothing logged yet. Tap “Log today” to add your first day.</p>
+          <p className="muted">Nothing logged yet. Tap today’s date on the calendar to add your first day.</p>
         ) : (
           <ul className="recent">
             {latest.map((e) => (

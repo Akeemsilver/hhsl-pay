@@ -24,6 +24,7 @@ export function SettingsHub() {
   const link = appLink();
   const sitesCount = siteCount(data);
   const [copied, setCopied] = useState(false);
+  const [askDownload, setAskDownload] = useState(false);
   const [kitMessage, setKitMessage] = useState<string | null>(null);
   const copyLink = async () => {
     try { await navigator.clipboard.writeText(link); } catch {
@@ -52,10 +53,10 @@ export function SettingsHub() {
   }, [data.history, data.payerNames, data.siteColors, data.timesheet, data.otherPayer, data.taxMode, data.holidays, sitesCount]);
   const shareKit = async () => {
     if (!kit) { setKitMessage("Getting the starter kit ready, try again in a moment."); return; }
-    const result = await shareFile(backupFileName("rates", false), kit);
+    const { result, error } = await shareFile(backupFileName("rates", false), kit);
     if (result === "shared") setKitMessage("Starter kit shared.");
     else if (result === "unsupported") setKitMessage("This browser cannot open the share menu. Use “Download starter kit” and send the file from your Downloads.");
-    else if (result === "failed") setKitMessage("The share menu could not open. Use “Download starter kit” instead.");
+    else if (result === "failed") setKitMessage(`The share menu could not open (${error}). Use “Download starter kit” instead.`);
     else setKitMessage(null);
   };
   const saveKit = async () => {
@@ -85,7 +86,7 @@ export function SettingsHub() {
         <p className="muted small">Starter kit: your sites, rates, tax rules and the timesheet form (no days, no pay, no name). It has to be sent as a file because this app's code is public, and company rates must never be put in public code. Only send it to colleagues.</p>
         <div className="row">
           <button className="primary" disabled={sitesCount === 0} onClick={() => void shareKit()}>Share starter kit</button>
-          <button disabled={sitesCount === 0} onClick={saveKit}>Download starter kit</button>
+          <button disabled={sitesCount === 0} onClick={() => setAskDownload(true)}>Download starter kit</button>
         </div>
         {kitMessage && <p className="notice" role="status">{kitMessage}</p>}
         {sitesCount === 0 && <p className="muted small">Add your sites first, then the starter kit is ready to share.</p>}
@@ -196,7 +197,7 @@ export function SettingsHub() {
             if (ask === "days") {
               update((d) => ({ ...d, entries: [], corrections: undefined }));
             } else if (ask === "settings") {
-              setTheme("system");
+              setTheme("light");
               update((d) => {
                 const fresh = newData();
                 return {
@@ -208,11 +209,20 @@ export function SettingsHub() {
               });
             } else {
               replace(newData());
-              setTheme("system");
+              setTheme("light");
               selectTab("home");
             }
             setAsk(null);
           }}
+        />
+      )}
+      {askDownload && (
+        <ConfirmDialog
+          title="Download the starter kit?"
+          message="It saves a file with your sites, pay rates, tax rules and the timesheet form to this phone's Downloads. It has no days and no pay, but it does have your company rates. Only send it to colleagues."
+          confirmLabel="Download" cancelLabel="Cancel" safe
+          onCancel={() => setAskDownload(false)}
+          onConfirm={() => { setAskDownload(false); void saveKit(); }}
         />
       )}
       <p className="muted small pad" aria-label="App version">Version {typeof __BUILD_ID__ === "string" ? __BUILD_ID__ : "dev"}</p>

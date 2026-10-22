@@ -21,64 +21,97 @@ export function BottomSheet({ label, onRequestClose, onPullDismiss, top, fromTop
   useEffect(() => {
     const el = sheet.current;
     if (!el || fromTop) return;
-    let startY = 0, dy = 0, tracking = false, dragging = false;
+    const backdrop = el.parentElement;
+    const HANDLE = ".grabber, .bar";
+    let startY = 0, dy = 0, tracking = false, dragging = false, pointerId = -1, lastY = 0, lastT = 0, speed = 0;
+    let settling = false;
 
+    // The sheet follows the finger one-to-one. Nothing is decided until the finger lifts.
     const move = (to: number) => {
       dy = Math.max(0, to);
       el.style.transition = "none";
       el.style.transform = `translateY(${dy}px)`;
+      if (backdrop) backdrop.style.background = `rgba(0, 0, 0, ${0.45 * (1 - Math.min(1, dy / Math.max(1, el.offsetHeight)))})`;
     };
-    const release = () => {
-      const far = dy > DISMISS_DISTANCE;
+    const track = (y: number) => {
+      const now = performance.now();
+      if (now > lastT) speed = (y - lastY) / (now - lastT);
+      lastY = y; lastT = now;
+    };
+    const springBack = () => {
       el.style.transition = "";
       el.style.transform = "";
+      if (backdrop) backdrop.style.background = "";
+      tracking = dragging = false; dy = 0;
+    };
+    // Lifting the finger: far enough (or flicked down) closes with a slide down, otherwise it settles back.
+    const release = () => {
+      const far = dy > DISMISS_DISTANCE || (speed > 0.6 && dy > 30);
       tracking = dragging = false;
-      dy = 0;
-      if (far) (pull.current ?? close.current)();
+      if (!far) { springBack(); return; }
+      settling = true;
+      // Carry on at the speed of the finger: a hard flick leaves quickly, a slow pull glides out, never a jump.
+      const rest = Math.max(el.offsetHeight, window.innerHeight) - dy;
+      const ms = Math.round(Math.min(360, Math.max(160, rest / Math.max(speed, 0.8))));
+      el.style.transition = `transform ${ms}ms cubic-bezier(0.4, 0, 0.2, 1)`;
+      el.style.transform = `translateY(${dy + rest}px)`;
+      if (backdrop) { backdrop.style.transition = `background ${ms}ms linear`; backdrop.style.background = "rgba(0, 0, 0, 0)"; }
+      window.setTimeout(() => { (pull.current ?? close.current)(); }, ms);
     };
 
-    const onStart = (e: TouchEvent) => { startY = e.touches[0]!.clientY; tracking = true; dragging = false; dy = 0; };
-    const onMove = (e: TouchEvent) => {
-      if (!tracking) return;
-      const d = e.touches[0]!.clientY - startY;
-      if (!dragging) {
-        if (d > 8 && el.scrollTop <= 0) dragging = true;
-        else if (d < -8) tracking = false;
-      }
-      if (dragging) {
-        e.preventDefault();
-        move(d);
-      }
-    };
-    const onEnd = () => { if (dragging) release(); tracking = false; };
-
-    el.addEventListener("touchstart", onStart, { passive: true });
-    el.addEventListener("touchmove", onMove, { passive: false });
-    el.addEventListener("touchend", onEnd);
-    el.addEventListener("touchcancel", onEnd);
-
-    // Mouse and pen: drag the grabber.
-    const grab = el.querySelector<HTMLElement>(".grabber");
+    // Grabber and title bar: pointer events with touch-action none, so the browser never takes the gesture away.
     const onDown = (e: PointerEvent) => {
-      if (e.pointerType === "touch") return;
-      startY = e.clientY; tracking = dragging = true; grab?.setPointerCapture(e.pointerId);
+      if (settling || !(e.target as Element).closest(HANDLE)) return;
+      startY = e.clientY; lastY = startY; lastT = performance.now(); speed = 0;
+      tracking = true; dragging = false; pointerId = e.pointerId;
     };
-    const onPointerMove = (e: PointerEvent) => { if (dragging && e.pointerType !== "touch") move(e.clientY - startY); };
-    const onUp = (e: PointerEvent) => { if (dragging && e.pointerType !== "touch") release(); };
-    grab?.addEventListener("pointerdown", onDown);
-    grab?.addEventListener("pointermove", onPointerMove);
-    grab?.addEventListener("pointerup", onUp);
-    grab?.addEventListener("pointercancel", onUp);
+    const onPointerMove = (e: PointerEvent) => {
+      if (!tracking || e.pointerId !== pointerId) return;
+      const d = e.clientY - startY;
+      if (!dragging && Math.abs(d) > 6) { dragging = true; el.setPointerCapture(e.pointerId); }
+      if (dragging) { track(e.clientY); move(d); }
+    };
+    const onUp = (e: PointerEvent) => {
+      if (e.pointerId !== pointerId) return;
+      pointerId = -1;
+      if (dragging) release(); else tracking = false;
+    };
+    const onPointerCancel = (e: PointerEvent) => { if (e.pointerId === pointerId) { pointerId = -1; if (dragging) springBack(); tracking = false; } };
 
+    // The rest of the sheet: pulling down while the content is scrolled to the top.
+    const inHandle = (e: TouchEvent) => !!(e.target as Element).closest(HANDLE);
+    const onTouchStart = (e: TouchEvent) => {
+      if (settling || inHandle(e)) return;
+      startY = e.touches[0]!.clientY; lastY = startY; lastT = performance.now(); speed = 0;
+      tracking = true; dragging = false; dy = 0;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (!tracking || pointerId !== -1 || inHandle(e)) return;
+      const d = e.touches[0]!.clientY - startY;
+      if (!dragging && d > 8 && el.scrollTop <= 0) dragging = true;
+      if (dragging) { e.preventDefault(); track(e.touches[0]!.clientY); move(d); }
+    };
+    const onTouchEnd = () => { if (pointerId !== -1 || !tracking) return; if (dragging) release(); tracking = false; };
+    // A cancelled touch is the browser taking over, not you letting go: settle back rather than close.
+    const onTouchCancel = () => { if (pointerId !== -1) return; if (dragging) springBack(); tracking = false; };
+
+    el.addEventListener("pointerdown", onDown);
+    el.addEventListener("pointermove", onPointerMove);
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointercancel", onPointerCancel);
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd);
+    el.addEventListener("touchcancel", onTouchCancel);
     return () => {
-      el.removeEventListener("touchstart", onStart);
-      el.removeEventListener("touchmove", onMove);
-      el.removeEventListener("touchend", onEnd);
-      el.removeEventListener("touchcancel", onEnd);
-      grab?.removeEventListener("pointerdown", onDown);
-      grab?.removeEventListener("pointermove", onPointerMove);
-      grab?.removeEventListener("pointerup", onUp);
-      grab?.removeEventListener("pointercancel", onUp);
+      el.removeEventListener("pointerdown", onDown);
+      el.removeEventListener("pointermove", onPointerMove);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointercancel", onPointerCancel);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchCancel);
     };
   }, []);
 
