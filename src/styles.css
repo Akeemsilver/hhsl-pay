@@ -809,3 +809,4 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .payer-slot { display: grid; }
 .payer-slot > * { grid-area: 1 / 1; }
 .payer-ghost { visibility: hidden; pointer-events: none; }
+.other-payer { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }

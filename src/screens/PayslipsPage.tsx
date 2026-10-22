@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { payerLabel, otherPayerId } from "../model";
-import { TaxSegment } from "../components/TaxMode";
+import { OtherJobsPayer, TaxSegment } from "../components/TaxMode";
 import { useStore } from "../store";
 import { PageHeader } from "../components/TopBar";
 
@@ -19,12 +19,7 @@ export function PayslipsPage() {
       </section>
       <h2 className="section-title">Other jobs</h2>
       <section className="card">
-        <label>Other jobs are paid on
-          <select aria-label="Other jobs payslip" value={otherPayerId(data)} onChange={(e) => update((d) => ({ ...d, otherPayer: e.target.value }))}>
-            {Object.entries(payers).map(([id, n]) => <option key={id} value={id}>{n}</option>)}
-          </select>
-        </label>
-        <p className="muted small">Pickups and deliveries that have an amount are added to this payslip's gross and taxed with it. Leave the amount blank until the company confirms it.</p>
+        <OtherJobsPayer />
       </section>
 
       <h2 className="section-title">Payslip names</h2>

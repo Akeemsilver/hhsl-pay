@@ -1,4 +1,4 @@
-import { isCombined, setCombinedTax } from "../model";
+import { isCombined, otherPayerId, payerLabel, setCombinedTax } from "../model";
 import { useStore } from "../store";
 
 /** Split or Combined tax for the whole app, as two buttons. */
@@ -30,5 +30,22 @@ export function TaxSwitch() {
       <span className="ts-label">{combined ? "Combined" : "Split"}</span>
       <span className="ts-track" aria-hidden="true"><i /></span>
     </button>
+  );
+}
+
+/** Which payslip other jobs (pickups, deliveries) are paid on and taxed with. */
+export function OtherJobsPayer() {
+  const { data, update } = useStore();
+  const payers: Record<string, string> = { ...data.payerNames };
+  for (const v of data.history.sites) for (const site of Object.values(v.value)) payers[site.payer] ??= payerLabel(data.payerNames, site.payer);
+  return (
+    <div className="other-payer">
+      <label>Other jobs are paid on
+        <select aria-label="Other jobs payslip" value={otherPayerId(data)} onChange={(e) => update((d) => ({ ...d, otherPayer: e.target.value }))}>
+          {Object.entries(payers).map(([id, n]) => <option key={id} value={id}>{n}</option>)}
+        </select>
+      </label>
+      <p className="muted small">Pickups and deliveries that have an amount are added to this payslip's gross and taxed with it. Leave the amount blank until the company confirms it.</p>
+    </div>
   );
 }

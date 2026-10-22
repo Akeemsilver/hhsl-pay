@@ -7,7 +7,7 @@ import { useNav } from "../nav";
 import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { newData, isCombined, userNameOf } from "../model";
-import { TaxSegment } from "../components/TaxMode";
+import { OtherJobsPayer, TaxSegment } from "../components/TaxMode";
 import { todayISO } from "../format";
 import { useStore } from "../store";
 import { useTheme, type ThemePref } from "../theme";
@@ -128,6 +128,7 @@ export function SettingsHub() {
             : "Split: Point Lisas / other and Atlantic each pay their own PAYE, NIS and health surcharge. The totals add them together, with each place shown in small print."}
           {" "}This applies to the whole app. <button className="link" onClick={() => open({ page: "payslips" })}>Open settings</button>
         </p>
+        <OtherJobsPayer />
       </section>
 
       <h2 className="section-title">Your work</h2>
