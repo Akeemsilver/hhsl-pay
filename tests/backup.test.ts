@@ -91,3 +91,20 @@ describe("starter kit settings", () => {
     expect(out.userName).toBe("Me");
   });
 });
+
+describe("starter kit site colours", () => {
+  it("spells out every site's colour and applies it on another phone", async () => {
+    const { ratesKitOf, applyKit } = await import("../src/backup");
+    const { newData } = await import("../src/model");
+    const source = newData();
+    const site = { payer: "main", baseRate: 1, weekday: {}, weekend: {}, holiday: {} };
+    source.history = { ...source.history, sites: [{ effectiveFrom: "2000-01-01", value: { Alpha: site, Beta: site } }] };
+    const names = ["Alpha", "Beta"];
+    source.siteColors = { [names[0]!.toLowerCase()]: 5 };
+    const kit = ratesKitOf(source);
+    expect(Object.keys(kit.siteColors!).sort()).toEqual(names.map((n) => n.toLowerCase()).sort());
+    expect(kit.siteColors![names[0]!.toLowerCase()]).toBe(5);
+    const out = applyKit(newData(), kit);
+    expect(out.siteColors).toEqual(kit.siteColors);
+  });
+});

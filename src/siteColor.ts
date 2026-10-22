@@ -36,3 +36,10 @@ export function siteColorIndex(data: AppData, site: string): number {
   const i = order.indexOf(key);
   return (i < 0 ? 0 : i) % SITE_COLORS.length;
 }
+
+/** Every site's colour spelled out, so a starter kit gives the same colours on another phone. */
+export function allSiteColors(data: AppData): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const key of siteOrder(data)) out[key] = siteColorIndex(data, key);
+  return out;
+}

@@ -1,6 +1,7 @@
 import type { RuleHistory } from "./engine";
 import type { AppData } from "./model";
 import type { TimesheetRule } from "./timesheet";
+import { allSiteColors } from "./siteColor";
 
 const APP = "hhsl-salary-tracker";
 
@@ -44,7 +45,7 @@ export function ratesKitOf(data: AppData, template?: { name: string; bytes: Arra
     otherPayer: data.otherPayer,
     taxMode: data.taxMode,
     holidays: data.holidays,
-    siteColors: data.siteColors,
+    siteColors: allSiteColors(data),
   };
 }
 
