@@ -1,14 +1,46 @@
 import type { RuleHistory } from "./engine";
 import type { AppData } from "./model";
+import type { TimesheetRule } from "./timesheet";
 
 const APP = "hhsl-salary-tracker";
 
 export type BackupKind = "full" | "rates";
 
+/** A rates file ("starter kit"): the sites, rates and tax rules, plus the payslip group names and timesheet job rules. No days and no name. */
+export interface RatesKit extends RuleHistory {
+  payerNames?: Record<string, string>;
+  timesheetRules?: TimesheetRule[];
+  siteLabel?: string;
+}
+
 export interface Parsed {
   kind: BackupKind;
   data?: AppData;
   history?: RuleHistory;
+  kit?: RatesKit;
+}
+
+/** The starter kit for this phone's current setup. */
+export function ratesKitOf(data: AppData): RatesKit {
+  return {
+    sites: data.history.sites,
+    tax: data.history.tax,
+    payerNames: data.payerNames,
+    timesheetRules: data.timesheet?.rules,
+    siteLabel: data.timesheet?.siteLabel,
+  };
+}
+
+/** The data with a starter kit's rates and groups applied. Days, name and backups settings stay. */
+export function applyKit(data: AppData, kit: RatesKit): AppData {
+  return {
+    ...data,
+    history: { sites: kit.sites, tax: kit.tax },
+    payerNames: { ...data.payerNames, ...(kit.payerNames ?? {}) },
+    timesheet: kit.timesheetRules || kit.siteLabel
+      ? { name: data.timesheet?.name ?? "", siteLabel: kit.siteLabel ?? data.timesheet?.siteLabel ?? "ERT Offsite", rules: kit.timesheetRules ?? data.timesheet?.rules ?? [], payrollEmail: data.timesheet?.payrollEmail }
+      : data.timesheet,
+  };
 }
 
 interface Envelope {
@@ -46,7 +78,7 @@ async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey>
   );
 }
 
-export async function serialize(kind: BackupKind, content: AppData | RuleHistory, password?: string): Promise<string> {
+export async function serialize(kind: BackupKind, content: AppData | RuleHistory | RatesKit, password?: string): Promise<string> {
   const env: Envelope = { app: APP, format: 1, kind, exportedAt: new Date().toISOString() };
   if (password) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -105,11 +137,15 @@ export async function parse(text: string, password?: string): Promise<Parsed> {
   }
 
   if (env.kind === "full" && isData(payload)) return { kind: "full", data: payload };
-  if (env.kind === "rates" && isHistory(payload)) return { kind: "rates", history: payload };
+  if (env.kind === "rates" && isHistory(payload)) {
+    const kit = payload as RatesKit;
+    return { kind: "rates", history: { sites: kit.sites, tax: kit.tax }, kit };
+  }
   throw new BadBackup("The backup is missing data or is from a newer version.");
 }
 
 export function backupFileName(kind: BackupKind, encrypted: boolean): string {
+  if (kind === "rates" && !encrypted) return "HHSL-starter-kit-rates.json";
   const date = new Date().toISOString().slice(0, 10);
   return `salary-tracker-${kind === "full" ? "backup" : "rates"}-${date}${encrypted ? "-locked" : ""}.json`;
 }

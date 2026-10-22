@@ -1,3 +1,5 @@
+import { appLink, siteCount } from "../kit";
+import { backupFileName, deliver, download, ratesKitOf, serialize } from "../backup";
 import { useNav } from "../nav";
 import { useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -16,10 +18,59 @@ export function SettingsHub() {
   const [theme, setTheme] = useTheme();
   const thisMonth = todayISO().slice(0, 7);
   const combinedNow = isCombined(data, thisMonth);
+  const link = appLink();
+  const sitesCount = siteCount(data);
+  const [copied, setCopied] = useState(false);
+  const [kitMessage, setKitMessage] = useState<string | null>(null);
+  const copyLink = async () => {
+    try { await navigator.clipboard.writeText(link); } catch {
+      const el = document.querySelector<HTMLInputElement>('input[aria-label="App link"]');
+      el?.select();
+      document.execCommand?.("copy");
+    }
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2000);
+  };
+  const shareLink = async () => {
+    try {
+      if (navigator.share) await navigator.share({ title: "HHSL pay app", text: "The pay app link:", url: link });
+      else await copyLink();
+    } catch { /* cancelled */ }
+  };
+  const kitText = () => serialize("rates", ratesKitOf(data));
+  const shareKit = async () => {
+    try {
+      const how = await deliver(backupFileName("rates", false), await kitText());
+      setKitMessage(how === "shared" ? "Starter kit shared." : "Starter kit saved to your Downloads. Send that file on WhatsApp.");
+    } catch (e) { if ((e as DOMException)?.name !== "AbortError") setKitMessage("Could not create the starter kit."); }
+  };
+  const saveKit = async () => {
+    download(backupFileName("rates", false), await kitText());
+    setKitMessage("Starter kit saved to your Downloads. Send that file on WhatsApp.");
+  };
   const sites = new Set(data.history.sites.flatMap((v) => Object.keys(v.value))).size;
   return (
     <>
       <PageHeader title="Settings" />
+
+      <h2 className="section-title">Share this app</h2>
+      <section className="card share-app">
+        <p className="muted small">To give a colleague the app: send them the link, then send the starter kit file with your pay rates. On their first start the app asks for that file.</p>
+        <label>App link
+          <input readOnly aria-label="App link" value={link} onFocus={(e) => e.currentTarget.select()} />
+        </label>
+        <div className="row">
+          <button onClick={copyLink}>{copied ? "Copied ✓" : "Copy link"}</button>
+          <button onClick={() => void shareLink()}>Share link</button>
+        </div>
+        <p className="muted small">Starter kit: your sites, rates and tax rules (no days, no pay, no name). It has to be sent as a file because this app's code is public, and company rates must never be put in public code. Only send it to colleagues.</p>
+        <div className="row">
+          <button className="primary" disabled={sitesCount === 0} onClick={() => void shareKit()}>Share starter kit</button>
+          <button disabled={sitesCount === 0} onClick={saveKit}>Download starter kit</button>
+        </div>
+        {kitMessage && <p className="notice" role="status">{kitMessage}</p>}
+        {sitesCount === 0 && <p className="muted small">Add your sites first, then the starter kit is ready to share.</p>}
+      </section>
 
       <h2 className="section-title">Your name</h2>
       <section className="card">

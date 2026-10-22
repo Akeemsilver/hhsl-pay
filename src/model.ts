@@ -58,6 +58,8 @@ export interface AppData {
   holidays?: { added: { date: string; name: string }[]; removed: string[] };
   /** The name shown on payslips and timesheets. */
   userName?: string;
+  /** The person chose to set up their sites by hand instead of loading a starter kit. */
+  setupSkipped?: boolean;
   /** Which payslip group other jobs are paid on and taxed with. */
   otherPayer?: string;
   /** Whether PAYE, NIS and the surcharge are worked out per payslip group (split) or on everything together, from a month on. */
