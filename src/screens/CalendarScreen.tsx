@@ -24,7 +24,6 @@ export function CalendarScreen() {
   const today = todayISO();
   const year = Number(month.slice(0, 4));
   const noSites = Object.keys(valueOn(data.history.sites, `${month}-01`)).length === 0;
-  const payerOrder = Object.keys(data.payerNames);
 
   return (
     <>
@@ -55,7 +54,7 @@ export function CalendarScreen() {
 
       {view === "calendar" ? (
         <>
-          <CalendarGrid month={month} days={days} result={result} today={today} selected={selected} onPick={setPicked} payerOrder={payerOrder} />
+          <CalendarGrid month={month} days={days} result={result} today={today} selected={selected} onPick={setPicked} />
           {selected ? <DayPanel date={selected} /> : <p className="muted pad">Tap a date to see its jobs and add one.</p>}
         </>
       ) : (

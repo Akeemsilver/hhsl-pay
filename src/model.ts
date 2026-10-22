@@ -64,6 +64,8 @@ export interface AppData {
   otherPayer?: string;
   /** Whether PAYE, NIS and the surcharge are worked out per payslip group (split) or on everything together, from a month on. */
   taxMode?: Array<{ effectiveFrom: string; combined: boolean }>;
+  /** Chosen calendar colour (0–7) per site, keyed by lower-case site name. Sites without one get an automatic colour. */
+  siteColors?: Record<string, number>;
   lastBackupAt?: string;
 }
 

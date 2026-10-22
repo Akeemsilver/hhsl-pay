@@ -204,6 +204,10 @@ button.link { min-height: 36px; border: 0; background: transparent; color: var(-
 .cal-cell.tone1.worked { background: color-mix(in srgb, #d97706 24%, var(--card)); }
 .cal-cell.tone2.worked { background: color-mix(in srgb, #2563eb 22%, var(--card)); }
 .cal-cell.tone3.worked { background: color-mix(in srgb, #7c3aed 22%, var(--card)); }
+.cal-cell.tone4.worked { background: color-mix(in srgb, #db2777 22%, var(--card)); }
+.cal-cell.tone5.worked { background: color-mix(in srgb, #65a30d 22%, var(--card)); }
+.cal-cell.tone6.worked { background: color-mix(in srgb, #0891b2 22%, var(--card)); }
+.cal-cell.tone7.worked { background: color-mix(in srgb, #92400e 22%, var(--card)); }
 .cal-cell.today { outline: 2px solid var(--accent); outline-offset: -1px; }
 .cal-cell.today .n { color: var(--accent); font-weight: 700; }
 
@@ -455,6 +459,16 @@ button.pill { min-height: 32px; padding: 0 12px; border-radius: 999px; font-size
 .cal-cell .dots .d.tone1 { background: #d97706; }
 .cal-cell .dots .d.tone2 { background: #2563eb; }
 .cal-cell .dots .d.tone3 { background: #7c3aed; }
+.cal-cell .dots .d.tone4 { background: #db2777; }
+.cal-cell .dots .d.tone5 { background: #65a30d; }
+.cal-cell .dots .d.tone6 { background: #0891b2; }
+.cal-cell .dots .d.tone7 { background: #92400e; }
+.swatches { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 12px; }
+.swatch { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; padding: 0; }
+.swatch.on { border-color: var(--text); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 4px 0; font-size: .85rem; }
+.legend .k { display: inline-flex; align-items: center; gap: 6px; }
+.legend .k i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .cal-cell .dots .d.toneo { background: var(--s3); }
 .cal-cell .dots .more { font-size: 0.6rem; color: var(--muted); line-height: 1; }
 .day-panel .card-head { margin-bottom: 6px; }
