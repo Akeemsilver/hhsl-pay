@@ -1,3 +1,4 @@
+import { InstallHelp } from "../components/InstallHelp";
 import { appLink, siteCount } from "../kit";
 import { backupFileName, deliver, download, ratesKitOf, serialize } from "../backup";
 import { useNav } from "../nav";
@@ -52,6 +53,11 @@ export function SettingsHub() {
   return (
     <>
       <PageHeader title="Settings" />
+
+      <h2 className="section-title">Install on your phone</h2>
+      <section className="card">
+        <InstallHelp />
+      </section>
 
       <h2 className="section-title">Share this app</h2>
       <section className="card share-app">

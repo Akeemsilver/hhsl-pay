@@ -33,7 +33,11 @@ export function watchInstall(): void {
   });
 }
 
-const isIos = () => /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+const isIos = () => {
+  const n = window.navigator;
+  // iPadOS reports itself as a Mac, so a Mac with a touch screen is an iPad.
+  return /iphone|ipad|ipod/i.test(n.userAgent) || (n.platform === "MacIntel" && n.maxTouchPoints > 1);
+};
 
 export type InstallState = "hidden" | "ready" | "ios";
 

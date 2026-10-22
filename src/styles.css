@@ -640,3 +640,7 @@ table.bands .row-no { width: 34px; text-align: center; color: var(--muted); font
 .cal-cell.selected .n { font-weight: 800; }
 .cal-cell:active { transform: scale(0.95); filter: brightness(1.12); }
 
+
+.install-help details { border-top: 1px solid var(--edge); padding: 4px 0; }
+.install-help details:first-child { border-top: 0; }
+.install-help summary { font-weight: 700; padding: 10px 0; cursor: pointer; }

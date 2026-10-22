@@ -95,7 +95,8 @@ export function HomeScreen() {
       {install.state === "ios" && (
         <div className="notice install-card">
           <strong>Install the app</strong>
-          <p>In Safari tap the Share button, then <strong>Add to Home Screen</strong>.</p>
+          <p>On iPhone: open this page in <strong>Safari</strong>, tap the <strong>Share</strong> button (square with an arrow), then <strong>Add to Home Screen</strong>, then <strong>Add</strong>.</p>
+          <button onClick={() => open({ page: "settings" })}>Full instructions in Settings</button>
         </div>
       )}
 
