@@ -1,3 +1,4 @@
+import type { SiteRates } from "./engine";
 import { newId, type AppData, type Entry } from "./model";
 import { guessAssignment, ImportError, type Assignment } from "./timesheetImport";
 
@@ -13,7 +14,15 @@ export interface AnnualDay {
   total: number;
 }
 
+/** One row of the spreadsheet's Settings tab: a site and its rates. */
+export interface AnnualSite {
+  name: string;
+  rates: SiteRates;
+}
+
 export interface AnnualSheet {
+  /** The sites and rates on the Settings tab (empty when the tab is missing). */
+  sites: AnnualSite[];
   year: number;
   /** Name from "Created by …", when present. */
   name: string;
@@ -112,9 +121,62 @@ export async function parseAnnual(bytes: ArrayBuffer | Uint8Array): Promise<Annu
       }
     }
   }
+  const sites = await readSites(zip, sheets, target, shared);
   if (days.length === 0 && !year) throw new ImportError("No days were found. This importer reads the yearly salary spreadsheet's month tabs.");
   if (!year) year = Number(days[0]?.date.slice(0, 4)) || new Date().getFullYear();
-  return { year, name, days };
+  return { year, name, days, sites };
+}
+
+const SETTINGS_FIRST_ROW = 5;
+const canonicalName = (n: string) => (n.trim().toLowerCase() === "hhsl yard" ? "HHSL Compound" : n.trim());
+const opt = (v: string | undefined) => { if (v === undefined) return undefined; const n = Number(v); return Number.isFinite(n) && n > 0 ? n : undefined; };
+
+async function readSites(zip: import("jszip"), sheets: Array<{ name: string; rid: string }>, target: Map<string, string>, shared: string[]): Promise<AnnualSite[]> {
+  const sheet = sheets.find((x) => x.name.trim().toLowerCase() === "settings");
+  if (!sheet) return [];
+  const path = (target.get(sheet.rid) ?? "").replace(/^\/?(xl\/)?/, "xl/");
+  const xml = await zip.file(path)?.async("string");
+  if (!xml) return [];
+  const grid = readGrid(xml, shared);
+  const out: AnnualSite[] = [];
+  for (let r = SETTINGS_FIRST_ROW; r < SETTINGS_FIRST_ROW + 60; r++) {
+    const raw = grid.get(`${r},1`);
+    if (!raw) { if (out.length) break; continue; }
+    const name = canonicalName(raw);
+    if (name.toLowerCase() === "all sites") continue;
+    const c = (col: number) => opt(grid.get(`${r},${col}`));
+    const site: SiteRates = {
+      payer: name.toLowerCase() === "atlantic" ? "atlantic" : "main",
+      baseRate: c(2), leadRate: c(3), showRateAboveHrs: c(4), rateAboveHrs: c(5),
+      weekday: { x1: c(6), x15: c(7), x2: c(8) },
+      holiday: { x1: c(9), x15: c(10), x2: c(11), x3: c(12) },
+      weekend: { x1: c(13), x15: c(14), x2: c(15) },
+      dailyStd: c(16), dailyLead: c(17), dailyHoliday: c(18),
+    };
+    out.push({ name, rates: JSON.parse(JSON.stringify(site)) as SiteRates });
+  }
+  return out;
+}
+
+/** The app's data with any sites from the spreadsheet's Settings tab that it does not have yet. Existing sites and rates are untouched. */
+export function withSheetSites(data: AppData, sheet: AnnualSheet): { data: AppData; added: string[] } {
+  const have = new Set(data.history.sites.flatMap((v) => Object.keys(v.value)).map((n) => n.toLowerCase()));
+  const missing = sheet.sites.filter((s) => !have.has(s.name.toLowerCase()));
+  if (missing.length === 0) return { data, added: [] };
+  const payerNames = { ...data.payerNames };
+  // A brand-new app still has the placeholder payslip name; the sheet's main group is Point Lisas / other.
+  if (payerNames.main === "Main payslip") payerNames.main = "Point Lisas / other";
+  for (const s of missing) {
+    if (payerNames[s.rates.payer] === undefined) payerNames[s.rates.payer] = s.rates.payer === "atlantic" ? "Atlantic LNG" : s.rates.payer === "main" ? "Point Lisas / other" : s.rates.payer;
+  }
+  return {
+    data: {
+      ...data,
+      payerNames,
+      history: { ...data.history, sites: data.history.sites.map((v) => ({ ...v, value: { ...v.value, ...Object.fromEntries(missing.map((s) => [s.name, structuredClone(s.rates)])) } })) },
+    },
+    added: missing.map((s) => s.name),
+  };
 }
 
 /** Guess the site for each client text, using site names, with the sheet's old "HHSL Yard" name understood. */
