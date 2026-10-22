@@ -47,6 +47,8 @@ export function HomeScreen() {
     const hero = heroRef.current;
     const stat = hero?.querySelector<HTMLElement>(".hero-stats > div:nth-child(4)");
     const slot = hero?.querySelector<HTMLElement>(".payer-slot");
+    const days = hero?.querySelector<HTMLElement>(".hero-stats > div:nth-child(3)");
+    if (hero && days && slot) hero.style.setProperty("--dx", `${Math.round((days.getBoundingClientRect().left - slot.getBoundingClientRect().left) * 10) / 10}px`);
     if (hero && stat && slot) hero.style.setProperty("--hx", `${Math.round((stat.getBoundingClientRect().left - slot.getBoundingClientRect().left) * 10) / 10}px`);
   };
   useLayoutEffect(() => {
