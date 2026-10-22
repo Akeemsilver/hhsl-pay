@@ -6,6 +6,8 @@ import { BottomSheet } from "./BottomSheet";
 import { BackIcon, DownloadIcon, EyeIcon, FilterIcon, GearIcon } from "./Icons";
 import { ExportSheet } from "./ExportSheet";
 import { TimesheetViewer } from "./TimesheetViewer";
+import { PayslipViewer } from "./PayslipViewer";
+import { ViewChooser } from "./ViewChooser";
 import { todayISO } from "../format";
 
 /**
@@ -26,7 +28,7 @@ export function TopBar({ title, subtitle, month = todayISO().slice(0, 7) }: { ti
         {subtitle && <p className="muted small">{subtitle}</p>}
       </div>
       <div className="top-actions">
-        <button className="icon gear" aria-label="View timesheet" title="View timesheet" onClick={() => open({ sub: "view" })}><EyeIcon /></button>
+        <button className="icon gear" aria-label="View timesheet or payslip" title="View timesheet or payslip" onClick={() => open({ sub: "viewpick" })}><EyeIcon /></button>
         <button className="icon gear" aria-label="Download timesheet or payslip" title="Download timesheet or payslip" onClick={() => open({ sub: "export" })}><DownloadIcon /></button>
         {sites.length > 1 && (
           <button className={`icon gear ${site ? "active" : ""}`} aria-label="Filter by location" title="Filter by location" aria-pressed={!!site} onClick={() => open({ sub: "filter" })}>
@@ -46,6 +48,8 @@ export function TopBar({ title, subtitle, month = todayISO().slice(0, 7) }: { ti
     )}
     {loc.sub === "export" && !loc.day && !loc.page && <ExportSheet month={month} />}
     {loc.sub === "view" && !loc.day && !loc.page && <TimesheetViewer month={month} />}
+    {loc.sub === "viewpick" && !loc.day && !loc.page && <ViewChooser month={month} />}
+    {loc.sub === "viewslip" && !loc.day && !loc.page && <PayslipViewer month={month} />}
     {loc.sub === "filter" && !loc.page && (
       <BottomSheet label="Filter by location" onRequestClose={back}>
         <h2>Filter by location</h2>

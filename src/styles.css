@@ -704,3 +704,7 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .sheet-backdrop.from-top .sheet { border-radius: 0 0 18px 18px; padding-top: calc(12px + env(safe-area-inset-top)); max-height: var(--vvh, 92%); }
 .pick-head { display: flex; align-items: center; justify-content: space-between; }
 .from-top .pick-list { max-height: calc(var(--vvh, 100vh) - 190px); }
+.view-choices { display: grid; gap: 12px; margin: 8px 0 16px; }
+.view-choices button { min-height: 56px; font-size: 1.05rem; }
+.pdf-pages { display: grid; gap: 10px; justify-items: center; }
+.pdf-page { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.25); max-width: none; }
