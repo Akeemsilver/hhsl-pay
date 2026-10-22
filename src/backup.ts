@@ -190,11 +190,11 @@ export async function deliver(fileName: string, content: string | Uint8Array, ty
   return download(fileName, content, type);
 }
 
-/** The ways tried when sharing the file, in order: file type and extension. One is tried each time the share button is tapped. Plain text comes first because phones accept it most readily. */
+/** The ways tried when sharing the file, in order: file type and extension. One is tried each time the share button is tapped. A plain .txt comes first: Android Chrome refuses .json files ("Permission denied") but accepts .txt. */
 export const SHARE_ATTEMPTS = [
+  { type: "text/plain", ext: ".txt" },
   { type: "text/plain", ext: ".json" },
   { type: "application/json", ext: ".json" },
-  { type: "text/plain", ext: ".txt" },
   { type: "application/octet-stream", ext: ".json" },
 ] as const;
 export const SHARE_TYPES = SHARE_ATTEMPTS;

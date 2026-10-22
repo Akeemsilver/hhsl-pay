@@ -98,20 +98,40 @@ export function ExportSheet({ month }: { month: string }) {
     to: settings.payrollEmail || DEFAULT_PAYROLL_EMAIL, name, monthName, siteLabel: settings.siteLabel || "ERT Offsite",
     days: rows.length, hours: total.t + total.t15 + total.t2 + total.t3, fileName: timesheetFileName(name, month),
   });
-  const sendToPayroll = async () => {
-    setPayrollOpen(false);
-    setBusy("payroll");
+  // The share menu only opens straight from a tap, so the file is built as soon as the payroll step opens, not on Continue.
+  const [payrollFile, setPayrollFile] = useState<{ fileName: string; bytes: Uint8Array } | null>(null);
+  const openPayroll = async () => {
     setMessage(null);
+    setPayrollFile(null);
+    setPayrollOpen(true);
     try {
       const made = await makeTimesheetXlsx(template!.bytes, settings, month, data.entries, data.history);
-      download(made.fileName, made.bytes, XLSX_MIME);
-      setMessage({ text: `Step 2 of 2: ${made.fileName} is in your Downloads. Attach it to the email that opens, then send.`, ok: true });
-      setTimeout(() => { window.location.href = mailtoLink(email); }, 700);
+      setPayrollFile({ fileName: made.fileName, bytes: made.bytes });
     } catch (e) {
+      setPayrollOpen(false);
       setMessage({ text: e instanceof TemplateError ? e.message : "Could not create the file.", ok: false });
-    } finally {
-      setBusy(null);
     }
+  };
+  const sendToPayroll = async () => {
+    if (!payrollFile) return;
+    const { fileName, bytes } = payrollFile;
+    const file = new File([bytes as BlobPart], fileName, { type: XLSX_MIME });
+    const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+    if (nav.share && nav.canShare?.({ files: [file] })) {
+      try {
+        await nav.share({ files: [file], title: email.subject, text: email.body });
+        setPayrollOpen(false);
+        setMessage({ text: "Time sheet shared.", ok: true });
+        return;
+      } catch (e) {
+        if ((e as DOMException)?.name === "AbortError") return;
+      }
+    }
+    // No share menu on this phone: save the file and open the mail app instead.
+    setPayrollOpen(false);
+    download(fileName, bytes, XLSX_MIME);
+    setMessage({ text: `${fileName} is in your Downloads. Attach it to the email that opens, then send.`, ok: true });
+    setTimeout(() => { window.location.href = mailtoLink(email); }, 700);
   };
   const downloadSlip = () => run("slip", async () => {
     const bytes = await payslipPdf(slips);
@@ -148,7 +168,7 @@ export function ExportSheet({ month }: { month: string }) {
             </>
           )}
           {rows.length > 0 && (
-            <button className="payroll-btn" disabled={!!busy || !template} onClick={() => setPayrollOpen(true)}>
+            <button className="payroll-btn" disabled={!!busy || !template} onClick={openPayroll}>
               <MailIcon /> Send to payroll
             </button>
           )}
@@ -204,7 +224,7 @@ export function ExportSheet({ month }: { month: string }) {
           </>
         )}
       </div>
-      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={sendToPayroll} />}
+      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={sendToPayroll} ready={!!payrollFile} />}
     </BottomSheet>
   );
 }
