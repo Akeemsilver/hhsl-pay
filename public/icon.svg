@@ -1,8 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#0f766e"/>
-  <g fill="none" stroke="#fff" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="116" y="132" width="280" height="260" rx="32"/>
-    <path d="M116 204h280M188 108v48M324 108v48"/>
-  </g>
-  <text x="256" y="330" font-family="Arial, Helvetica, sans-serif" font-size="116" font-weight="700" fill="#fff" text-anchor="middle">$</text>
+<rect width="512" height="512" fill="#0f766e"/>
+<rect x="92" y="112" width="328" height="304" rx="38" fill="#ffffff"/>
+<rect x="92" y="112" width="328" height="104" rx="38" fill="#0b4f4a"/>
+<rect x="92" y="170" width="328" height="46" fill="#0b4f4a"/>
+<rect x="156" y="68" width="26" height="58" rx="13" fill="#ffffff"/>
+<rect x="330" y="68" width="26" height="58" rx="13" fill="#ffffff"/>
+<text x="256" y="200" font-family="DejaVu Sans, Arial, Helvetica, sans-serif" font-weight="800" font-size="84" letter-spacing="4" text-anchor="middle" fill="#ffffff">HHSL</text>
+<g fill="#d7e4e2">
+<rect x="128" y="244" width="46" height="34" rx="8"/><rect x="196" y="244" width="46" height="34" rx="8"/><rect x="264" y="244" width="46" height="34" rx="8"/>
+<rect x="128" y="298" width="46" height="34" rx="8"/><rect x="196" y="298" width="46" height="34" rx="8"/>
+</g>
+<circle cx="356" cy="342" r="80" fill="#f5b82e" stroke="#ffffff" stroke-width="12"/>
+<text x="356" y="378" font-family="DejaVu Sans, Arial, Helvetica, sans-serif" font-weight="700" font-size="106" text-anchor="middle" fill="#0b4f4a">$</text>
 </svg>
