@@ -87,7 +87,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
 
   return (
     <>
-      <BottomSheet label={`Entries for ${date}`} onRequestClose={requestClose}>
+      <BottomSheet label={`Entries for ${date}`} onRequestClose={requestClose} onPullDismiss={leave}>
         <header className="bar">
           <h2>{WEEKDAYS[wd]} {date}</h2>
           {holidayName && <p className="hol-name">{holidayName}</p>}

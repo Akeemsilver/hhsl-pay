@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { valueOn } from "../engine";
 import { MONTHS, WEEKDAYS, daysOfMonth, hoursText, money, shiftMonth, todayISO } from "../format";
 import { useInstall } from "../install";
@@ -29,7 +30,8 @@ function shortDate(iso: string): string {
 
 export function HomeScreen() {
   const { data } = useStore();
-  const { open, selectTab } = useNav();
+  const { open, selectTab, loc } = useNav();
+  const [picked, setPicked] = useState<string | undefined>();
   const today = todayISO();
   const month = today.slice(0, 7);
   const year = Number(today.slice(0, 4));
@@ -143,7 +145,7 @@ export function HomeScreen() {
           <h2>{MONTHS[thisMonthIndex]}</h2>
           <button className="link" onClick={() => selectTab("calendar")}>Full calendar</button>
         </div>
-        <CalendarGrid month={month} days={daysOfMonth(month)} result={thisMonth} today={today} onPick={(d) => open({ day: d })} payerOrder={Object.keys(data.payerNames)} />
+        <CalendarGrid month={month} days={daysOfMonth(month)} result={thisMonth} today={today} selected={loc.day ?? picked} onPick={(d) => { setPicked(d); open({ day: d }); }} payerOrder={Object.keys(data.payerNames)} />
       </div>
 
       <section className="card">
