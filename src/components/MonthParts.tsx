@@ -15,7 +15,7 @@ import type { Entry } from "../model";
  * The tax of each payslip in small print. `groups` is how many payslip groups have income: when tax is combined there is
  * one "All sites" line, shown whenever split would have shown several, so flipping the tax method changes figures only.
  */
-export function PayerTax({ payers, groups }: { payers: Array<{ payer: string; paye: number; nis: number; surcharge: number }>; groups?: number }) {
+export function PayerTax({ payers, groups }: { payers: Array<{ payer: string; paye: number; nis: number; surcharge: number; weighted?: number }>; groups?: number }) {
   const { data } = useStore();
   const combinedNote = payers.length === 1 && payers[0]!.payer === "all" && (groups ?? 0) >= 2;
   if (payers.length < 2 && !combinedNote) return null;
@@ -23,8 +23,8 @@ export function PayerTax({ payers, groups }: { payers: Array<{ payer: string; pa
     <ul className="payer-tax" aria-label="Tax for each payslip">
       {payers.map((p) => (
         <li key={p.payer}>
-          <b>{p.payer === "all" ? "All sites" : payerLabel(data.payerNames, p.payer)}</b>
-          <span>PAYE <i className="c-paye">{money(p.paye)}</i> · NIS {money(p.nis)} · Health surcharge {money(p.surcharge)}</span>
+          <b>{p.payer === "all" ? "All sites" : payerLabel(data.payerNames, p.payer)}{p.weighted !== undefined && <em>{hoursText(p.weighted)} h</em>}</b>
+          <span>PAYE <i className="c-paye">{money(p.paye)}</i> · NIS {money(p.nis)} · Surcharge {money(p.surcharge)}</span>
         </li>
       ))}
     </ul>

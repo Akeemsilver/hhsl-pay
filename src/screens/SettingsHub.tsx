@@ -14,6 +14,9 @@ import { useTheme, type ThemePref } from "../theme";
 import { PageHeader } from "../components/TopBar";
 import { CalendarIcon, ChevronRight, FileIcon, MapPinIcon, SaveIcon, ShieldIcon, UsersIcon } from "../components/Icons";
 
+/** The starter kit is saved as a .txt so the download and the share are the same file. */
+const kitFileName = () => backupFileName("rates", false).replace(/\.json$/, ".txt");
+
 export function SettingsHub() {
   const { open, selectTab } = useNav();
   const { data, persistent, update, replace } = useStore();
@@ -60,7 +63,7 @@ export function SettingsHub() {
     if (!kit) { setKitMessage("Getting the starter kit ready, try again in a moment."); return; }
     const tried = attempt.current;
     // Saved to Downloads first, in the same tap, so the file is safe even if the share menu is refused.
-    if (saveFirst && !savedKit.current) { download(backupFileName("rates", false), kit); savedKit.current = true; }
+    if (saveFirst && !savedKit.current) { download(kitFileName(), kit, "text/plain"); savedKit.current = true; }
     const { result, error, type } = await shareFile(backupFileName("rates", false), kit, tried);
     if (result === "shared") { attempt.current = 0; savedKit.current = false; setKitMessage("Starter kit saved to your Downloads and shared."); }
     else if (result === "cancelled") { savedKit.current = false; setKitMessage("Starter kit saved to your Downloads."); }
@@ -73,7 +76,7 @@ export function SettingsHub() {
     } else setKitMessage("This browser cannot open the share menu. Use “Download starter kit” and send the file from your Downloads.");
   };
   const saveKit = async () => {
-    download(backupFileName("rates", false), await kitText());
+    download(kitFileName(), await kitText(), "text/plain");
     setKitMessage("Starter kit saved to your Downloads. Send that file on WhatsApp.");
   };
   const sites = new Set(data.history.sites.flatMap((v) => Object.keys(v.value))).size;

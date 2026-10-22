@@ -610,7 +610,11 @@ button.icon.gear, .bar.page button.icon { transition: box-shadow .15s, transform
 
 .payer-tax { list-style: none; margin: 10px 0 0; padding: 8px 0 0; border-top: 1px solid var(--edge); display: grid; gap: 4px; font-size: 0.72rem; color: var(--muted); }
 .payer-tax li { display: flex; flex-direction: column; gap: 1px; }
+.payer-tax li > span { white-space: nowrap; }
+.payer-tax li { position: relative; }
 .payer-tax b { color: var(--text); font-weight: 600; }
+/* Starts exactly under the Paid hours figure: the fourth of the four equal columns above (6px gaps). */
+.payer-tax b em { position: absolute; top: 0; left: var(--hx, calc(3 * ((100% - 18px) / 4 + 6px))); font-style: normal; font-weight: 400; font-size: inherit; line-height: inherit; color: var(--text); white-space: nowrap; }
 .payer-tax i { font-style: normal; }
 input[hidden] { display: none !important; }
 .import-preview { margin-top: 12px; display: grid; gap: 10px; }

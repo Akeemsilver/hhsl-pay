@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { valueOn } from "../engine";
 import { MONTHS, WEEKDAYS, daysOfMonth, hoursText, money, shiftMonth, todayISO } from "../format";
 import { useInstall } from "../install";
@@ -41,6 +41,20 @@ export function HomeScreen() {
   const month = today.slice(0, 7);
   const year = Number(today.slice(0, 4));
 
+  // The site hours line up exactly under the Paid hours figure, whatever the width of the other columns.
+  const heroRef = useRef<HTMLElement>(null);
+  const alignHours = () => {
+    const hero = heroRef.current;
+    const stat = hero?.querySelector<HTMLElement>(".hero-stats > div:nth-child(4)");
+    const slot = hero?.querySelector<HTMLElement>(".payer-slot");
+    if (hero && stat && slot) hero.style.setProperty("--hx", `${Math.round((stat.getBoundingClientRect().left - slot.getBoundingClientRect().left) * 10) / 10}px`);
+  };
+  useLayoutEffect(() => {
+    alignHours();
+    window.addEventListener("resize", alignHours);
+    return () => window.removeEventListener("resize", alignHours);
+  });
+
   const { site: filterSite } = useSiteFilter();
   const install = useInstall();
   const shownResult = useMonth(shown);
@@ -62,7 +76,7 @@ export function HomeScreen() {
     ...shownResult.entries.filter((e) => e.pay.total > 0).map((e) => e.entry.date),
     ...(filterSite ? [] : [...othersByDate(data.entries, shown).keys()]),
   ]);
-  const hours = shownResult.entries.reduce((s, e) => s + e.entry.hours, 0);
+  const hours = shownResult.payers.reduce((s, p) => s + p.weighted, 0);
   const diff = shownResult.gross - lastMonth.gross;
 
   const rules = valueOn(data.history.tax, today);
@@ -129,7 +143,7 @@ export function HomeScreen() {
         </div>
       )}
 
-      <section className="hero" aria-label={`Totals for ${shown}`}>
+      <section className="hero" ref={heroRef} aria-label={`Totals for ${shown}`}>
         <div className="hero-top">
           <span><i className="dot dot-gross" />Gross · {MONTHS[Number(shown.slice(5)) - 1]}{shown.slice(0, 4) !== String(year) ? ` ${shown.slice(0, 4)}` : ""}{shown === month ? " so far" : ""}</span>
           {lastMonth.gross > 0 && (
@@ -141,7 +155,7 @@ export function HomeScreen() {
           <div><span><i className="dot dot-net" />Net</span><strong className="c-net">{money(shownResult.net)}</strong></div>
           <div><span><i className="dot dot-paye" />PAYE</span><strong className="c-paye">{money(shownResult.paye)}</strong></div>
           <div><span>Days</span><strong>{worked.size}</strong></div>
-          <div><span>Hours</span><strong>{hoursText(hours)} h</strong></div>
+          <div><span>Paid hours</span><strong>{hoursText(hours)} h</strong></div>
         </div>
         <AverageLine gross={shownYear.map((m) => m.gross)} net={shownYear.map((m) => m.net)} index={Number(shown.slice(5)) - 1} />
         <div className="payer-slot">
