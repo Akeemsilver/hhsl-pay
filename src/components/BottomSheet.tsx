@@ -5,7 +5,7 @@ const DISMISS_DISTANCE = 110;
 
 /**
  * A bottom sheet that closes when you tap outside it, press Escape or the phone's Back button (the owner wires Back),
- * or pull it down. Pulling down only starts when the content is scrolled to the top, so scrolling still works.
+ * or pull it down by its handle or title bar. The content below scrolls freely and never pulls the sheet.
  * The owner decides what "close" means, for example asking to discard unsaved changes.
  */
 export function BottomSheet({ label, onRequestClose, onPullDismiss, top, fromTop, children }: {
@@ -22,7 +22,7 @@ export function BottomSheet({ label, onRequestClose, onPullDismiss, top, fromTop
     const el = sheet.current;
     if (!el || fromTop) return;
     const backdrop = el.parentElement;
-    const HANDLE = ".grabber, .bar";
+    const HANDLE = ".grabber, .bar, .time-head, .sheet-head";
     let startY = 0, dy = 0, tracking = false, dragging = false, pointerId = -1, lastY = 0, lastT = 0, speed = 0;
     let settling = false;
 
@@ -59,7 +59,7 @@ export function BottomSheet({ label, onRequestClose, onPullDismiss, top, fromTop
       window.setTimeout(() => { (pull.current ?? close.current)(); }, ms);
     };
 
-    // Grabber and title bar: pointer events with touch-action none, so the browser never takes the gesture away.
+    // Only the handle and the title bar pull the sheet (touch-action none there, so the browser never takes the gesture).
     // A sheet opened inside another one (the site search, the time picker) must not pull the sheet behind it.
     const mine = (e: Event) => (e.target as Element | null)?.closest(".sheet") === el;
     const onDown = (e: PointerEvent) => {
@@ -80,40 +80,15 @@ export function BottomSheet({ label, onRequestClose, onPullDismiss, top, fromTop
     };
     const onPointerCancel = (e: PointerEvent) => { if (e.pointerId === pointerId) { pointerId = -1; if (dragging) springBack(); tracking = false; } };
 
-    // The rest of the sheet: pulling down while the content is scrolled to the top.
-    const inHandle = (e: TouchEvent) => !!(e.target as Element).closest(HANDLE);
-    const onTouchStart = (e: TouchEvent) => {
-      if (settling || !mine(e) || inHandle(e)) return;
-      startY = e.touches[0]!.clientY; lastY = startY; lastT = performance.now(); speed = 0;
-      tracking = true; dragging = false; dy = 0;
-    };
-    const onTouchMove = (e: TouchEvent) => {
-      if (!tracking || pointerId !== -1 || inHandle(e)) return;
-      const d = e.touches[0]!.clientY - startY;
-      if (!dragging && d > 8 && el.scrollTop <= 0) dragging = true;
-      if (dragging) { e.preventDefault(); track(e.touches[0]!.clientY); move(d); }
-    };
-    const onTouchEnd = () => { if (pointerId !== -1 || !tracking) return; if (dragging) release(); tracking = false; };
-    // A cancelled touch is the browser taking over, not you letting go: settle back rather than close.
-    const onTouchCancel = () => { if (pointerId !== -1) return; if (dragging) springBack(); tracking = false; };
-
     el.addEventListener("pointerdown", onDown);
     el.addEventListener("pointermove", onPointerMove);
     el.addEventListener("pointerup", onUp);
     el.addEventListener("pointercancel", onPointerCancel);
-    el.addEventListener("touchstart", onTouchStart, { passive: true });
-    el.addEventListener("touchmove", onTouchMove, { passive: false });
-    el.addEventListener("touchend", onTouchEnd);
-    el.addEventListener("touchcancel", onTouchCancel);
     return () => {
       el.removeEventListener("pointerdown", onDown);
       el.removeEventListener("pointermove", onPointerMove);
       el.removeEventListener("pointerup", onUp);
       el.removeEventListener("pointercancel", onPointerCancel);
-      el.removeEventListener("touchstart", onTouchStart);
-      el.removeEventListener("touchmove", onTouchMove);
-      el.removeEventListener("touchend", onTouchEnd);
-      el.removeEventListener("touchcancel", onTouchCancel);
     };
   }, []);
 

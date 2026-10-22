@@ -207,3 +207,22 @@ describe("other job hours", () => {
     expect(rows[0]).toMatchObject({ client: "Other job", hours: { t: 3.5, t15: 0, t2: 0, t3: 0 } });
   });
 });
+
+import { timesheetSummary as _sum } from "../src/timesheet";
+describe("timesheetSummary", () => {
+  it("reads out whole sites, single roles and what stays off", () => {
+    const t = _sum([{ site: "HHSL Compound", label: "HHSL" }, { site: "PLNL", role: "Client medic", label: "PLNL Medic" }], ["HHSL Compound", "PLNL", "Atlantic"], true, false);
+    expect(t).toBe("On your timesheet: every day at HHSL Compound; client medic days at PLNL; other jobs. Other work at Atlantic stays off.");
+  });
+});
+
+import { withComputedHours, siteHasLunch } from "../src/model";
+describe("sites without a lunch check", () => {
+  it("pay the whole time between start and end", () => {
+    const e = { id: "1", date: "2026-10-01", site: "HHSL Compound", hours: 0, detailed: true, startTime: "07:00", endTime: "19:00" } as never;
+    expect(withComputedHours(e, true).hours).toBe(11);
+    expect(withComputedHours(e, false).hours).toBe(12);
+    expect(siteHasLunch(undefined)).toBe(true);
+    expect(siteHasLunch({ lunch: false } as never)).toBe(false);
+  });
+});

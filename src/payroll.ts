@@ -11,7 +11,7 @@ export function payrollEmail(input: { to: string; name: string; monthName: strin
     to: input.to,
     subject: `Time Sheet - ${name} - ${input.monthName}`,
     body: [
-      "Hello,",
+      "Good day,",
       "",
       `Attached is my ${input.monthName} time sheet.`,
       "",

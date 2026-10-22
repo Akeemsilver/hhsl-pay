@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
-import { SitePicker } from "../components/SitePicker";
-import { DEFAULT_PAYROLL_EMAIL, emptyTimesheetSettings, type TimesheetRule } from "../timesheet";
+import { TimesheetJobs } from "../components/TimesheetJobs";
+import { DEFAULT_PAYROLL_EMAIL, emptyTimesheetSettings } from "../timesheet";
 import { useTemplate } from "../hooks";
-import { DEFAULT_ROLES, userNameOf } from "../model";
+import { userNameOf } from "../model";
 import { useStore } from "../store";
 import { PageHeader } from "../components/TopBar";
 
@@ -13,25 +13,6 @@ export function TimesheetPage() {
   const { template, save, clear } = useTemplate();
   const fileInput = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string | null>(null);
-
-  const sites = new Map<string, string[]>();
-  for (const v of data.history.sites) for (const [name, s] of Object.entries(v.value)) {
-    const roles = new Set([...DEFAULT_ROLES, ...(sites.get(name) ?? []), ...Object.keys(s.roles ?? {})]);
-    sites.set(name, [...roles]);
-  }
-  const siteNames = [...sites.keys()];
-  const [site, setSite] = useState(siteNames[0] ?? "");
-  const [role, setRole] = useState("");
-  const [label, setLabel] = useState("");
-  const roles = sites.get(site) ?? [];
-  const suggested = role ? `${site} ${role}` : site;
-
-  const addRule = () => {
-    const rule: TimesheetRule = { site, role: role || undefined, label: (label || suggested).trim() };
-    setSettings({ rules: [...settings.rules, rule] });
-    setLabel("");
-  };
-  const duplicate = settings.rules.some((r) => r.site === site && (r.role ?? "") === role);
 
   return (
     <>
@@ -51,45 +32,7 @@ export function TimesheetPage() {
         </label>
       </section>
 
-      <section className="card">
-        <h2>Other jobs</h2>
-        <p className="muted small">All other jobs (pickups, deliveries) go on the timesheet automatically, each as its own row named “Other job - what it was”, with the hours from its start and end time. Once you enter an amount they are also added to the payslip. Which payslip they go on is set in Settings, Payslips.</p>
-      </section>
-
-      <section className="card">
-        <h2>Jobs that go on the timesheet</h2>
-        <p className="muted small">Only these jobs are listed when you download. Client medic jobs at any site are always included automatically (named “Site Medic”, e.g. “PLNL Medic”). Everything else stays off the form.</p>
-        {settings.rules.length === 0 ? <p className="muted">None yet. Add your first below.</p> : (
-          <ul className="rule-list">
-            {settings.rules.map((r, i) => (
-              <li key={`${r.site}|${r.role ?? ""}`}>
-                <span>
-                  {r.site} · {r.role ?? "any role"}
-                  <small>Client column: “{r.label}”</small>
-                </span>
-                <button className="icon" aria-label={`Remove ${r.site} ${r.role ?? ""}`} onClick={() => setSettings({ rules: settings.rules.filter((_, j) => j !== i) })}>✕</button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {siteNames.length === 0 ? <p className="muted">Add your sites first under Site locations & rates.</p> : (
-          <>
-            <div className="grid2">
-              <SitePicker value={site} names={siteNames} onPick={(n) => { setSite(n); setRole(""); setLabel(""); }} />
-              <label>Role
-                <select value={role} onChange={(e) => { setRole(e.target.value); setLabel(""); }}>
-                  <option value="">Any role</option>
-                  {roles.map((r) => <option key={r}>{r}</option>)}
-                </select>
-              </label>
-            </div>
-            <label>Client column text
-              <input value={label} placeholder={suggested} onChange={(e) => setLabel(e.target.value)} />
-            </label>
-            <button className="primary" disabled={!site || duplicate} onClick={addRule}>{duplicate ? "Already added" : "Add to timesheet"}</button>
-          </>
-        )}
-      </section>
+      <TimesheetJobs />
 
       <section className="card">
         <h2>Time sheet template</h2>

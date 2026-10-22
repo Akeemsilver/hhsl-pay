@@ -23,6 +23,8 @@ export interface RoleRates {
 export interface SiteRates {
   /** Which payslip this site's income lands on; each payer gets its own PAYE/NIS calculation. */
   payer: string;
+  /** Does a job here have a lunch check (unpaid lunch taken off)? Yes unless set to false. */
+  lunch?: boolean;
   baseRate?: number;
   leadRate?: number;
   /** If set, the hourly rate only applies once hours exceed this; otherwise it is blank (rate 0). */

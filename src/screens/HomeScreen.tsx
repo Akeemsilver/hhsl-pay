@@ -214,7 +214,7 @@ export function HomeScreen() {
                 <button onClick={() => open({ day: e.date })}>
                   <span className="when">{shortDate(e.date)}</span>
                   <span className="what">
-                    {isOther(e) ? `Other · ${e.description || "no description"}` : <>{e.site}{e.hours > 0 && ` · ${hoursText(e.hours)} h`}{e.holiday && " · holiday"}</>}
+                    {isOther(e) ? `Other · ${e.description || "no description"}` : <>{e.site}{e.hours > 0 && ` · ${hoursText(e.hours)} h`}{e.holiday && " · HOL/TAR"}</>}
                   </span>
                   <span className="amount">{isOther(e) ? "" : money(siteTotal(e))}</span>
                 </button>
