@@ -1,4 +1,5 @@
-import { applyKit, BadBackup, isEncrypted, parse, PasswordRequired, type RatesKit } from "./backup";
+import { saveTemplate } from "./storage";
+import { applyKit, BadBackup, fromB64, isEncrypted, parse, PasswordRequired, type RatesKit } from "./backup";
 import type { AppData } from "./model";
 
 /** The address of this app, for sharing: where it is hosted, including the folder (e.g. https://name.github.io/hhsl-pay/). */
@@ -9,7 +10,7 @@ export function appLink(): string {
 
 export const siteCount = (data: Pick<AppData, "history">) => new Set(data.history.sites.flatMap((v) => Object.keys(v.value))).size;
 
-export interface KitResult { data: AppData; sites: number; groups: number }
+export interface KitResult { data: AppData; sites: number; groups: number; template: boolean }
 
 /** Read a starter kit (rates file) and return the data with its sites, rates and groups applied. Throws a readable Error. */
 export async function readKit(file: File, data: AppData): Promise<KitResult> {
@@ -25,7 +26,12 @@ export async function readKit(file: File, data: AppData): Promise<KitResult> {
     if (e instanceof BadBackup) throw new Error(e.message);
     throw e instanceof Error ? e : new Error("Could not read that file.");
   }
+  let template = false;
+  if (kit.timesheetTemplate?.data) {
+    const bytes = fromB64(kit.timesheetTemplate.data);
+    template = await saveTemplate({ name: kit.timesheetTemplate.name, bytes: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer });
+  }
   const next = applyKit(data, kit);
   const last = kit.sites[kit.sites.length - 1]?.value ?? {};
-  return { data: next, sites: Object.keys(last).length, groups: new Set(Object.values(last).map((s) => s.payer)).size };
+  return { data: next, sites: Object.keys(last).length, groups: new Set(Object.values(last).map((s) => s.payer)).size, template };
 }

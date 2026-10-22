@@ -1,6 +1,7 @@
 import type { RuleHistory } from "./engine";
 import type { AppData } from "./model";
 import type { TimesheetRule } from "./timesheet";
+import { allSiteColors } from "./siteColor";
 
 const APP = "hhsl-salary-tracker";
 
@@ -11,6 +12,17 @@ export interface RatesKit extends RuleHistory {
   payerNames?: Record<string, string>;
   timesheetRules?: TimesheetRule[];
   siteLabel?: string;
+  payrollEmail?: string;
+  /** Which payslip group other jobs are paid and taxed on. */
+  otherPayer?: string;
+  /** Split or combined tax, and from which month. */
+  taxMode?: AppData["taxMode"];
+  /** Public holiday edits (for example Divali). */
+  holidays?: AppData["holidays"];
+  /** Calendar colour per site (0–11), keyed by lower-case site name. */
+  siteColors?: AppData["siteColors"];
+  /** The company time sheet form (.xlsx), so a colleague does not have to find it. Sent inside the kit, never kept in the app's public code. */
+  timesheetTemplate?: { name: string; data: string };
 }
 
 export interface Parsed {
@@ -21,13 +33,19 @@ export interface Parsed {
 }
 
 /** The starter kit for this phone's current setup. */
-export function ratesKitOf(data: AppData): RatesKit {
+export function ratesKitOf(data: AppData, template?: { name: string; bytes: ArrayBuffer } | null): RatesKit {
   return {
+    ...(template ? { timesheetTemplate: { name: template.name, data: toB64(new Uint8Array(template.bytes)) } } : {}),
     sites: data.history.sites,
     tax: data.history.tax,
     payerNames: data.payerNames,
     timesheetRules: data.timesheet?.rules,
     siteLabel: data.timesheet?.siteLabel,
+    payrollEmail: data.timesheet?.payrollEmail,
+    otherPayer: data.otherPayer,
+    taxMode: data.taxMode,
+    holidays: data.holidays,
+    siteColors: allSiteColors(data),
   };
 }
 
@@ -37,8 +55,12 @@ export function applyKit(data: AppData, kit: RatesKit): AppData {
     ...data,
     history: { sites: kit.sites, tax: kit.tax },
     payerNames: { ...data.payerNames, ...(kit.payerNames ?? {}) },
-    timesheet: kit.timesheetRules || kit.siteLabel
-      ? { name: data.timesheet?.name ?? "", siteLabel: kit.siteLabel ?? data.timesheet?.siteLabel ?? "ERT Offsite", rules: kit.timesheetRules ?? data.timesheet?.rules ?? [], payrollEmail: data.timesheet?.payrollEmail }
+    otherPayer: kit.otherPayer ?? data.otherPayer,
+    taxMode: kit.taxMode ?? data.taxMode,
+    holidays: kit.holidays ?? data.holidays,
+    siteColors: kit.siteColors ? { ...data.siteColors, ...kit.siteColors } : data.siteColors,
+    timesheet: kit.timesheetRules || kit.siteLabel || kit.payrollEmail
+      ? { name: data.timesheet?.name ?? "", siteLabel: kit.siteLabel ?? data.timesheet?.siteLabel ?? "ERT Offsite", rules: kit.timesheetRules ?? data.timesheet?.rules ?? [], payrollEmail: kit.payrollEmail ?? data.timesheet?.payrollEmail, includeOther: data.timesheet?.includeOther }
       : data.timesheet,
   };
 }
@@ -55,12 +77,12 @@ interface Envelope {
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
-function toB64(bytes: Uint8Array): string {
+export function toB64(bytes: Uint8Array): string {
   let s = "";
   for (const b of bytes) s += String.fromCharCode(b);
   return btoa(s);
 }
-function fromB64(text: string): Uint8Array {
+export function fromB64(text: string): Uint8Array {
   const s = atob(text);
   const out = new Uint8Array(s.length);
   for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);

@@ -96,8 +96,10 @@ describe("Simple and Detailed jobs", () => {
     expect(back.endTime).toBeUndefined();
   });
 
-  it("never touches an other job", () => {
+  it("fills an other job's hours from its times, and leaves typed hours alone without times", () => {
     const other: Entry = { id: "2", date: "2026-07-01", kind: "other", site: "", hours: 0, startTime: "08:00", endTime: "10:00" };
-    expect(withComputedHours(other)).toBe(other);
+    expect(withComputedHours(other).hours).toBe(2);
+    const typed: Entry = { id: "3", date: "2026-07-01", kind: "other", site: "", hours: 3.5 };
+    expect(withComputedHours(typed)).toBe(typed);
   });
 });

@@ -95,7 +95,8 @@ export function HomeScreen() {
       {install.state === "ios" && (
         <div className="notice install-card">
           <strong>Install the app</strong>
-          <p>In Safari tap the Share button, then <strong>Add to Home Screen</strong>.</p>
+          <p>On iPhone: open this page in <strong>Safari</strong>, tap the <strong>Share</strong> button (square with an arrow), then <strong>Add to Home Screen</strong>, then <strong>Add</strong>.</p>
+          <button onClick={() => open({ page: "settings" })}>Full instructions in Settings</button>
         </div>
       )}
 
@@ -145,7 +146,7 @@ export function HomeScreen() {
           <h2>{MONTHS[thisMonthIndex]}</h2>
           <button className="link" onClick={() => selectTab("calendar")}>Full calendar</button>
         </div>
-        <CalendarGrid month={month} days={daysOfMonth(month)} result={thisMonth} today={today} selected={loc.day ?? picked} onPick={(d) => { setPicked(d); open({ day: d }); }} payerOrder={Object.keys(data.payerNames)} />
+        <CalendarGrid month={month} days={daysOfMonth(month)} result={thisMonth} today={today} selected={loc.day ?? picked} onPick={(d) => { setPicked(d); open({ day: d }); }} />
       </div>
 
       <section className="card">

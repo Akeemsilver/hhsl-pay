@@ -1,3 +1,5 @@
+import { loadTemplate } from "../storage";
+import { InstallHelp } from "../components/InstallHelp";
 import { appLink, siteCount } from "../kit";
 import { backupFileName, deliver, download, ratesKitOf, serialize } from "../backup";
 import { useNav } from "../nav";
@@ -37,7 +39,7 @@ export function SettingsHub() {
       else await copyLink();
     } catch { /* cancelled */ }
   };
-  const kitText = () => serialize("rates", ratesKitOf(data));
+  const kitText = async () => serialize("rates", ratesKitOf(data, await loadTemplate()));
   const shareKit = async () => {
     try {
       const how = await deliver(backupFileName("rates", false), await kitText());
@@ -53,6 +55,11 @@ export function SettingsHub() {
     <>
       <PageHeader title="Settings" />
 
+      <h2 className="section-title">Install on your phone</h2>
+      <section className="card">
+        <InstallHelp />
+      </section>
+
       <h2 className="section-title">Share this app</h2>
       <section className="card share-app">
         <p className="muted small">To give a colleague the app: send them the link, then send the starter kit file with your pay rates. On their first start the app asks for that file.</p>
@@ -63,7 +70,7 @@ export function SettingsHub() {
           <button onClick={copyLink}>{copied ? "Copied ✓" : "Copy link"}</button>
           <button onClick={() => void shareLink()}>Share link</button>
         </div>
-        <p className="muted small">Starter kit: your sites, rates and tax rules (no days, no pay, no name). It has to be sent as a file because this app's code is public, and company rates must never be put in public code. Only send it to colleagues.</p>
+        <p className="muted small">Starter kit: your sites, rates, tax rules and the timesheet form (no days, no pay, no name). It has to be sent as a file because this app's code is public, and company rates must never be put in public code. Only send it to colleagues.</p>
         <div className="row">
           <button className="primary" disabled={sitesCount === 0} onClick={() => void shareKit()}>Share starter kit</button>
           <button disabled={sitesCount === 0} onClick={saveKit}>Download starter kit</button>

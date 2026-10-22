@@ -51,6 +51,11 @@ export function TimesheetPage() {
       </section>
 
       <section className="card">
+        <h2>Other jobs</h2>
+        <p className="muted small">All other jobs (pickups, deliveries) go on the timesheet automatically, each as its own row named “Other job - what it was”, with the hours from its start and end time. Once you enter an amount they are also added to the payslip. Which payslip they go on is set in Settings, Payslips.</p>
+      </section>
+
+      <section className="card">
         <h2>Jobs that go on the timesheet</h2>
         <p className="muted small">Only these jobs are listed when you download. Client medic jobs at any site are always included automatically (named “Site Medic”, e.g. “PLNL Medic”). Everything else stays off the form.</p>
         {settings.rules.length === 0 ? <p className="muted">None yet. Add your first below.</p> : (

@@ -48,11 +48,11 @@ describe("which jobs go on the timesheet", () => {
     expect(buildTimesheet("2026-10", entries, history, rules).rows).toEqual([]);
   });
 
-  it("puts other jobs on the timesheet, named by the job, with hours from their times", () => {
+  it("puts other jobs on the timesheet with the description in the client column and hours from their times", () => {
     const entries: Entry[] = [{ id: "1", date: "2026-10-05", kind: "other", site: "", hours: 0, description: "Airport pickup", startTime: "08:00", endTime: "10:30" }];
     const rows = buildTimesheet("2026-10", entries, history, rules).rows;
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ client: "Other job - Airport pickup", onDuty: "08:00", offDuty: "10:30", hours: { t: 2.5, t15: 0, t2: 0, t3: 0 } });
+    expect(rows[0]).toMatchObject({ client: "Airport pickup", onDuty: "08:00", offDuty: "10:30", hours: { t: 2.5, t15: 0, t2: 0, t3: 0 } });
   });
 
   it("matches site and role names without caring about case", () => {
@@ -189,5 +189,21 @@ describe("filling the template", () => {
   it("names the file after the person and month", () => {
     expect(timesheetFileName("akeem SILVERTON", "2026-10")).toBe("HHSL-Time-Sheet-Akeem-Silverton-2026-10.xlsx");
     expect(timesheetFileName("", "2026-10")).toBe("HHSL-Time-Sheet-2026-10.xlsx");
+  });
+});
+
+describe("other jobs on the timesheet can be turned off", () => {
+  it("leaves them out when asked", () => {
+    const entries: Entry[] = [{ id: "1", date: "2026-10-05", kind: "other", site: "", hours: 0, description: "Pickup", startTime: "08:00", endTime: "09:00" }];
+    expect(buildTimesheet("2026-10", entries, history, rules, true).rows).toHaveLength(1);
+    expect(buildTimesheet("2026-10", entries, history, rules, false).rows).toHaveLength(0);
+  });
+});
+
+describe("other job hours", () => {
+  it("uses typed hours when there are no times, and shows 'Other job' with no description", () => {
+    const entries: Entry[] = [{ id: "1", date: "2026-10-05", kind: "other", site: "", hours: 3.5 }];
+    const rows = buildTimesheet("2026-10", entries, history, rules).rows;
+    expect(rows[0]).toMatchObject({ client: "Other job", hours: { t: 3.5, t15: 0, t2: 0, t3: 0 } });
   });
 });

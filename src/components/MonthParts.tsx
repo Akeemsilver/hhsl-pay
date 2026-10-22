@@ -3,6 +3,7 @@ import { correctionKey, othersByDate, payerLabel } from "../model";
 import { useSiteFilter } from "../filter";
 import { holidayMap } from "../holidays";
 import { useStore } from "../store";
+import { SITE_COLORS, siteColorIndex } from "../siteColor";
 import type { MonthResult } from "../engine";
 import type { Entry } from "../model";
 
@@ -115,7 +116,8 @@ export function DayList({ days, result, today, onPick }: { days: string[]; resul
               <span className="entries">
                 {priced.length === 0 && extra.length === 0 && <span className="muted">—</span>}
                 {priced.map(({ entry, pay }) => (
-                  <span key={entry.id} className="chip">
+                  <span key={entry.id} className="chip" style={{ background: `color-mix(in srgb, ${SITE_COLORS[siteColorIndex(data, entry.site)]!.hex} 22%, var(--card))` }}>
+                    <i className="sw" style={{ background: SITE_COLORS[siteColorIndex(data, entry.site)]!.hex }} />
                     {entry.site}
                     {entry.hours > 0 && ` · ${hoursText(entry.hours)} h`}
                     {entry.lead && " · lead"}
@@ -140,21 +142,15 @@ export function DayList({ days, result, today, onPick }: { days: string[]; resul
 }
 
 /** Month grid, Sunday first. Each cell shows the day's total and the site(s) worked, plus other jobs. */
-export function CalendarGrid({ month, days, result, today, onPick, payerOrder, selected }: {
-  month: string; days: string[]; result: MonthResult<Entry>; today: string; onPick: (d: string) => void; payerOrder: string[]; selected?: string | null;
+export function CalendarGrid({ month, days, result, today, onPick, selected }: {
+  month: string; days: string[]; result: MonthResult<Entry>; today: string; onPick: (d: string) => void; selected?: string | null;
 }) {
   const { data } = useStore();
   const hol = holidayMap(days.map((d) => Number(d.slice(0, 4))), data);
   const { site: fsite } = useSiteFilter();
   const others = fsite ? new Map<string, Entry[]>() : othersByDate(data.entries, month);
+  const legend = [...new Set(result.entries.map((e) => e.entry.site))];
   const lead = new Date(`${month}-01T00:00:00Z`).getUTCDay();
-  const siteOf = (name: string) => {
-    for (const v of data.history.sites) {
-      const hit = Object.entries(v.value).find(([k]) => k.toLowerCase() === name.toLowerCase());
-      if (hit) return hit[1];
-    }
-    return undefined;
-  };
   return (
     <section className="card calendar" aria-label="Calendar">
       <div className="cal-head" aria-hidden="true">
@@ -168,11 +164,11 @@ export function CalendarGrid({ month, days, result, today, onPick, payerOrder, s
           const extra = others.get(date) ?? [];
           const total = priced.reduce((s, e) => s + e.pay.total, 0);
           const first = priced[0];
-          const tone = first ? Math.max(0, payerOrder.indexOf(siteOf(first.entry.site)?.payer ?? "")) % 4 : 0;
+          const tone = first ? siteColorIndex(data, first.entry.site) : 0;
           const state = first ? `worked tone${tone}` : extra.length ? "worked other" : "";
           const jobCount = priced.length + extra.length;
           const dotTones = [
-            ...priced.map((p) => Math.max(0, payerOrder.indexOf(siteOf(p.entry.site)?.payer ?? "")) % 4),
+            ...priced.map((p) => siteColorIndex(data, p.entry.site)),
             ...extra.map(() => "o"),
           ].slice(0, 4);
           return (
@@ -206,6 +202,11 @@ export function CalendarGrid({ month, days, result, today, onPick, payerOrder, s
           );
         })}
       </div>
+      {legend.length > 0 && (
+        <p className="legend">
+          {legend.map((n) => <span key={n} className="k"><i style={{ background: SITE_COLORS[siteColorIndex(data, n)]!.hex }} />{n}</span>)}
+        </p>
+      )}
     </section>
   );
 }

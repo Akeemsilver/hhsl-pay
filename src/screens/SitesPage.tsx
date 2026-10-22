@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { valueOn, type RoleRates, type SiteRates, type SiteTable, type TierCaps } from "../engine";
 import { DEFAULT_ROLES, emptySite, isOther, payerLabel, rolesFor } from "../model";
 import { useStore } from "../store";
+import { SITE_COLORS, siteColorIndex } from "../siteColor";
 import { PageHeader } from "../components/TopBar";
 import { NumInput, TakeEffect, versionLabel, type Num } from "../components/settingsParts";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -88,6 +89,8 @@ function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename,
   name: string; saved: SiteRates; payers: Record<string, string>; firstDate: string; impactFor: (draft: SiteRates, from: string) => Impact;
   onSave: (draft: SiteRates, from: string) => void; onRename: (n: string) => void; onRemove: () => void; onRenameRole: (from: string, to: string) => void;
 }) {
+  const { data, update } = useStore();
+  const colorNow = siteColorIndex(data, name);
   const savedKey = JSON.stringify(saved);
   const [site, setSite] = useState<SiteRates>(saved);
   useEffect(() => setSite(JSON.parse(savedKey) as SiteRates), [savedKey]);
@@ -108,6 +111,15 @@ function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename,
       <label>Site name
         <input value={draft} onChange={(e) => setDraft(e.target.value)} onBlur={() => draft.trim() && draft !== name && onRename(draft.trim())} />
       </label>
+      <div>
+        <span className="muted small">Calendar colour</span>
+        <div className="swatches">
+          {SITE_COLORS.map((c, i) => (
+            <button key={c.name} type="button" className={`swatch ${i === colorNow ? "on" : ""}`} style={{ background: c.hex }} aria-label={c.name} aria-pressed={i === colorNow}
+              onClick={() => update((d) => ({ ...d, siteColors: { ...d.siteColors, [name.toLowerCase()]: i } }))} />
+          ))}
+        </div>
+      </div>
       <label>Payslip
         <select value={site.payer} onChange={(e) => set("payer", e.target.value)}>
           {Object.entries(payers).map(([id, n]) => <option key={id} value={id}>{n}</option>)}
