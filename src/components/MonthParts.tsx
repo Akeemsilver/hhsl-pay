@@ -23,7 +23,7 @@ export function PayerTax({ payers, groups }: { payers: Array<{ payer: string; pa
     <ul className="payer-tax" aria-label="Tax for each payslip">
       {payers.map((p) => (
         <li key={p.payer}>
-          <b>{p.payer === "all" ? "All sites" : payerLabel(data.payerNames, p.payer)}{p.weighted !== undefined && <em>{hoursText(p.weighted)} paid h</em>}</b>
+          <b>{p.payer === "all" ? "All sites" : payerLabel(data.payerNames, p.payer)}{p.weighted !== undefined && <em>{hoursText(p.weighted)} h</em>}</b>
           <span>PAYE <i className="c-paye">{money(p.paye)}</i> · NIS {money(p.nis)} · Surcharge {money(p.surcharge)}</span>
         </li>
       ))}

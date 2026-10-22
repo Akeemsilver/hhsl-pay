@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { valueOn } from "../engine";
 import { MONTHS, WEEKDAYS, daysOfMonth, hoursText, money, shiftMonth, todayISO } from "../format";
 import { useInstall } from "../install";
@@ -40,6 +40,20 @@ export function HomeScreen() {
   const [shown, setShown] = useState(today.slice(0, 7));
   const month = today.slice(0, 7);
   const year = Number(today.slice(0, 4));
+
+  // The site hours line up exactly under the Paid hours figure, whatever the width of the other columns.
+  const heroRef = useRef<HTMLElement>(null);
+  const alignHours = () => {
+    const hero = heroRef.current;
+    const stat = hero?.querySelector<HTMLElement>(".hero-stats > div:nth-child(4)");
+    const slot = hero?.querySelector<HTMLElement>(".payer-slot");
+    if (hero && stat && slot) hero.style.setProperty("--hx", `${Math.round((stat.getBoundingClientRect().left - slot.getBoundingClientRect().left) * 10) / 10}px`);
+  };
+  useLayoutEffect(() => {
+    alignHours();
+    window.addEventListener("resize", alignHours);
+    return () => window.removeEventListener("resize", alignHours);
+  });
 
   const { site: filterSite } = useSiteFilter();
   const install = useInstall();
@@ -129,7 +143,7 @@ export function HomeScreen() {
         </div>
       )}
 
-      <section className="hero" aria-label={`Totals for ${shown}`}>
+      <section className="hero" ref={heroRef} aria-label={`Totals for ${shown}`}>
         <div className="hero-top">
           <span><i className="dot dot-gross" />Gross · {MONTHS[Number(shown.slice(5)) - 1]}{shown.slice(0, 4) !== String(year) ? ` ${shown.slice(0, 4)}` : ""}{shown === month ? " so far" : ""}</span>
           {lastMonth.gross > 0 && (
