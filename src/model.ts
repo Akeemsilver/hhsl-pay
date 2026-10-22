@@ -145,11 +145,14 @@ export function isDetailed(e: Entry): boolean {
   return e.detailed ?? !!(e.startTime || e.endTime);
 }
 
+/** Whether jobs at this site have a lunch check. Yes for every site unless it was set to No. */
+export const siteHasLunch = (site: SiteRates | undefined): boolean => site?.lunch !== false;
+
 /** Re-works the paid hours of a Detailed job from its times and lunch (0 until both times are set). Simple jobs are left alone. */
-export function withComputedHours(e: Entry): Entry {
+export function withComputedHours(e: Entry, lunchApplies = true): Entry {
   if (isOther(e)) return e.startTime && e.endTime ? { ...e, hours: otherHours(e) } : e;
   if (!isDetailed(e)) return e;
-  return { ...e, hours: paidHoursFrom(e) ?? 0 };
+  return { ...e, hours: paidHoursFrom(lunchApplies ? e : { ...e, lunchPaid: true }) ?? 0 };
 }
 
 /** Pressing Detailed clears the hours: they now come from the start and end time. */

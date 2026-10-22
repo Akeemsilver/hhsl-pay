@@ -845,3 +845,5 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 
 .tj-summary{margin:.5rem 0;padding:.65rem .8rem;border-radius:12px;background:var(--bg-soft,rgba(127,127,127,.12));line-height:1.45;font-weight:600}
 .tj-roles{margin:.25rem 0 .5rem .9rem;padding-left:.7rem;border-left:3px solid rgba(127,127,127,.3)}
+.lunch-choice { display: grid; gap: 6px; margin: 8px 0; }
+.lunch-choice .segmented { max-width: 220px; }

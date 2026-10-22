@@ -23,6 +23,20 @@ function CapsRow({ label, caps, onChange, withX3 }: { label: string; caps: TierC
   );
 }
 
+/** Yes or No: does a job at this site have a lunch check? No hides the lunch options on the day form. */
+function LunchChoice({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="lunch-choice" role="group" aria-label="Job requires lunch check">
+      <span className="lbl">Job requires lunch check</span>
+      <div className="segmented">
+        <button type="button" aria-pressed={value} className={value ? "on" : ""} onClick={() => onChange(true)}>Yes</button>
+        <button type="button" aria-pressed={!value} className={!value ? "on" : ""} onClick={() => onChange(false)}>No</button>
+      </div>
+      <span className="muted small">{value ? "The day form asks if lunch was paid and takes unpaid lunch off." : "No lunch options on the day form; the whole time between start and end is paid."}</span>
+    </div>
+  );
+}
+
 function pickTemplate(id: string) {
   const t = templateById(id)!;
   return { weekday: { ...t.weekday }, weekend: { ...t.weekend }, holiday: { ...t.holiday } };
@@ -120,6 +134,7 @@ function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename,
           ))}
         </div>
       </div>
+      <LunchChoice value={site.lunch !== false} onChange={(v) => set("lunch", v ? undefined : false)} />
       <label>Payslip
         <select value={site.payer} onChange={(e) => set("payer", e.target.value)}>
           {Object.entries(payers).map(([id, n]) => <option key={id} value={id}>{n}</option>)}
@@ -292,6 +307,7 @@ function AddSiteForm({ table, payers, onAdd }: {
   const [std, setStd] = useState<Num>();
   const [lead, setLead] = useState<Num>();
   const [template, setTemplate] = useState<string | undefined>();
+  const [lunch, setLunch] = useState(true);
   const isNew = group === "__new";
   const mine = Object.values(table).filter((s) => s.payer === group && (s.baseRate ?? 0) > 0);
   const groupStd = commonValue(mine.map((m) => m.baseRate));
@@ -304,9 +320,9 @@ function AddSiteForm({ table, payers, onAdd }: {
   const ok = !!name.trim() && !taken && (!isNew || (!!groupName.trim() && (std ?? 0) > 0));
   const add = () => {
     const id = isNew ? slug(groupName, groupIds) : group;
-    const site = applyTemplate({ ...emptySite(id), baseRate: finalStd, leadRate: finalLead }, tpl);
+    const site = applyTemplate({ ...emptySite(id), baseRate: finalStd, leadRate: finalLead, ...(lunch ? {} : { lunch: false }) }, tpl);
     onAdd(name.trim(), id, site, isNew ? groupName.trim() : undefined);
-    setName(""); setGroupName(""); setStd(undefined); setLead(undefined); setTemplate(undefined); setGroup(isNew ? id : group);
+    setName(""); setGroupName(""); setStd(undefined); setLead(undefined); setTemplate(undefined); setLunch(true); setGroup(isNew ? id : group);
   };
   return (
     <div className="add-site">
@@ -330,6 +346,7 @@ function AddSiteForm({ table, payers, onAdd }: {
       ) : (
         <p className="muted small">Uses the group's rates: {groupStd !== undefined ? `$${groupStd}/h standard, $${finalLead ?? groupStd}/h team lead` : "no hourly rates set yet; edit the site after adding it"}.</p>
       )}
+      <LunchChoice value={lunch} onChange={setLunch} />
       <label>Overtime hours
         <select aria-label="Hours template for the new site" value={tpl} onChange={(e) => setTemplate(e.target.value)}>
           {HOURS_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}

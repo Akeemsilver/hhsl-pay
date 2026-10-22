@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { SitePicker } from "../components/SitePicker";
 import { computeDay, findSite, valueOn } from "../engine";
 import { WEEKDAYS, durationText, hoursText, money } from "../format";
-import { isDetailed, isOther, newId, rolesFor, toDetailed, toSimple, withComputedHours, type Entry } from "../model";
+import { isDetailed, isOther, newId, rolesFor, siteHasLunch, toDetailed, toSimple, withComputedHours, type Entry } from "../model";
 import { useNav } from "../nav";
 import { holidayMap } from "../holidays";
 import { useStore } from "../store";
@@ -69,8 +69,13 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
   };
 
   const holidayName = holidayMap([Number(date.slice(0, 4))], data).get(date);
+  const lunchAt = (name: string) => siteHasLunch(findSite(sites, name));
   const patch = (id: string, changes: Partial<Entry>) =>
-    setDraft((list) => list.map((e) => (e.id === id ? withComputedHours({ ...e, ...changes }) : e)));
+    setDraft((list) => list.map((e) => {
+      if (e.id !== id) return e;
+      const next = { ...e, ...changes };
+      return withComputedHours(next, lunchAt(next.site));
+    }));
   const remove = (id: string) => setDraft((list) => list.filter((e) => e.id !== id));
 
   // A new job starts from your most recent job's times and lunch, so a usual 07:00-19:00 day is two taps.
@@ -83,7 +88,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
     } else {
       fresh.detailed = false;
     }
-    return withComputedHours(fresh);
+    return withComputedHours(fresh, lunchAt(fresh.site));
   };
   const newOther = (): Entry => ({ id: newId(), date, kind: "other", site: "", hours: 0, description: "" });
   const addJob = () => setDraft((list) => [...list, newJob()]);
@@ -176,7 +181,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                     <strong>{hoursText(entry.hours)} h</strong>
                     <span className="muted small">
                       {entry.hours > 0 || (entry.startTime && entry.endTime)
-                        ? <>{entry.startTime}–{entry.endTime} is {durationText(entry.startTime, entry.endTime)}{entry.lunchPaid ? ", lunch paid" : `, minus ${(entry.lunchMinutes ?? 60) === 30 ? "30 min" : "1 hour"} unpaid lunch`}</>
+                        ? <>{entry.startTime}–{entry.endTime} is {durationText(entry.startTime, entry.endTime)}{!lunchAt(entry.site) ? "" : entry.lunchPaid ? ", lunch paid" : `, minus ${(entry.lunchMinutes ?? 60) === 30 ? "30 min" : "1 hour"} unpaid lunch`}</>
                         : "Set the start and end time below."}
                     </span>
                   </div>
@@ -201,10 +206,12 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                     <TimeField label="Start time" value={entry.startTime} quick={quick} onChange={(v) => patch(entry.id, { startTime: v })} />
                     <TimeField label="End time" value={entry.endTime} quick={quick} onChange={(v) => patch(entry.id, { endTime: v })} />
                   </div>
-                  <div className="checks lunch">
-                    <label><input type="checkbox" checked={!!entry.lunchPaid} onChange={(e) => patch(entry.id, { lunchPaid: e.target.checked })} /> Lunch was paid</label>
-                  </div>
-                  {!entry.lunchPaid && (
+                  {lunchAt(entry.site) && (
+                    <div className="checks lunch">
+                      <label><input type="checkbox" checked={!!entry.lunchPaid} onChange={(e) => patch(entry.id, { lunchPaid: e.target.checked })} /> Lunch was paid</label>
+                    </div>
+                  )}
+                  {lunchAt(entry.site) && !entry.lunchPaid && (
                     <div className="lunch-length" role="group" aria-label="Unpaid lunch">
                       <span className="lbl">Unpaid lunch</span>
                       {[30, 60].map((m) => (
@@ -223,7 +230,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                 </div>
               ) : (
                 <div className="mode-switch">
-                  <button type="button" className="circle-btn" aria-label="Detailed: start and end time, lunch" onClick={() => setDraft((list) => list.map((e) => (e.id === entry.id ? toDetailed(e) : e)))}>
+                  <button type="button" className="circle-btn" aria-label="Detailed: start and end time, lunch" onClick={() => setDraft((list) => list.map((e) => (e.id === entry.id ? withComputedHours(toDetailed(e), lunchAt(e.site)) : e)))}>
                     <ChevronDown />Detailed
                   </button>
                   <span className="muted small">Add start and end time, and lunch.</span>
