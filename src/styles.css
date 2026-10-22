@@ -794,3 +794,4 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .more-details[open] > summary { border-bottom: 1px solid var(--line); margin-bottom: 8px; }
 .more-details > p { margin: 8px 14px; }
 .more-details > .ytable { margin: 0 10px 10px; }
+.pick-list { overscroll-behavior: contain; }

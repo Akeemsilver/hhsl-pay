@@ -85,7 +85,7 @@ export function BackupScreen() {
       <section className="card">
         <h2>Restore from a backup</h2>
         <p className="muted small">Use this on a new phone. It replaces everything currently in the app.</p>
-        <input ref={fullInput} type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void readFile(f, "full"); e.target.value = ""; }} />
+        <input ref={fullInput} type="file" accept=".json,.txt,application/json,text/plain" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void readFile(f, "full"); e.target.value = ""; }} />
         <button className="wide" onClick={() => fullInput.current?.click()}>Choose backup file…</button>
       </section>
 
@@ -100,7 +100,7 @@ export function BackupScreen() {
           <button onClick={() => backUp("rates")}>Share rates file</button>
           <button onClick={() => ratesInput.current?.click()}>Import rates file…</button>
         </div>
-        <input ref={ratesInput} type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void readFile(f, "rates"); e.target.value = ""; }} />
+        <input ref={ratesInput} type="file" accept=".json,.txt,application/json,text/plain" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void readFile(f, "rates"); e.target.value = ""; }} />
       </section>
 
       <section className="card">

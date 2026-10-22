@@ -2,9 +2,9 @@ import { loadTemplate } from "../storage";
 import { ShareGuide } from "../components/ShareGuide";
 import { InstallHelp } from "../components/InstallHelp";
 import { appLink, siteCount } from "../kit";
-import { backupFileName, download, ratesKitOf, serialize, shareFile } from "../backup";
+import { backupFileName, download, ratesKitOf, serialize, SHARE_TYPES, shareFile } from "../backup";
 import { useNav } from "../nav";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { newData, isCombined, setTaxModeFrom, userNameOf } from "../model";
 import { todayISO } from "../format";
@@ -51,13 +51,21 @@ export function SettingsHub() {
     return () => { live = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.history, data.payerNames, data.siteColors, data.timesheet, data.otherPayer, data.taxMode, data.holidays, sitesCount]);
+  // Each tap makes one attempt (the phone allows one per tap); a refused attempt moves on to the next file type.
+  const attempt = useRef(0);
   const shareKit = async () => {
     if (!kit) { setKitMessage("Getting the starter kit ready, try again in a moment."); return; }
-    const { result, error } = await shareFile(backupFileName("rates", false), kit);
-    if (result === "shared") setKitMessage("Starter kit shared.");
-    else if (result === "unsupported") setKitMessage("This browser cannot open the share menu. Use “Download starter kit” and send the file from your Downloads.");
-    else if (result === "failed") setKitMessage(`The share menu could not open (${error}). Use “Download starter kit” instead.`);
-    else setKitMessage(null);
+    const tried = attempt.current;
+    const { result, error, type } = await shareFile(backupFileName("rates", false), kit, tried);
+    if (result === "shared") { attempt.current = 0; setKitMessage("Starter kit shared."); }
+    else if (result === "cancelled") setKitMessage(null);
+    else if (result === "failed" && tried < SHARE_TYPES.length - 1) {
+      attempt.current = tried + 1;
+      setKitMessage(`That did not open the share menu (${error}). Tap “Share starter kit” again to try another way.`);
+    } else if (result === "failed") {
+      attempt.current = 0;
+      setKitMessage(`The share menu would not open (${error}; tried ${SHARE_TYPES.length} ways, last as ${type}). Use “Download starter kit”, then send the file from your Downloads.`);
+    } else setKitMessage("This browser cannot open the share menu. Use “Download starter kit” and send the file from your Downloads.");
   };
   const saveKit = async () => {
     download(backupFileName("rates", false), await kitText());
