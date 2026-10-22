@@ -62,7 +62,7 @@ export function HomeScreen() {
     ...shownResult.entries.filter((e) => e.pay.total > 0).map((e) => e.entry.date),
     ...(filterSite ? [] : [...othersByDate(data.entries, shown).keys()]),
   ]);
-  const hours = shownResult.entries.reduce((s, e) => s + e.entry.hours, 0);
+  const hours = shownResult.payers.reduce((s, p) => s + p.weighted, 0);
   const diff = shownResult.gross - lastMonth.gross;
 
   const rules = valueOn(data.history.tax, today);
@@ -141,7 +141,7 @@ export function HomeScreen() {
           <div><span><i className="dot dot-net" />Net</span><strong className="c-net">{money(shownResult.net)}</strong></div>
           <div><span><i className="dot dot-paye" />PAYE</span><strong className="c-paye">{money(shownResult.paye)}</strong></div>
           <div><span>Days</span><strong>{worked.size}</strong></div>
-          <div><span>Hours</span><strong>{hoursText(hours)} h</strong></div>
+          <div><span>Paid hours</span><strong>{hoursText(hours)} h</strong></div>
         </div>
         <AverageLine gross={shownYear.map((m) => m.gross)} net={shownYear.map((m) => m.net)} index={Number(shown.slice(5)) - 1} />
         <div className="payer-slot">
