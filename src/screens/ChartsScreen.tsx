@@ -54,7 +54,7 @@ export function ChartsScreen() {
 
   return (
     <>
-      <TopBar title="Charts" />
+      <TopBar title="Charts" month={`${year}-${year === Number(todayISO().slice(0, 4)) ? todayISO().slice(5, 7) : "12"}`} />
       <div className="monthbar">
         <button className="icon" onClick={() => setYear(year - 1)} aria-label="Previous year"><BackIcon /></button>
         <div className="monthname">{year}</div>

@@ -3,10 +3,18 @@ import { useNav } from "../nav";
 import { useSiteFilter } from "../filter";
 import { useStore } from "../store";
 import { BottomSheet } from "./BottomSheet";
-import { BackIcon, FilterIcon, GearIcon } from "./Icons";
+import { BackIcon, DownloadIcon, EyeIcon, FilterIcon, GearIcon } from "./Icons";
+import { ExportSheet } from "./ExportSheet";
+import { TimesheetViewer } from "./TimesheetViewer";
+import { PayslipViewer } from "./PayslipViewer";
+import { ViewChooser } from "./ViewChooser";
+import { todayISO } from "../format";
 
-/** Header for the main tabs: title on the left, settings gear on the right. */
-export function TopBar({ title, subtitle, action }: { title: ReactNode; subtitle?: ReactNode; action?: ReactNode }) {
+/**
+ * Header for the main tabs: title on the left; on the right the same buttons on every tab (view and download the
+ * timesheet or payslip for `month`, filter by location when there is more than one site, settings).
+ */
+export function TopBar({ title, subtitle, month = todayISO().slice(0, 7) }: { title: ReactNode; subtitle?: ReactNode; month?: string }) {
   const { open, back, loc } = useNav();
   const { data } = useStore();
   const { site, setSite } = useSiteFilter();
@@ -20,7 +28,8 @@ export function TopBar({ title, subtitle, action }: { title: ReactNode; subtitle
         {subtitle && <p className="muted small">{subtitle}</p>}
       </div>
       <div className="top-actions">
-        {action}
+        <button className="icon gear" aria-label="View timesheet or payslip" title="View timesheet or payslip" onClick={() => open({ sub: "viewpick" })}><EyeIcon /></button>
+        <button className="icon gear" aria-label="Download timesheet or payslip" title="Download timesheet or payslip" onClick={() => open({ sub: "export" })}><DownloadIcon /></button>
         {sites.length > 1 && (
           <button className={`icon gear ${site ? "active" : ""}`} aria-label="Filter by location" title="Filter by location" aria-pressed={!!site} onClick={() => open({ sub: "filter" })}>
             <FilterIcon />
@@ -37,6 +46,10 @@ export function TopBar({ title, subtitle, action }: { title: ReactNode; subtitle
         <button onClick={() => setSite(null)}>Show all</button>
       </div>
     )}
+    {loc.sub === "export" && !loc.day && !loc.page && <ExportSheet month={month} />}
+    {loc.sub === "view" && !loc.day && !loc.page && <TimesheetViewer month={month} />}
+    {loc.sub === "viewpick" && !loc.day && !loc.page && <ViewChooser month={month} />}
+    {loc.sub === "viewslip" && !loc.day && !loc.page && <PayslipViewer month={month} />}
     {loc.sub === "filter" && !loc.page && (
       <BottomSheet label="Filter by location" onRequestClose={back}>
         <h2>Filter by location</h2>

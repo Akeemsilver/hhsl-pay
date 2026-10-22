@@ -197,12 +197,12 @@ export function ExportSheet({ month }: { month: string }) {
       <div className="sheet-footer">
         {tab === "timesheet" ? (
           <>
-            <button disabled={!!busy || !template || rows.length === 0} onClick={() => open({ sub: "view" })}>View timesheet</button>
+            <button disabled={!!busy || !template || rows.length === 0} onClick={() => open({ sub: "view" })}>View</button>
             <button className="primary" disabled={!!busy || !template || rows.length === 0} onClick={downloadExcel}>{busy === "xlsx" ? "Preparing…" : "Download timesheet"}</button>
           </>
         ) : (
           <>
-            <button onClick={back}>Close</button>
+            <button disabled={!!busy || slips.length === 0} onClick={() => open({ sub: "viewslip" })}>View</button>
             <button className="primary" disabled={!!busy || slips.length === 0} onClick={downloadSlip}>{busy === "slip" ? "Preparing…" : "Download payslip (PDF)"}</button>
           </>
         )}

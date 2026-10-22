@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { SitePicker } from "../components/SitePicker";
 import { DEFAULT_PAYROLL_EMAIL, emptyTimesheetSettings, type TimesheetRule } from "../timesheet";
 import { useTemplate } from "../hooks";
 import { DEFAULT_ROLES, userNameOf } from "../model";
@@ -74,11 +75,7 @@ export function TimesheetPage() {
         {siteNames.length === 0 ? <p className="muted">Add your sites first under Site locations & rates.</p> : (
           <>
             <div className="grid2">
-              <label>Site
-                <select value={site} onChange={(e) => { setSite(e.target.value); setRole(""); setLabel(""); }}>
-                  {siteNames.map((n) => <option key={n}>{n}</option>)}
-                </select>
-              </label>
+              <SitePicker value={site} names={siteNames} onPick={(n) => { setSite(n); setRole(""); setLabel(""); }} />
               <label>Role
                 <select value={role} onChange={(e) => { setRole(e.target.value); setLabel(""); }}>
                   <option value="">Any role</option>
