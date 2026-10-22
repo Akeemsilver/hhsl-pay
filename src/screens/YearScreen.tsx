@@ -1,4 +1,5 @@
 import { useYear } from "../hooks";
+import { useSessionState } from "../session";
 import { useSiteFilter } from "../filter";
 import { PayerTax } from "../components/MonthParts";
 import { useMemo, useState } from "react";
@@ -11,7 +12,7 @@ import { BackIcon, ForwardIcon } from "../components/Icons";
 
 export function YearScreen() {
   const { data } = useStore();
-  const [year, setYear] = useState(Number(todayISO().slice(0, 4)));
+  const [year, setYear] = useSessionState("year-year", Number(todayISO().slice(0, 4)));
 
   const months = useYear(year);
   const { site: filterSite } = useSiteFilter();

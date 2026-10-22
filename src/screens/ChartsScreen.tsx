@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useSessionState } from "../session";
 import { MONTHS, todayISO } from "../format";
 import { useYear } from "../hooks";
 import { useStore } from "../store";
@@ -15,7 +16,7 @@ const MAX_SITES = 8;
 
 export function ChartsScreen() {
   const { data } = useStore();
-  const [year, setYear] = useState(Number(todayISO().slice(0, 4)));
+  const [year, setYear] = useSessionState("charts-year", Number(todayISO().slice(0, 4)));
   const months = useYear(year);
 
   const bySite = useMemo(() => {
