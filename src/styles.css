@@ -614,7 +614,7 @@ button.icon.gear, .bar.page button.icon { transition: box-shadow .15s, transform
 .payer-tax li { position: relative; }
 .payer-tax b { color: var(--text); font-weight: 600; }
 /* Starts exactly under the Paid hours figure: the fourth of the four equal columns above (6px gaps). */
-.payer-tax b em { position: absolute; top: 0; left: var(--hx, calc(3 * ((100% - 18px) / 4 + 6px))); font-style: normal; font-weight: 700; font-size: 0.92rem; line-height: 1; color: var(--text); white-space: nowrap; }
+.payer-tax b em { position: absolute; top: 0; left: var(--hx, calc(3 * ((100% - 18px) / 4 + 6px))); font-style: normal; font-weight: 600; font-size: inherit; line-height: inherit; color: var(--text); white-space: nowrap; }
 .payer-tax i { font-style: normal; }
 input[hidden] { display: none !important; }
 .import-preview { margin-top: 12px; display: grid; gap: 10px; }
