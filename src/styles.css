@@ -366,7 +366,7 @@ legend { font-size: 0.85rem; color: var(--muted); padding: 0 4px; }
 .chart .hit:focus-visible { stroke: var(--accent); stroke-width: 2; }
 .legend { display: flex; gap: 14px; list-style: none; margin: 6px 0 0; padding: 0; font-size: 0.85rem; color: var(--muted); }
 .legend li { display: flex; align-items: center; gap: 6px; }
-.swatch { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.swatch { width: 12px; height: 12px; border-radius: 50%; flex: none; }
 .hbars { display: flex; flex-direction: column; gap: 6px; }
 .hbar { display: grid; grid-template-columns: 72px 1fr 70px; align-items: center; gap: 8px; min-height: 28px; border-radius: 6px; cursor: pointer; }
 .hbar:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
@@ -477,11 +477,11 @@ button.pill { min-height: 32px; padding: 0 12px; border-radius: 999px; font-size
 .cal-cell .dots .d.tone10 { background: #475569; }
 .cal-cell .dots .d.tone11 { background: #16a34a; }
 .swatches { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 12px; }
-.swatch { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; padding: 0; }
-.swatch.on { border-color: var(--text); }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 4px 0; font-size: .85rem; }
-.legend .k { display: inline-flex; align-items: center; gap: 6px; }
-.legend .k i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.color-swatch { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; padding: 0; }
+.color-swatch.on { border-color: var(--text); }
+.cal-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 4px 0; font-size: .85rem; }
+.cal-legend .k { display: inline-flex; align-items: center; gap: 6px; }
+.cal-legend .k i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .cal-cell .dots .d.toneo { background: var(--s3); }
 .cal-cell .dots .more { font-size: 0.6rem; color: var(--muted); line-height: 1; }
 .day-panel .card-head { margin-bottom: 6px; }

@@ -115,7 +115,7 @@ function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename,
         <span className="muted small">Calendar colour</span>
         <div className="swatches">
           {SITE_COLORS.map((c, i) => (
-            <button key={c.name} type="button" className={`swatch ${i === colorNow ? "on" : ""}`} style={{ background: c.hex }} aria-label={c.name} aria-pressed={i === colorNow}
+            <button key={c.name} type="button" className={`color-swatch ${i === colorNow ? "on" : ""}`} style={{ background: c.hex }} aria-label={c.name} aria-pressed={i === colorNow}
               onClick={() => update((d) => ({ ...d, siteColors: { ...d.siteColors, [name.toLowerCase()]: i } }))} />
           ))}
         </div>

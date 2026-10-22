@@ -209,7 +209,7 @@ export function CalendarGrid({ month, days, result, today, onPick, selected, sli
         })}
       </div>
       {legend.length > 0 && (
-        <p className="legend">
+        <p className="cal-legend">
           {legend.map((n) => <span key={n} className="k"><i style={{ background: SITE_COLORS[siteColorIndex(data, n)]!.hex }} />{n}</span>)}
         </p>
       )}
