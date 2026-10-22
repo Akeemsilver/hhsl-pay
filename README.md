@@ -45,5 +45,6 @@ npm run build      # typecheck + production build into dist/
 2. Merge to `main`. `.github/workflows/deploy.yml` tests, builds and publishes the site.
 3. The app is served at `https://<user>.github.io/hhsl-salary-tracker/`.
 
+The address follows the repository name (`https://<user>.github.io/<repository>/`), so renaming the repository renames the link.
 Saved data is tied to the web address. Pick the final address before sharing the app widely. To use a custom
 domain, set the repository variable `BASE_PATH` to `/`.
