@@ -118,7 +118,12 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                   <TimeField label="Start time (optional)" value={entry.startTime} quick={quick} onChange={(v) => patch(entry.id, { startTime: v })} />
                   <TimeField label="End time (optional)" value={entry.endTime} quick={quick} onChange={(v) => patch(entry.id, { endTime: v })} />
                 </div>
-                {duration && <p className="muted small">Duration {duration}</p>}
+                {duration && <p className="muted small">Duration {duration}. The hours below are filled in from the times.</p>}
+                <label>
+                  Hours worked (optional)
+                  <HoursField value={entry.hours} onChange={(h) => patch(entry.id, { hours: h })} />
+                  <span className="muted small">Goes in the hours column of the timesheet. Leave it blank if you do not know it.</span>
+                </label>
                 <label>
                   Amount paid ($, optional)
                   <input

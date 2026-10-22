@@ -143,7 +143,8 @@ export function isDetailed(e: Entry): boolean {
 
 /** Re-works the paid hours of a Detailed job from its times and lunch (0 until both times are set). Simple jobs are left alone. */
 export function withComputedHours(e: Entry): Entry {
-  if (isOther(e) || !isDetailed(e)) return e;
+  if (isOther(e)) return e.startTime && e.endTime ? { ...e, hours: otherHours(e) } : e;
+  if (!isDetailed(e)) return e;
   return { ...e, hours: paidHoursFrom(e) ?? 0 };
 }
 
@@ -209,8 +210,9 @@ export function otherPayerId(data: Pick<AppData, "otherPayer" | "payerNames">): 
 }
 
 /** Hours between an other job's start and end time (0 when either is missing). */
-export function otherHours(e: Pick<Entry, "startTime" | "endTime">): number {
-  if (!e.startTime || !e.endTime) return 0;
+export function otherHours(e: Pick<Entry, "startTime" | "endTime" | "hours">): number {
+  // Hours typed in by hand count when there are no start and end times to work them out from.
+  if (!e.startTime || !e.endTime) return e.hours > 0 ? e.hours : 0;
   const m = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
   let span = m(e.endTime) - m(e.startTime);
   if (span <= 0) span += 24 * 60;

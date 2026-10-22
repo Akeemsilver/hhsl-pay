@@ -46,8 +46,8 @@ export const CLIENT_MEDIC = "Client medic";
 const same = (a: string | undefined, b: string | undefined) => (a ?? "").trim().toLowerCase() === (b ?? "").trim().toLowerCase();
 
 export function matchRule(entry: Entry, rules: TimesheetRule[], includeOther = true): TimesheetRule | undefined {
-  // Other jobs go on the timesheet (unless turned off), named by what they were.
-  if (isOther(entry)) return !includeOther ? undefined : { site: "", label: `Other job${entry.description?.trim() ? ` - ${entry.description.trim()}` : ""}` };
+  // Other jobs go on the timesheet, with what they were (e.g. "Airport run") in the client column.
+  if (isOther(entry)) return !includeOther ? undefined : { site: "", label: entry.description?.trim() || "Other job" };
   // A specific role rule wins over an "any role" rule for the same site.
   const roleMatch = rules.find((r) => r.role && same(r.site, entry.site) && same(r.role, entry.role));
   const siteMatch = roleMatch ?? rules.find((r) => !r.role && same(r.site, entry.site));
