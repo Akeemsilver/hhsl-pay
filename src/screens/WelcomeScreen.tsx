@@ -66,7 +66,7 @@ export function WelcomeScreen() {
       <ol className="steps">
         <li>Ask the person who sent you the link to this app to send you the <strong>starter kit file</strong>. They find it in the app under Settings, Share this app.</li>
         <li>They send it to you on WhatsApp.</li>
-        <li>In WhatsApp, tap the file to download it to your phone.</li>
+        <li>In WhatsApp, tap the file. <strong>Android:</strong> it downloads. <strong>iPhone:</strong> it opens as text, so tap the Share icon, then <strong>Save to Files</strong>.</li>
         <li>Come back here, tap <strong>Choose starter kit file</strong>, and pick it from your Downloads.</li>
       </ol>
       <input ref={input} type="file" accept=".json,.txt,application/json,text/plain" hidden aria-label="Starter kit file"

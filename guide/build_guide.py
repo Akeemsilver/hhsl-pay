@@ -119,7 +119,7 @@ s.append(Paragraph("Get the file (in WhatsApp on your phone)", h2))
 s.append(steps([
  ("Ask the person who sent you this guide to send you the <b>starter kit file</b>, called <b>HHSL-starter-kit-rates.txt</b>, on WhatsApp.", None),
  ("Open the message in WhatsApp and <b>tap the file</b> to download it. A small download arrow shows until it is saved.", I("whatsapp")),
- ("<b>iPhone only:</b> after it opens, tap the Share icon, then <b>Save to Files</b>, so the app can find it.", None)]))
+ ("<b>iPhone:</b> WhatsApp only shows the file as text and has no download arrow. Tap the <b>Share icon</b> (the square with an arrow, bottom left), then <b>Save to Files</b>, then <b>Save</b>. The app can only pick files saved in Files.", None)]))
 s.append(Paragraph("Load it into the app", h2))
 s.append(steps([
  ("Open the app from its icon. Type your <b>full name</b> (it is printed on your payslips and time sheets) and tap <b>Continue</b>.", A("a-welcome"), 50),

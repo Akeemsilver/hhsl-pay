@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { backupFileName } from "../backup";
+
+/** The starter kit is shared as a .txt (the phone will not share a .json), so that is the name people see. */
+const kitName = () => backupFileName("rates", false).replace(/\.json$/, ".txt");
 import { shareMessage } from "../shareGuide";
 
 /** A written guide to giving a colleague the app, and a ready-made message to send with it. */
 export function ShareGuide({ link }: { link: string }) {
-  const message = shareMessage(link, backupFileName("rates", false));
+  const message = shareMessage(link, kitName());
   const [note, setNote] = useState<string | null>(null);
   const copy = async () => {
     try { await navigator.clipboard.writeText(message); setNote("Message copied. Paste it into WhatsApp or an email."); }
@@ -44,7 +47,7 @@ export function ShareGuide({ link }: { link: string }) {
         <ol className="steps">
           <li>Open the link <strong>in Chrome</strong> (Android) or <strong>Safari</strong> (iPhone). If it opens inside WhatsApp, tap the three dots, then <strong>Open in browser</strong>.</li>
           <li>Install it: Android, tap <strong>Install app</strong>. iPhone, tap Share, then <strong>Add to Home Screen</strong>. (The install guide is on the first screen too.)</li>
-          <li>In WhatsApp, tap the file <strong>{backupFileName("rates", false)}</strong> and save or download it to the phone.</li>
+          <li>In WhatsApp, tap the file <strong>{kitName()}</strong> and save it to the phone. Android: it downloads. iPhone: it opens, tap the Share icon, then <strong>Save to Files</strong>.</li>
           <li>Open the app from its icon. Type their full name, tap <strong>Continue</strong>.</li>
           <li>Tap <strong>Choose starter kit file</strong> and pick the file from Downloads. The sites and rates fill in.</li>
           <li>Start logging days. They can back up from Settings, Backup &amp; restore.</li>
@@ -56,7 +59,7 @@ export function ShareGuide({ link }: { link: string }) {
         <ul className="steps">
           <li><strong>The link opens but nothing installs.</strong> Use Chrome on Android or Safari on iPhone, not a browser inside another app, and not a private tab.</li>
           <li><strong>The file will not pick.</strong> Make sure it is saved on the phone, not just in the chat. Open the file picker, tap the menu, choose <strong>Downloads</strong>.</li>
-          <li><strong>An error about the file.</strong> They picked a different file, for example a backup. It must be the one named {backupFileName("rates", false)}.</li>
+          <li><strong>An error about the file.</strong> They picked a different file, for example a backup. It must be the one named {kitName()}.</li>
           <li><strong>They already entered sites by hand.</strong> Applying the starter kit later, in Settings, Backup &amp; restore, replaces the rates but keeps their days.</li>
         </ul>
       </details>
