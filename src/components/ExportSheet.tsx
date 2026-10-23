@@ -146,9 +146,13 @@ export function ExportSheet({ month }: { month: string }) {
   // Main way: save the file, then open the phone's mail app (Gmail, Outlook, ...) with the address, subject and message ready.
   const openMailApp = () => {
     if (!payrollFile) return;
-    download(payrollFile.fileName, payrollFile.bytes, XLSX_MIME);
+    // A new name each time (the time is added): when the same name is already in Downloads, Chrome asks "Download file again?" and that question ends up hidden behind the mail app.
+    const now = new Date();
+    const stamp = `${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
+    const fileName = payrollFile.fileName.replace(/\.xlsx$/, `-${stamp}.xlsx`);
+    download(fileName, payrollFile.bytes, XLSX_MIME);
     setPayrollOpen(false); setPayrollTry(0);
-    setMessage({ text: `${payrollFile.fileName} is in your Downloads. Attach it to the email that opens, then send.`, ok: true });
+    setMessage({ text: `${fileName} is in your Downloads. Attach it to the email that opens, then send.`, ok: true });
     setTimeout(() => { window.location.href = mailtoLink(email); }, 700);
   };
   const downloadSlip = () => run("slip", async () => {

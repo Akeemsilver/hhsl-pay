@@ -10,7 +10,7 @@ export function PayrollDialog({ email, fileName, onCancel, onContinue, onShare, 
       <div className="confirm payroll" role="dialog" aria-modal="true" aria-label="Send time sheet to payroll" onClick={(e) => e.stopPropagation()}>
         <p className="muted small">Send by email</p>
         <h2>Send your time sheet to payroll</h2>
-        <p className="muted small"><strong>{fileName}</strong> is saved to your Downloads and your email app (Gmail, Outlook, …) opens with this message ready. Attach the file, then send:</p>
+        <p className="muted small">Your time sheet (<strong>{fileName}</strong>, with the time added) is saved to your Downloads and your email app (Gmail, Outlook, …) opens with this message ready. Attach the file, then send:</p>
         <div className="mail-preview" aria-label="Email preview">
           <div><span>To</span><b>{email.to}</b></div>
           <div><span>Subject</span><b>{email.subject}</b></div>
