@@ -264,3 +264,13 @@ describe("fixed day rate sites", () => {
     expect(pay("2026-10-17")).toBe(800); // Saturday
   });
 });
+
+describe("other jobs without times", () => {
+  it("do not warn about a missing start or end time", () => {
+    const sites = { effectiveFrom: "2000-01-01", value: {} };
+    const entries = [{ id: "1", date: "2026-10-12", kind: "other", site: "", hours: 0, description: "Delivery" }] as never;
+    const { rows, warnings } = _bt("2026-10", entries, { sites: [sites], tax: [] } as never, []);
+    expect(rows).toHaveLength(1);
+    expect(warnings).toEqual([]);
+  });
+});

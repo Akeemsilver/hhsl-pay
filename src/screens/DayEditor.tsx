@@ -33,7 +33,10 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
   // The "Include on the time sheet" tick changes the site's time sheet rule, so it is held here until Save too.
   const originalRules = useRef<TimesheetRule[]>(data.timesheet?.rules ?? []);
   const [rulesDraft, setRulesDraft] = useState<TimesheetRule[]>(() => structuredClone(originalRules.current));
-  const rulesChanged = JSON.stringify(rulesDraft) !== JSON.stringify(originalRules.current);
+  // Other jobs go on the time sheet as a group (any other job, whatever it is called); this tick is that one setting.
+  const originalOther = useRef(data.timesheet?.includeOther !== false);
+  const [otherOn, setOtherOn] = useState(originalOther.current);
+  const rulesChanged = JSON.stringify(rulesDraft) !== JSON.stringify(originalRules.current) || otherOn !== originalOther.current;
   const dirty = JSON.stringify(draft) !== JSON.stringify(original.current) || rulesChanged;
   // Only jobs were taken off (nothing else edited): the button says Remove instead of Save.
   const removingOnly = dirty && draft.length < original.current.length
@@ -65,7 +68,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
     update((d) => ({
       ...d,
       entries: [...d.entries.filter((e) => e.date !== date), ...draft],
-      ...(rulesChanged ? { timesheet: { ...(d.timesheet ?? emptyTimesheetSettings()), rules: rulesDraft } } : {}),
+      ...(rulesChanged ? { timesheet: { ...(d.timesheet ?? emptyTimesheetSettings()), rules: rulesDraft, includeOther: otherOn } } : {}),
     }));
     leave();
   };
@@ -138,6 +141,13 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
             return (
               <div className="entry other" key={entry.id} data-entry-id={entry.id}>
                 <strong className="entry-kind">Other job</strong>
+                <label className="check ts-check">
+                  <input type="checkbox" checked={otherOn} onChange={(e) => setOtherOn(e.target.checked)} />
+                  <span>
+                    Put other jobs on the time sheet
+                    <small className="muted">All other jobs, whatever they are called.</small>
+                  </span>
+                </label>
                 <label>
                   What was the job?
                   <input

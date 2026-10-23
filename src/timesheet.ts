@@ -93,7 +93,8 @@ export function buildTimesheet(month: string, entries: Entry[], history: RuleHis
     const ends = jobs.map((j) => j.entry.endTime).filter((t): t is string => !!t);
     const clients = [...new Set(jobs.map((j) => j.rule.label))];
 
-    if (jobs.some((j) => !j.entry.startTime || !j.entry.endTime)) warnings.push(`${dayLabel(date)}: start or end time is missing.`);
+    // Start and end time are required for a job at a site, but optional for an other job.
+    if (jobs.some((j) => !isOther(j.entry) && (!j.entry.startTime || !j.entry.endTime))) warnings.push(`${dayLabel(date)}: start or end time is missing.`);
     if (jobs.length > 1) warnings.push(`${dayLabel(date)}: ${jobs.length} jobs share one row (hours added together).`);
 
     rows.push({
