@@ -194,8 +194,8 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
               {findSite(sites, entry.site)?.roleField ? (
                 <label>
                   {findSite(sites, entry.site)!.roleField!.label}
-                  <input
-                    value={entry.role ?? ""} placeholder={findSite(sites, entry.site)!.roleField!.placeholder}
+                  <input aria-label={findSite(sites, entry.site)!.roleField!.label}
+                    value={entry.role ?? ""} placeholder={`e.g. ${findSite(sites, entry.site)!.roleField!.placeholder ?? ""}`.trim()}
                     onChange={(e) => patch(entry.id, { role: e.target.value || undefined })}
                   />
                 </label>
