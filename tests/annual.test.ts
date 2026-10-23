@@ -93,3 +93,53 @@ describe("sites and rates from the Settings tab", () => {
     expect(again.data.history.sites[0]!.value.TGU!.baseRate).toBe(99);
   });
 });
+
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+/** The monthly spreadsheet: one "List1" tab, month and year in the header, dates written as text, money as text, first week on row 6. */
+async function monthlyWorkbook(month: number, year: number, days: Array<{ date: string; site: string; hours?: number; total: string }>) {
+  const zip = new JSZip();
+  const cells: string[] = [cell(1, 2, "Created by Test Person "), cell(2, 18, MONTH_NAMES[month - 1]!.toUpperCase()), cell(3, 18, year)];
+  const first = new Date(Date.UTC(year, month - 1, 1)); first.setUTCDate(1 - first.getUTCDay());
+  for (let w = 0; w < 6; w++) for (let d = 0; d < 7; d++) {
+    const dt = new Date(first); dt.setUTCDate(first.getUTCDate() + w * 7 + d);
+    const iso = dt.toISOString().slice(0, 10);
+    const row = 6 + w * 12, col = 2 + d * 5;
+    cells.push(cell(row, col, `${MONTH_NAMES[dt.getUTCMonth()]}, ${dt.getUTCDate()}`));
+    const job = days.find((x) => x.date === iso);
+    cells.push(cell(row + 2, col, job?.site ?? "All Sites"));
+    if (job) { if (job.hours) cells.push(cell(row + 2, col + 2, job.hours)); cells.push(cell(row + 2, col + 3, job.total), cell(row + 3, col + 1, false), cell(row + 4, col + 1, false)); }
+  }
+  zip.file("xl/workbook.xml", `<workbook><sheets><sheet name="List1" sheetId="1" r:id="rId1"/><sheet name="DATA" sheetId="2" r:id="rId2"/></sheets></workbook>`);
+  zip.file("xl/_rels/workbook.xml.rels", `<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Target="worksheets/sheet2.xml"/></Relationships>`);
+  zip.file("xl/worksheets/sheet1.xml", `<worksheet><sheetData><row r="1">${cells.join("")}</row></sheetData></worksheet>`);
+  zip.file("xl/worksheets/sheet2.xml", `<worksheet><sheetData><row r="1">${cell(1, 1, "JANUARY")}${cell(1, 2, 1)}</row></sheetData></worksheet>`);
+  return zip.generateAsync({ type: "uint8array" });
+}
+
+describe("monthly spreadsheet import", () => {
+  it("reads the single calendar tab: text dates, money as text, flat-pay days, neighbouring months ignored", async () => {
+    const sheet = await parseAnnual(await monthlyWorkbook(9, 2026, [
+      { date: "2026-09-03", site: "Alpha", hours: 10, total: " $ 600.00 " },
+      { date: "2026-09-15", site: "Offshore", total: " $ 1,000.00 " },
+      { date: "2026-08-31", site: "Alpha", hours: 4, total: " $ 240.00 " },
+      { date: "2026-10-01", site: "Alpha", hours: 4, total: " $ 240.00 " },
+    ]));
+    expect(sheet.year).toBe(2026);
+    expect(sheet.name).toBe("Test Person");
+    expect(sheet.days).toEqual([
+      { date: "2026-09-03", client: "Alpha", hours: 10, lead: false, holiday: false, total: 600 },
+      { date: "2026-09-15", client: "Offshore", hours: 0, lead: false, holiday: false, total: 1000 },
+    ]);
+  });
+  it("adding several months one after another keeps the earlier months", async () => {
+    let d = newData();
+    d.history = { sites: [{ effectiveFrom: "2000-01-01", value: demoSites }], tax: [{ effectiveFrom: "2000-01-01", value: demoTax }] };
+    const site = "Alpha";
+    for (const [month, date] of [[8, "2026-08-04"], [9, "2026-09-03"], [10, "2026-10-06"]] as const) {
+      const sheet = await parseAnnual(await monthlyWorkbook(month, 2026, [{ date, site, hours: 8, total: " $ 100.00 " }]));
+      d = applyAnnual(d, sheet, { [site]: { site } }, "replace").data;
+    }
+    expect(d.entries.map((e) => e.date)).toEqual(["2026-08-04", "2026-09-03", "2026-10-06"]);
+  });
+});

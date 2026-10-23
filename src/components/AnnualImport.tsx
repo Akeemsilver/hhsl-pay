@@ -54,7 +54,7 @@ export function AnnualImport() {
   return (
     <section className="card">
       <h2>Import from your yearly spreadsheet</h2>
-      <p className="muted small">Bring in the days worked from the yearly salary spreadsheet (the one with a tab for each month), saved as .xlsx. Only days, hours, team lead and holiday flags are read. You see a preview first and nothing changes until you confirm.</p>
+      <p className="muted small">Bring in the days worked from the yearly salary spreadsheet (a tab for each month) or a monthly one (a single calendar), saved as .xlsx. Months you already have are kept unless you choose Replace. Only days, hours, team lead and holiday flags are read. You see a preview first and nothing changes until you confirm.</p>
       <input ref={input} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden
         onChange={(e) => { const f = e.target.files?.[0]; if (f) void read(f); e.target.value = ""; }} />
       <button className="wide" disabled={busy} onClick={() => input.current?.click()}>{busy ? "Reading…" : "Choose yearly spreadsheet…"}</button>

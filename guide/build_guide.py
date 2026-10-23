@@ -133,7 +133,7 @@ s.append(callout("File will not download or will not load?", [
  "The starter kit holds company pay rates. Only pass it to colleagues."], WARN, WARNB))
 
 s.append(Paragraph('<a name="p3"/>Part 3. Bring in your spreadsheet (optional)', h1))
-s.append(Paragraph(f"If you keep your days in the yearly salary spreadsheet (a tab for each month, January to December), the app can read your days from it. The app reads <b>Excel (.xlsx)</b> files, so a Google Sheet has to be saved as Excel first. You do this in the <b>Google Sheets app</b> on your phone: {lk(PLAY, 'get it on Android')} or {lk(APPSTORE, 'get it on iPhone')}.", body))
+s.append(Paragraph(f"If you keep your days in the yearly salary spreadsheet (a tab for each month, January to December), or in a monthly one (a single calendar for one month), the app can read your days from it. You can import one file per month, one after another: the months you already have stay as they are. The app reads <b>Excel (.xlsx)</b> files, so a Google Sheet has to be saved as Excel first. You do this in the <b>Google Sheets app</b> on your phone: {lk(PLAY, 'get it on Android')} or {lk(APPSTORE, 'get it on iPhone')}.", body))
 s.append(Paragraph("Step A. Save your Google Sheet as Excel (in the Google Sheets app)", h2))
 s.append(steps([
  ("Open the sheet in the <b>Google Sheets app</b>. Tap the <b>three dots</b> at the top right, then <b>Share &amp; export</b>, then <b>Save as</b>, then <b>Microsoft Excel (.xlsx)</b>.", I("sheets-phone")),
