@@ -35,5 +35,7 @@ await page.getByRole("button", { name: "Month", exact: true }).last().click(); a
 await page.getByRole("button", { name: /^Wed 21,/ }).click(); await page.waitForTimeout(400);
 await page.getByRole("button", { name: /Add job/ }).first().click(); await page.waitForTimeout(500);
 await snap("tick", { tick: page.locator(".ts-switch") });
+await page.locator(".ts-switch").first().click(); await page.waitForTimeout(300);
+await snap("tickon", { tick: page.locator(".ts-switch") });
 fs.writeFileSync(`${S}/boxes.json`, JSON.stringify(boxes));
 await b.close();
