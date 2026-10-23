@@ -237,9 +237,11 @@ export function CalendarGrid({ month, days, result, today, onPick, selected, sli
           );
         })}
       </div>
-      {unpaidDays.length > 0 && (
-        <p className="cal-unpaid" role="status">Unpaid other jobs: {unpaidDays.map(ordinal).join(", ")}. Tap the date to add the amount.</p>
-      )}
+      {unpaidDays.length > 0 && (() => {
+        const text = `Unpaid other jobs: ${unpaidDays.map(ordinal).join(", ")}. Tap a date to add the amount.`;
+        // One line when it fits (the text shrinks a little to make it fit); a long list of dates may wrap.
+        return <p className={`cal-unpaid ${text.length > 78 ? "wrap" : ""}`} role="status" style={{ "--n": text.length } as React.CSSProperties}>{text}</p>;
+      })()}
       {legend.length > 0 && (
         <p className="cal-legend">
           {legend.map((n) => <span key={n} className="k"><i style={{ background: SITE_COLORS[siteColorIndex(data, n)]!.hex }} />{n}</span>)}
