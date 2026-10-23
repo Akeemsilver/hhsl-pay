@@ -33,6 +33,8 @@ function read(): Loc {
 export interface Guard {
   blocks: (next: Loc, current: Loc) => boolean;
   onBlocked: () => void;
+  /** Another day was tapped while this day sheet is open. Return true when the screen took care of it (for example by asking to discard changes). */
+  onSwitch?: (day: string) => boolean;
 }
 
 interface Nav {
@@ -40,6 +42,8 @@ interface Nav {
   setGuard: (g: Guard | null) => void;
   /** Open a settings page or a day sheet on top of the current screen. */
   open: (next: { page?: Page; day?: string; sub?: string; add?: "job" | "other"; focus?: string }) => void;
+  /** Show a day's sheet: opens it, or when one is already open switches it to this day (no extra Back step). */
+  showDay: (day: string) => void;
   /** Switch tab; going back to Home returns to the first history entry. */
   selectTab: (tab: Tab) => void;
   back: () => void;
@@ -110,6 +114,19 @@ export function NavProvider({ children }: { children: ReactNode }) {
     [loc],
   );
 
+  const showDay = useCallback(
+    (day: string) => {
+      const cur = locRef.current;
+      if (!cur.day) { open({ day }); return; }
+      if (cur.day === day) return;
+      if (guard.current?.onSwitch?.(day)) return;
+      const l: Loc = { ...cur, day, add: undefined, focus: undefined, sub: undefined };
+      window.history.replaceState(l, "");
+      setLoc(l);
+    },
+    [open],
+  );
+
   const selectTab = useCallback(
     (tab: Tab) => {
       if (tab === "home") {
@@ -129,6 +146,6 @@ export function NavProvider({ children }: { children: ReactNode }) {
   );
 
   const back = useCallback(() => window.history.back(), []);
-  const value = useMemo(() => ({ loc, setGuard, open, selectTab, back, exitHint }), [loc, setGuard, open, selectTab, back, exitHint]);
+  const value = useMemo(() => ({ loc, setGuard, open, showDay, selectTab, back, exitHint }), [loc, setGuard, open, showDay, selectTab, back, exitHint]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

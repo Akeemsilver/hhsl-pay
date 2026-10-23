@@ -29,7 +29,7 @@ const shortDate = (iso: string) => dayDMY(iso, true);
 
 export function HomeScreen() {
   const { data } = useStore();
-  const { open, selectTab, loc } = useNav();
+  const { open, showDay, selectTab, loc } = useNav();
   const [picked, setPicked] = useState<string | undefined>();
   const today = todayISO();
   const [shown, setShown] = useState(today.slice(0, 7));
@@ -172,7 +172,7 @@ export function HomeScreen() {
           <MonthPicker month={shown} onChange={setShown} />
           <button className="icon" onClick={() => slide.go(1)} aria-label="Next month"><ForwardIcon /></button>
         </div>
-        <CalendarGrid month={shown} days={daysOfMonth(shown)} result={shownResult} today={today} selected={loc.day ?? picked} onPick={(d) => { setPicked(d); open({ day: d }); }} slide={slide} />
+        <CalendarGrid month={shown} days={daysOfMonth(shown)} result={shownResult} today={today} selected={loc.day ?? picked} onPick={(d) => { setPicked(d); showDay(d); }} slide={slide} />
       </div>
 
       <section className="card">
@@ -221,7 +221,7 @@ export function HomeScreen() {
           <ul className="recent">
             {latest.map((e) => (
               <li key={e.id}>
-                <button onClick={() => open({ day: e.date })}>
+                <button onClick={() => showDay(e.date)}>
                   <span className="when">{shortDate(e.date)}</span>
                   <span className="what">
                     {isOther(e) ? `Other · ${e.description || "no description"}` : <>{e.site}{e.hours > 0 && ` · ${hoursText(e.hours)} h`}{e.holiday && " · HOL/TAR"}</>}

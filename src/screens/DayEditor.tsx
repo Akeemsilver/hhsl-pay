@@ -22,7 +22,9 @@ const QUICK_JOBS = ["Airport pickup", "Delivery", "Drop-off", "Yard run"];
  */
 export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "job" | "other"; focus?: string; onClose: () => void }) {
   const { data, update } = useStore();
-  const { setGuard } = useNav();
+  const { setGuard, showDay } = useNav();
+  // A date tapped on the calendar behind this sheet while there are unsaved changes: asked about first.
+  const pendingDay = useRef<string | null>(null);
   const sites = valueOn(data.history.sites, date);
   const siteNames = Object.keys(sites);
   const original = useRef<Entry[]>(data.entries.filter((e) => e.date === date));
@@ -49,6 +51,10 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
   const quick = quickTimes(data.entries.flatMap((e) => [e.startTime, e.endTime]));
 
   useEffect(() => closeRef.current?.focus(), []);
+  useEffect(() => {
+    document.documentElement.classList.add("day-sheet-open");
+    return () => document.documentElement.classList.remove("day-sheet-open");
+  }, []);
 
   // Opened from the calendar's "Add job": start with a blank job already on the form. Or scroll to the job being edited.
   useEffect(() => {
@@ -63,7 +69,11 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
   // Pressing the phone's Back button while there are unsaved changes asks first instead of closing.
   useEffect(() => {
     if (!dirty) return;
-    setGuard({ blocks: (next) => !next.day, onBlocked: () => setConfirming(true) });
+    setGuard({
+      blocks: (next) => !next.day,
+      onBlocked: () => setConfirming(true),
+      onSwitch: (day) => { pendingDay.current = day; setConfirming(true); return true; },
+    });
     return () => setGuard(null);
   }, [dirty, setGuard]);
 
@@ -142,7 +152,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
 
   return (
     <>
-      <BottomSheet label={`Entries for ${dmy(date)}`} onRequestClose={requestClose} onPullDismiss={leave}>
+      <BottomSheet modeless label={`Entries for ${dmy(date)}`} onRequestClose={requestClose} onPullDismiss={leave}>
         <header className="bar">
           <h2>{dayDMY(date)}</h2>
           {holidayName && <p className="hol-name">{holidayName}</p>}
@@ -421,8 +431,13 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
           message="You have unsaved changes to this day. If you leave now they will be lost."
           cancelLabel="Keep editing"
           confirmLabel="Discard"
-          onCancel={() => setConfirming(false)}
-          onConfirm={() => { setConfirming(false); leave(); }}
+          onCancel={() => { pendingDay.current = null; setConfirming(false); }}
+          onConfirm={() => {
+            setConfirming(false);
+            const day = pendingDay.current;
+            pendingDay.current = null;
+            if (day) { setGuard(null); showDay(day); } else leave();
+          }}
         />
       )}
     </>
