@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useSessionState } from "../session";
+import { useBarHeight } from "../barHeight";
 import { valueOn } from "../engine";
 import { daysOfMonth, shiftMonth, todayISO } from "../format";
 import { useMonth } from "../hooks";
@@ -42,15 +43,7 @@ export function CalendarScreen() {
   const noSites = Object.keys(valueOn(data.history.sites, `${month}-01`)).length === 0;
 
   // The month bar sticks right under the title bar, whatever height that bar has on this phone.
-  useEffect(() => {
-    const bar = document.querySelector<HTMLElement>(".bar");
-    if (!bar) return;
-    const set = () => document.documentElement.style.setProperty("--bar-h", `${bar.getBoundingClientRect().height}px`);
-    set();
-    const ro = new ResizeObserver(set);
-    ro.observe(bar);
-    return () => { ro.disconnect(); document.documentElement.style.removeProperty("--bar-h"); };
-  }, []);
+  useBarHeight();
 
   return (
     <>

@@ -9,12 +9,14 @@ import { isCombined, overridesFor } from "../model";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
 import { TaxSwitch } from "../components/TaxMode";
+import { useBarHeight } from "../barHeight";
 import { BackIcon, ForwardIcon } from "../components/Icons";
 import { YearByPayslip, YearSites } from "../components/YearParts";
 import { AverageLine } from "../components/AverageLine";
 import { yearReport } from "../yearReport";
 
 export function YearScreen() {
+  useBarHeight();
   const { data } = useStore();
   const [year, setYear] = useSessionState("year-year", Number(todayISO().slice(0, 4)));
 
