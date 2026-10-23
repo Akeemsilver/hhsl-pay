@@ -19,5 +19,5 @@ def make(name, notes, out, up, down):
 make("typed",[("typed","Type in a location","above")],"d-typed",up=170,down=420)
 make("fixed",[("fixed","Fixed day rate","above"),("rate","Day rate","below"),("hours","1x hours","below")],"d-fixed",up=150,down=170)
 make("weekend",[("wk","Same as weekday","above"),("hol","Or set its own","below")],"d-weekend",up=170,down=170)
-make("tick",[("tick","Tick to put the site on the time sheet","below")],"d-tick",up=300,down=300)
+make("tick",[("tick","Time sheet switch","above")],"d-tick",up=300,down=300)
 for n in ["d-typed","d-fixed","d-weekend","d-tick"]: print(n,Image.open(f"shots9/{n}.png").size)
