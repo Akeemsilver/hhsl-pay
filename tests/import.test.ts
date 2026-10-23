@@ -11,4 +11,12 @@ describe("payroll email", () => {
     expect(link.startsWith("mailto:payrollassistant@hhslsafety.com?subject=Time%20Sheet")).toBe(true);
     expect(decodeURIComponent(link.split("body=")[1]!)).toBe(e.body);
   });
+  it("builds links that open Mail, Gmail and Outlook with the address, subject and message filled in", async () => {
+    const { payrollEmail, mailtoLink, gmailLink, outlookLink } = await import("../src/payroll");
+    const e = payrollEmail({ to: "a@b.test", name: "TEST PERSON", monthName: "October 2026", siteLabel: "x", days: 1, hours: 8, fileName: "f.xlsx" });
+    expect(mailtoLink(e)).toMatch(/^mailto:a@b\.test\?subject=/);
+    expect(gmailLink(e)).toMatch(/^googlegmail:\/\/\/co\?to=a%40b\.test&subject=Time%20Sheet/);
+    expect(outlookLink(e)).toMatch(/^ms-outlook:\/\/compose\?to=a%40b\.test&subject=Time%20Sheet/);
+    expect(decodeURIComponent(gmailLink(e).split("body=")[1]!)).toBe(e.body);
+  });
 });

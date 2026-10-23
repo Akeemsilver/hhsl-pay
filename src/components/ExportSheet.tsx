@@ -18,7 +18,7 @@ import { PayrollDialog } from "./PayrollDialog";
 import { isIos } from "../install";
 import { MailIcon } from "./Icons";
 import { download, withTime } from "../backup";
-import { mailtoLink, payrollEmail } from "../payroll";
+import { gmailLink, mailtoLink, outlookLink, payrollEmail } from "../payroll";
 
 
 function SlipPreview({ slip }: { slip: Payslip }) {
@@ -106,6 +106,7 @@ export function ExportSheet({ month }: { month: string }) {
     setPayrollFile(null);
     setPayrollError(null);
     setPayrollTry(0);
+    setSavedToFiles(false);
     setPayrollOpen(true);
     try {
       const made = await makeTimesheetXlsx(template!.bytes, settings, month, data.entries, data.history);
@@ -144,29 +145,34 @@ export function ExportSheet({ month }: { month: string }) {
     }
     setPayrollError("this phone cannot share files");
   };
-  // iPhone: a downloaded file opens in a viewer that hides the mail app, so the file is handed straight to the share menu (Mail attaches it).
-  const [copied, setCopied] = useState(false);
-  const copyAddress = async () => {
-    try { await navigator.clipboard.writeText(email.to); setCopied(true); window.setTimeout(() => setCopied(false), 3000); }
-    catch { setPayrollError("could not copy. The address is shown above: press and hold it to copy"); }
-  };
-  const shareToMail = async () => {
-    if (!payrollFile) return;
+  // iPhone: a downloaded file opens in a viewer that hides the mail app, so there are two steps: the file goes to the share menu
+  // (Save to Files), then the chosen email app opens with the address, subject and message filled in, and the file is attached from Files.
+  const [savedToFiles, setSavedToFiles] = useState(false);
+  const shareFileNow = async (withText: boolean): Promise<boolean> => {
+    if (!payrollFile) return false;
     const file = new File([payrollFile.bytes as BlobPart], payrollFile.fileName, { type: XLSX_MIME });
     const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
     setPayrollError(null);
-    if (!nav.share || (nav.canShare && !nav.canShare({ files: [file] }))) { setPayrollError("this phone cannot share files"); return; }
+    if (!nav.share || (nav.canShare && !nav.canShare({ files: [file] }))) { setPayrollError("this phone cannot share files"); return false; }
     try {
-      await nav.share({ files: [file], title: email.subject, text: email.body });
-      setPayrollOpen(false);
-      setMessage({ text: "Time sheet shared.", ok: true });
+      await nav.share(withText ? { files: [file], title: email.subject, text: email.body } : { files: [file], title: payrollFile.fileName });
+      return true;
     } catch (e) {
       if ((e as DOMException)?.name !== "AbortError") setPayrollError((e as Error)?.message || (e as DOMException)?.name || "Error");
+      return false;
     }
   };
-  const saveOnly = () => {
-    if (!payrollFile) return;
-    download(withTime(payrollFile.fileName), payrollFile.bytes, XLSX_MIME);
+  const saveToFiles = async () => { if (await shareFileNow(false)) setSavedToFiles(true); };
+  const openEmailApp = (app: "mail" | "gmail" | "outlook") => {
+    window.location.href = app === "gmail" ? gmailLink(email) : app === "outlook" ? outlookLink(email) : mailtoLink(email);
+  };
+  // Other way: the file goes straight into an email app through the share menu, attached; the address is copied for pasting.
+  const shareToMail = async () => {
+    try { await navigator.clipboard.writeText(email.to); } catch { /* the address is shown on screen */ }
+    if (await shareFileNow(true)) {
+      setPayrollOpen(false);
+      setMessage({ text: `Time sheet shared. The address ${email.to} is copied: paste it in the To box.`, ok: true });
+    }
   };
   // Main way: save the file, then open the phone's mail app (Gmail, Outlook, ...) with the address, subject and message ready.
   const openMailApp = () => {
@@ -269,7 +275,7 @@ export function ExportSheet({ month }: { month: string }) {
           </>
         )}
       </div>
-      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={openMailApp} onShare={shareToPayroll} ios={isIos()} onShareMail={shareToMail} onCopyAddress={copyAddress} copied={copied} onSaveOnly={saveOnly} ready={!!payrollFile} error={payrollError} />}
+      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={openMailApp} onShare={shareToPayroll} ios={isIos()} onSaveToFiles={saveToFiles} saved={savedToFiles} onOpenEmail={openEmailApp} onShareMail={shareToMail} ready={!!payrollFile} error={payrollError} />}
     </BottomSheet>
   );
 }
