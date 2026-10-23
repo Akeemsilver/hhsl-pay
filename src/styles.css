@@ -868,3 +868,12 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .ts-check span { display: grid; gap: 1px; line-height: 1.25; }
 .ts-check small { font-size: 0.78rem; }
 .example-box { pointer-events: none; opacity: 0.9; }
+
+.tj-text { margin: 0 0 4px 30px; }
+.tj-text summary { cursor: pointer; font-size: 0.8rem; color: var(--accent); list-style: none; }
+.tj-text summary::-webkit-details-marker { display: none; }
+.tj-text .tj-label { margin: 6px 0 0; }
+.tj-roles > summary { cursor: pointer; font-size: 0.85rem; color: var(--muted); padding: 4px 0 4px 30px; }
+.tj-roles[open] > summary { color: var(--text); }
+.tj-roles > summary::after { content: " ▾"; }
+.tj-roles[open] > summary::after { content: " ▴"; }

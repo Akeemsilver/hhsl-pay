@@ -42,18 +42,22 @@ export function TimesheetJobs() {
 
   const row = (site: string, role?: string) => {
     const rule = find(site, role);
+    const typed = !role && !!typedField(site);
     return (
       <div className="tj-row" key={key({ site, role })}>
         <label className="tj-check">
           <input type="checkbox" checked={!!rule} onChange={() => toggle(site, role)} />
           <span>{role ?? site}</span>
         </label>
-        {rule && (
-          <label className="tj-label">Client column
-            <input value={rule.label} onChange={(e) => relabel(site, role, e.target.value)} placeholder={suggested(site, role)} />
-          </label>
+        {rule && typed && <p className="muted small">Client assigned: the {typedField(site)!.label.toLowerCase()} you type on each day.</p>}
+        {rule && !typed && (
+          <details className="tj-text">
+            <summary>Shows as “{rule.label}” · change</summary>
+            <label className="tj-label">Client assigned on the time sheet
+              <input value={rule.label} onChange={(e) => relabel(site, role, e.target.value)} placeholder={suggested(site, role)} />
+            </label>
+          </details>
         )}
-        {rule && !role && typedField(site) && <p className="muted small">The Client column uses what you type in “{typedField(site)!.label}” on each day. The text above is only used when that box is empty.</p>}
       </div>
     );
   };
@@ -83,13 +87,16 @@ export function TimesheetJobs() {
       {siteNames.map((site) => {
         const roles = [...sites.get(site)!];
         const ticked = roles.filter((r) => find(site, r)).length;
+        const typed = !!typedField(site);
         return (
           <div className="tj-site" key={site}>
             {row(site)}
-            <div className="tj-roles">
-              <span className="muted small">{find(site) ? "Roles are already included" : "Or only these roles"}{ticked > 0 && !find(site) ? ` · ${ticked} ticked` : ""}</span>
-              {roles.map((r) => row(site, r))}
-            </div>
+            {!typed && !find(site) && (
+              <details className="tj-roles" open={ticked > 0}>
+                <summary>Only certain roles{ticked > 0 ? ` · ${ticked} ticked` : ""}</summary>
+                {roles.map((r) => row(site, r))}
+              </details>
+            )}
           </div>
         );
       })}
