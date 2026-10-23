@@ -183,9 +183,6 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
               <button onClick={() => { addJob(); setMode("edit"); }} disabled={siteNames.length === 0}>Add job</button>
               <button onClick={() => { addOther(); setMode("edit"); }}>Add other job</button>
             </div>
-            <div className="sheet-footer">
-              <button className="wide" onClick={leave}>Close</button>
-            </div>
           </>
         ) : (
           <>
