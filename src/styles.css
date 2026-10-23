@@ -1036,3 +1036,10 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 .import-changes details { margin-top: 6px; }
 .import-changes summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
 .import-changes .row { justify-content: space-between; gap: 8px; }
+
+.import-modes { display: grid; gap: 8px; margin: 10px 0; }
+.import-modes button { display: grid; gap: 2px; text-align: left; padding: 10px 12px; border-radius: 12px; background: var(--card); border: 2px solid var(--field-edge); color: var(--text); min-height: 0; box-shadow: none; }
+.import-modes button strong { font-size: 1rem; }
+.import-modes button span { font-size: 0.85rem; font-weight: 400; color: var(--muted); }
+.import-modes button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--card)); }
+.import-modes button.on strong::after { content: " ✓"; color: var(--accent); }

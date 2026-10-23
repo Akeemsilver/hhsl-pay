@@ -7,6 +7,12 @@ import { useStore } from "../store";
 import { ImportError, type Assignment } from "../siteMatch";
 
 
+const MODES: Array<{ id: ImportMode; title: string; text: string }> = [
+  { id: "update", title: "Update", text: "Adds new days and fixes changed ones to match the file. Days only in the app stay." },
+  { id: "add", title: "Add only", text: "Adds new days only. Nothing you already logged is changed." },
+  { id: "replace", title: "Replace", text: "Clears these months, then adds the file's days. Days not in the file are removed." },
+];
+
 /** Backup screen card: read the yearly or monthly salary spreadsheet and add its days to the app, after a preview. */
 export function AnnualImport() {
   const { data, replace } = useStore();
@@ -67,11 +73,6 @@ export function AnnualImport() {
   }
 
   const importLabel = !changes ? "Import" : mode === "update" ? `Import (${changes.counts.new} new, ${changes.counts.changed} updated)` : mode === "add" ? `Import ${changes.counts.new} new day${changes.counts.new === 1 ? "" : "s"}` : `Replace with ${usable} day${usable === 1 ? "" : "s"}`;
-  const modeText: Record<ImportMode, string> = {
-    update: "Adds days you have not logged and brings days you already logged (same site and date) in line with the file. Days that are only in the app are never touched.",
-    add: "Adds only days you have not logged yet. Everything already logged stays exactly as it is, even if the file differs.",
-    replace: "Clears your logged jobs in the months in this file, then adds the file's days. Days in those months that are not in the file are removed. Other months and Other jobs are kept.",
-  };
 
   return (
     <section className="card">
@@ -133,12 +134,14 @@ export function AnnualImport() {
               )}
             </div>
           )}
-          <div className="segmented three" role="group" aria-label="How to import the spreadsheet">
-            <button aria-pressed={mode === "update"} className={mode === "update" ? "on" : ""} onClick={() => setMode("update")}>Update</button>
-            <button aria-pressed={mode === "add"} className={mode === "add" ? "on" : ""} onClick={() => setMode("add")}>Add only</button>
-            <button aria-pressed={mode === "replace"} className={mode === "replace" ? "on" : ""} onClick={() => setMode("replace")}>Replace</button>
+          <div className="import-modes" role="group" aria-label="How to import the spreadsheet">
+            {MODES.map((m) => (
+              <button key={m.id} type="button" aria-pressed={mode === m.id} className={mode === m.id ? "on" : ""} onClick={() => setMode(m.id)}>
+                <strong>{m.title}</strong>
+                <span>{m.text}</span>
+              </button>
+            ))}
           </div>
-          <p className="muted small">{modeText[mode]}</p>
           {mode === "replace" && changes && changes.removeCount > 0 && <p className="notice warn" role="status">Replace removes {changes.removeCount} logged day{changes.removeCount === 1 ? "" : "s"} first{changes.counts.onlyInApp > 0 ? `, including ${changes.counts.onlyInApp} that ${changes.counts.onlyInApp === 1 ? "is" : "are"} not in the file` : ""}.</p>}
           <div className="row">
             <button onClick={() => setSheet(null)}>Cancel</button>

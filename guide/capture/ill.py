@@ -106,17 +106,24 @@ for i,t in enumerate(["HHSL-starter-kit-rates.pdf","photo_2026.jpg","statement.p
 save(im,"picker")
 
 # 9 import preview mock
-im,d=canvas(560)
-rr(d,(16,12,624,548),WHITE,20,outline=LINE)
+im,d=canvas(808)
+rr(d,(16,12,624,796),WHITE,20,outline=LINE)
 label(d,(40,32),"Example Name · 2026 · 180 days",25,True)
-for i,(m,n) in enumerate([("January","20 days"),("February","18 days"),("March","22 days")]):
-    y=82+i*34; label(d,(40,y),m,22,fill=GREY); label(d,(600,y),n,22,fill=GREY,anchor="ra")
-label(d,(40,196),"“Atlantic LNG” is",24)
-rr(d,(40,230,600,282),WHITE,12,outline=LINE); label(d,(56,243),"Atlantic",24); label(d,(580,243),"v",22,fill=GREY,anchor="ra")
-ring(d,(40,230,600,282),4); label(d,(600,300),"Pick the site each name is",22,True,RED,"ra")
-rr(d,(40,342,320,396),(226,231,236),12); label(d,(180,369),"Add",24,True,anchor="mm")
-rr(d,(320,342,600,396),WHITE,12,outline=LINE); label(d,(460,369),"Replace these months",21,anchor="mm",fill=GREY)
-label(d,(40,410),"Add keeps what you already have.",20,fill=GREY)
-rr(d,(40,456,300,520),WHITE,14,outline=LINE); label(d,(170,488),"Cancel",24,anchor="mm")
-rr(d,(320,456,600,520),TEAL,14); label(d,(460,488),"Import 180 days",24,True,WHITE,"mm"); ring(d,(320,456,600,520),4)
+for i,(m,n) in enumerate([("January","20 days"),("February","18 days")]):
+    y=76+i*32; label(d,(40,y),m,22,fill=GREY); label(d,(600,y),n,22,fill=GREY,anchor="ra")
+label(d,(40,150),"“Atlantic LNG” is",24)
+rr(d,(40,184,600,232),WHITE,12,outline=LINE); label(d,(56,196),"Atlantic",24); label(d,(580,196),"v",22,fill=GREY,anchor="ra")
+ring(d,(40,184,600,232),4); label(d,(600,246),"Pick the site each name is",22,True,RED,"ra")
+rr(d,(40,284,600,364),(232,242,240),12)
+for i,(n,t) in enumerate([("13","new"),("2","the same"),("1","changed"),("23","only in app")]):
+    cx=40+70+i*140; label(d,(cx,296),n,28,True,anchor="ma"); label(d,(cx,336),t,18,fill=GREY,anchor="ma")
+ring(d,(40,284,600,364),3); label(d,(600,372),"What will change",22,True,RED,"ra")
+opts=[("Update (chosen)","Adds new days, fixes changed ones. Days only in the app stay.",True),("Add only","Adds new days only. Nothing already logged changes.",False),("Replace","Clears these months, then adds the file's days.",False)]
+for i,(t,x,on) in enumerate(opts):
+    y=412+i*88
+    rr(d,(40,y,600,y+76),(232,242,240) if on else WHITE,12,outline=TEAL if on else LINE)
+    label(d,(56,y+8),t,23,True,TEAL if on else INK); label(d,(56,y+42),x,18,fill=GREY)
+ring(d,(40,412,600,676),3); label(d,(600,684),"Three ways to import",22,True,RED,"ra")
+rr(d,(40,728,300,784),WHITE,14,outline=LINE); label(d,(170,756),"Cancel",23,anchor="mm")
+rr(d,(320,728,600,784),TEAL,14); label(d,(460,756),"Import (13 new, 1 updated)",19,True,WHITE,"mm")
 save(im,"import-preview")
