@@ -231,7 +231,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                         </label>
                       )}
                     </div>
-                    {entry.site && <p className="muted small ts-hint">{viaOther ? (siteRule ? "The whole site is on the time sheet (Settings, Timesheet)." : "On it by a role rule (Settings, Timesheet).") : role ? `Time sheet: all ${entry.site} ${role} days, not just this one.` : `Time sheet: all days at ${entry.site}, not just this one.`}</p>}
+                    {entry.site && <p className="muted small ts-hint">{viaOther ? (siteRule ? "The whole site is on the time sheet (Settings, Timesheet)." : "On it by a role rule (Settings, Timesheet).") : role ? `All ${entry.site} ${role} days, not just this one.` : `All ${entry.site} days, not just this one.`}</p>}
                   </>
                 );
               })()}
