@@ -293,7 +293,9 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                       )}
                     </div>
                     {entry.site && (() => {
-                      const hint = viaOther ? (siteRule ? "The whole site is on the time sheet (Settings, Timesheet)." : "On it by a role rule (Settings, Timesheet).") : `Time sheet: All ${entry.site}${role ? ` ${role}` : ""} days not just this one.`;
+                      const hint = viaOther ? (siteRule ? "The whole site is on the time sheet (Settings, Timesheet)." : "On it by a role rule (Settings, Timesheet).") : own
+                        ? `On the time sheet: all ${entry.site}${role ? ` ${role}` : ""} days, not just this one.`
+                        : `${entry.site}${role ? ` ${role}` : ""} is not on your time sheet.`;
                       // One line on any phone: the text shrinks with the screen width.
                       return <p className="muted ts-hint" style={{ "--n": hint.length } as React.CSSProperties}>{hint}</p>;
                     })()}
