@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSessionState } from "../session";
 import { valueOn } from "../engine";
 import { daysOfMonth, shiftMonth, todayISO } from "../format";
@@ -27,10 +27,21 @@ export function CalendarScreen() {
   const year = Number(month.slice(0, 4));
   const noSites = Object.keys(valueOn(data.history.sites, `${month}-01`)).length === 0;
 
+  // The month bar sticks right under the title bar, whatever height that bar has on this phone.
+  useEffect(() => {
+    const bar = document.querySelector<HTMLElement>(".bar");
+    if (!bar) return;
+    const set = () => document.documentElement.style.setProperty("--bar-h", `${bar.getBoundingClientRect().height}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(bar);
+    return () => { ro.disconnect(); document.documentElement.style.removeProperty("--bar-h"); };
+  }, []);
+
   return (
     <>
       <TopBar title="Month" month={month} />
-      <div className="monthbar">
+      <div className="monthbar sticky">
         <button className="icon" onClick={() => slide.go(-1)} aria-label="Previous month"><BackIcon /></button>
         <MonthPicker month={month} onChange={setMonth} />
         <button className="icon" onClick={() => slide.go(1)} aria-label="Next month"><ForwardIcon /></button>

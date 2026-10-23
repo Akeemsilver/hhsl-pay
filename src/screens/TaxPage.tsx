@@ -6,7 +6,7 @@ import { BandTable, NumInput, TakeEffect, versionLabel } from "../components/set
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { isFarBack } from "../rateEdit";
 import { applyFrom, diffObject } from "../rateEdit";
-import { todayISO } from "../format";
+import { dmy, todayISO } from "../format";
 
 export function TaxPage() {
   const { data, update } = useStore();
@@ -36,7 +36,7 @@ export function TaxPage() {
       <p className="muted pad">Edit the rules, then tap Save and choose “Take effect from”. That is today unless you pick another day, for example the 1st of next month. Earlier months keep calculating with the old rules.</p>
 
       {asOf !== todayISO() && (
-        <p className="notice">Showing the rules in force on <strong>{asOf}</strong>. <button className="link" onClick={() => setAsOf(todayISO())}>Back to today</button></p>
+        <p className="notice">Showing the rules in force on <strong>{dmy(asOf)}</strong>. <button className="link" onClick={() => setAsOf(todayISO())}>Back to today</button></p>
       )}
 
       <section className="card">
@@ -71,7 +71,7 @@ export function TaxPage() {
             <button className="primary" onClick={() => (isFarBack(from, todayISO(), earliest) ? setAsk(true) : save())}>Save</button>
           </div>
           {ask && (
-            <ConfirmDialog title={`Are you sure? ${from} is a long way back`} message={`Saving these rules from ${from} recalculates every month since then.`} confirmLabel="Save from that date" cancelLabel="Cancel" safe
+            <ConfirmDialog title={`Are you sure? ${dmy(from)} is a long way back`} message={`Saving these rules from ${dmy(from)} recalculates every month since then.`} confirmLabel="Save from that date" cancelLabel="Cancel" safe
               onCancel={() => setAsk(false)} onConfirm={() => { setAsk(false); save(); }} />
           )}
         </div>

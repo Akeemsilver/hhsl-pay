@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { newData, isCombined, userNameOf } from "../model";
 import { OtherJobsPayer, TaxSegment } from "../components/TaxMode";
-import { todayISO } from "../format";
+import { localDMY, todayISO } from "../format";
 import { useStore } from "../store";
 import { useTheme, type ThemePref } from "../theme";
 import { PageHeader } from "../components/TopBar";
@@ -205,7 +205,7 @@ export function SettingsHub() {
         <li>
           <button onClick={() => open({ page: "backup" })}>
             <SaveIcon />
-            <span><strong>Backup &amp; restore</strong><small>{data.lastBackupAt ? `Last backup ${new Date(data.lastBackupAt).toLocaleDateString()}` : "Not backed up yet"}</small></span>
+            <span><strong>Backup &amp; restore</strong><small>{data.lastBackupAt ? `Last backup ${localDMY(new Date(data.lastBackupAt))}` : "Not backed up yet"}</small></span>
             <ChevronRight />
           </button>
         </li>

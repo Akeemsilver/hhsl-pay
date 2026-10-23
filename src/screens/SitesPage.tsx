@@ -9,7 +9,7 @@ import { NumInput, TakeEffect, versionLabel, type Num } from "../components/sett
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { applyFrom, changeGroup, commonValue, diffSite, groupSites, isFarBack, patchSite, rateImpact, type GroupChange, type Impact } from "../rateEdit";
 import { HOURS_TEMPLATES, applyTemplate, detectTemplate, templateById } from "../templates";
-import { todayISO } from "../format";
+import { dmy, todayISO } from "../format";
 
 function CapsRow({ label, caps, onChange, withX3 }: { label: string; caps: TierCaps; onChange: (c: TierCaps) => void; withX3?: boolean }) {
   const set = (k: keyof TierCaps) => (v: Num) => onChange({ ...caps, [k]: v });
@@ -395,8 +395,8 @@ function GroupRates({ payer, name, table, firstDate, impactFor, farBack, onApply
       {skip.length > 0 && <p className="muted small">Not changed (flat pay or a threshold rate): {skip.join(", ")}. Edit those below.</p>}
       {ask && (
         <ConfirmDialog
-          title={farBack(from) ? `Are you sure? ${from} is a long way back` : `Change ${name}?`}
-          message={`${std !== curStd ? `Standard rate ${curStd ?? "-"} → ${std ?? "-"}. ` : ""}${newLead !== curLead ? `Team lead rate ${curLead ?? "-"} → ${newLead ?? "-"}. ` : ""}${capsChanged ? "Hours at 1x, 1.5x, 2x and 3x change too. " : ""}Applies to ${included.join(", ")}${except.length ? ` (leaving out ${except.join(", ")})` : ""} from ${from}${from === todayISO() ? " (today)" : ""}.${impact && impact.days > 0 ? ` This recalculates ${impact.days} logged day${impact.days === 1 ? "" : "s"} (${impact.delta >= 0 ? "+" : "-"}$${Math.abs(impact.delta).toFixed(2)} gross).` : ""}`}
+          title={farBack(from) ? `Are you sure? ${dmy(from)} is a long way back` : `Change ${name}?`}
+          message={`${std !== curStd ? `Standard rate ${curStd ?? "-"} → ${std ?? "-"}. ` : ""}${newLead !== curLead ? `Team lead rate ${curLead ?? "-"} → ${newLead ?? "-"}. ` : ""}${capsChanged ? "Hours at 1x, 1.5x, 2x and 3x change too. " : ""}Applies to ${included.join(", ")}${except.length ? ` (leaving out ${except.join(", ")})` : ""} from ${dmy(from)}${from === todayISO() ? " (today)" : ""}.${impact && impact.days > 0 ? ` This recalculates ${impact.days} logged day${impact.days === 1 ? "" : "s"} (${impact.delta >= 0 ? "+" : "-"}$${Math.abs(impact.delta).toFixed(2)} gross).` : ""}`}
           confirmLabel="Change for all sites" cancelLabel="Cancel" safe
           onCancel={() => setAsk(false)}
           onConfirm={() => { setAsk(false); onApply(change_, from); }}
@@ -567,7 +567,7 @@ export function SitesPage() {
       <p className="muted pad">Change the rates for a whole payslip group in one go, or edit one site. Every change has a “Take effect from” date, which is today unless you pick another day. Earlier days keep their old rates, so a raise never changes past pay.</p>
 
       {asOf !== todayISO() && (
-        <p className="notice">Showing the rates in force on <strong>{asOf}</strong>. <button className="link" onClick={() => setAsOf(todayISO())}>Back to today</button></p>
+        <p className="notice">Showing the rates in force on <strong>{dmy(asOf)}</strong>. <button className="link" onClick={() => setAsOf(todayISO())}>Back to today</button></p>
       )}
 
       {groups.map((g) => (

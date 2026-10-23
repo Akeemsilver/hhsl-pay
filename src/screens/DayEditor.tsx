@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SitePicker } from "../components/SitePicker";
 import { computeDay, findSite, valueOn } from "../engine";
-import { WEEKDAYS, durationText, hoursText, money } from "../format";
+import { dayDMY, dmy, durationText, hoursText, money, timeRange } from "../format";
 import { isDetailed, isOther, newId, rolesFor, siteHasLunch, toDetailed, toSimple, withComputedHours, type Entry } from "../model";
 import { useNav } from "../nav";
 import { holidayMap } from "../holidays";
@@ -28,8 +28,10 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
   const [draft, setDraft] = useState<Entry[]>(() => structuredClone(original.current));
   const started = useRef(false);
   const [confirming, setConfirming] = useState(false);
+  // Tapping a day first shows what is on it (Edit or Delete each job, or add one). Edit and Add open the form.
+  const [mode, setMode] = useState<"overview" | "edit">(add || focus ? "edit" : "overview");
+  const [deleting, setDeleting] = useState<Entry | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const wd = new Date(`${date}T00:00:00Z`).getUTCDay();
   // The "Include on the time sheet" tick changes the site's time sheet rule, so it is held here until Save too.
   const originalRules = useRef<TimesheetRule[]>(data.timesheet?.rules ?? []);
   const [rulesDraft, setRulesDraft] = useState<TimesheetRule[]>(() => structuredClone(originalRules.current));
@@ -123,18 +125,62 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
   const newOther = (): Entry => ({ id: newId(), date, kind: "other", site: "", hours: 0, description: "" });
   const addJob = () => setDraft((list) => [...list, newJob()]);
   const addOther = () => setDraft((list) => [...list, newOther()]);
+  const startEdit = (id: string) => { setMode("edit"); requestAnimationFrame(() => document.querySelector(`[data-entry-id="${id}"]`)?.scrollIntoView({ block: "start" })); };
+  const deleteNow = (id: string) => {
+    update((d) => ({ ...d, entries: d.entries.filter((x) => x.id !== id) }));
+    original.current = original.current.filter((x) => x.id !== id);
+    setDraft((list) => list.filter((x) => x.id !== id));
+  };
 
   return (
     <>
-      <BottomSheet label={`Entries for ${date}`} onRequestClose={requestClose} onPullDismiss={leave}>
+      <BottomSheet label={`Entries for ${dmy(date)}`} onRequestClose={requestClose} onPullDismiss={leave}>
         <header className="bar">
-          <h2>{WEEKDAYS[wd]} {date}</h2>
+          <h2>{dayDMY(date)}</h2>
           {holidayName && <p className="hol-name">{holidayName}</p>}
           <button ref={closeRef} className="icon" onClick={requestClose} aria-label="Close">✕</button>
         </header>
 
         {siteNames.length === 0 && <p className="muted">No sites are set up for this date. Add them in Settings → Rates &amp; tax. You can still log an other job.</p>}
 
+        {mode === "overview" ? (
+          <>
+            {draft.length === 0 && <p className="muted">No jobs on this day.</p>}
+            {draft.map((e) => {
+              const other = isOther(e);
+              const pay = other ? null : computeDay(e, sites);
+              const times = timeRange(e.startTime, e.endTime);
+              return (
+                <div className={`day-job ${other ? "other" : ""}`} key={e.id}>
+                  <div className="info">
+                    <div className="title">
+                      <strong>{other ? `Other · ${e.description || "no description"}` : e.site}</strong>
+                      {e.role && <span className="badge">{e.role}</span>}
+                      {e.lead && <span className="badge">Team lead</span>}
+                      {e.holiday && <span className="badge">Holiday / TAR</span>}
+                    </div>
+                    <span className="muted small">
+                      {[times, !other && e.hours > 0 ? `${hoursText(e.hours)} h paid` : "", other && e.amount ? `paid ${money(e.amount)}` : ""].filter(Boolean).join(" · ") || "no times"}
+                    </span>
+                  </div>
+                  {pay && <span className="amount">{money(pay.total)}</span>}
+                  <div className="row">
+                    <button onClick={() => startEdit(e.id)}>Edit</button>
+                    <button className="danger" onClick={() => setDeleting(e)}>Delete</button>
+                  </div>
+                </div>
+              );
+            })}
+            <div className="grid2 add-buttons">
+              <button onClick={() => { addJob(); setMode("edit"); }} disabled={siteNames.length === 0}>Add job</button>
+              <button onClick={() => { addOther(); setMode("edit"); }}>Add other job</button>
+            </div>
+            <div className="sheet-footer">
+              <button className="wide" onClick={leave}>Close</button>
+            </div>
+          </>
+        ) : (
+          <>
         {draft.map((entry) => {
           if (isOther(entry)) {
             const duration = durationText(entry.startTime, entry.endTime);
@@ -340,7 +386,20 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
             ? <button className="danger outline" onClick={save}>Remove</button>
             : <button className="primary" onClick={save} disabled={!dirty}>Save</button>}
         </div>
+          </>
+        )}
       </BottomSheet>
+
+      {deleting && (
+        <ConfirmDialog
+          title="Delete this job?"
+          message={`${isOther(deleting) ? deleting.description || "This other job" : deleting.site} on ${dmy(date)} will be removed.`}
+          cancelLabel="Keep it"
+          confirmLabel="Delete"
+          onCancel={() => setDeleting(null)}
+          onConfirm={() => { deleteNow(deleting.id); setDeleting(null); }}
+        />
+      )}
 
       {confirming && (
         <ConfirmDialog

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useStore } from "../store";
 import { PageHeader } from "../components/TopBar";
 import { builtInHolidays, holidaysFor } from "../holidays";
+import { dmy } from "../format";
 
 export function HolidaysPage() {
   const { data, update } = useStore();
@@ -26,7 +27,7 @@ export function HolidaysPage() {
         <ul className="plain">
           {list.map((h) => (
             <li key={h.date} className="row">
-              <span><strong>{h.date.slice(8)}/{h.date.slice(5, 7)}</strong> <span className="hol-name">{h.name}</span></span>
+              <span><strong>{dmy(h.date)}</strong> <span className="hol-name">{h.name}</span></span>
               <button aria-label={`Remove ${h.name}`} onClick={() => edit((x) => ({
                 added: x.added.filter((a) => a.date !== h.date),
                 removed: builtIn.has(h.date) ? [...x.removed, h.date] : x.removed,
