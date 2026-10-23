@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { deliver } from "../backup";
+import { deliver, download, withTime } from "../backup";
 import { GUIDE_FILE } from "../guideFile";
 import { useNav } from "../nav";
 import { PdfViewer } from "./PdfViewer";
@@ -30,12 +30,19 @@ export function GuideViewer() {
     }
   };
 
+  const save = () => {
+    if (!pdf) return;
+    download(withTime(GUIDE_FILE), pdf, "application/pdf");
+    setNote("Guide saved to your Downloads.");
+  };
+
   return (
     <PdfViewer
       pdf={pdf} error={error} busy="Loading the guide…" label="Guide" title="Guide" onClose={back}
       foot={<>
         {note && <span className="muted small">{note}</span>}
-        <button className="primary" disabled={!pdf} onClick={share}>Share guide (PDF)</button>
+        <button disabled={!pdf} onClick={share}>Share</button>
+        <button className="primary" disabled={!pdf} onClick={save}>Download guide (PDF)</button>
       </>}
     />
   );
