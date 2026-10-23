@@ -1,4 +1,5 @@
 import { loadTemplate } from "../storage";
+import { useBarHeight } from "../barHeight";
 import { ShareGuide } from "../components/ShareGuide";
 import { InstallHelp } from "../components/InstallHelp";
 import { appLink, siteCount } from "../kit";
@@ -22,6 +23,7 @@ const kitFileName = () => backupFileName("rates", false).replace(/\.json$/, ".tx
 const GUIDE_FILE = "HHSL-pay-app-mobile-guide.pdf";
 
 export function SettingsHub() {
+  useBarHeight();
   const { open, selectTab } = useNav();
   const { data, persistent, update, replace } = useStore();
   const [ask, setAsk] = useState<"settings" | "days" | "all" | null>(null);
@@ -114,7 +116,7 @@ export function SettingsHub() {
 
       {/* Folded up so it does not take the top of Settings; More... unfolds the link, starter kit and guide. */}
       <details className="card share-app">
-        <summary>
+        <summary onClick={(e) => { const d = e.currentTarget.parentElement as HTMLDetailsElement; if (d.open) requestAnimationFrame(() => d.scrollIntoView({ block: "nearest" })); }}>
           <span className="sa-title"><strong>Share this app</strong><small>App link, starter kit and guide</small></span>
           <span className="sa-more" aria-hidden="true" />
         </summary>

@@ -5,6 +5,7 @@ import { useYear } from "../hooks";
 import { useStore } from "../store";
 import { payerLabel } from "../model";
 import { TopBar } from "../components/TopBar";
+import { TaxSwitch } from "../components/TaxMode";
 import { BackIcon, ForwardIcon } from "../components/Icons";
 import { AverageLine } from "../components/AverageLine";
 import { ChartCard, HBars, MonthColumns, SplitBar, TipRow, fullMoney } from "../components/charts";
@@ -108,6 +109,7 @@ export function ChartsScreen() {
         <ChartCard
           title="Gross by payslip"
           note="How the year's gross splits between your payslips."
+          action={<TaxSwitch />}
           table={{ head: ["Payslip", "Gross", "Share"], rows: byPayer.map((p) => [p.name, fullMoney(p.value), `${((p.value / sum(byPayer.map((x) => x.value))) * 100).toFixed(1)}%`]) }}
         >
           <SplitBar parts={byPayer} />

@@ -218,6 +218,7 @@ export function CalendarGrid({ month, days, result, today, onPick, selected, sli
               aria-label={`${WEEKDAYS[wd]} ${Number(date.slice(8))}${hol.has(date) ? ` (${hol.get(date)})` : ""}, ${priced.length ? money(total) : "no job"}${extra.length ? `, ${extra.length} other job${extra.length > 1 ? "s" : ""}` : ""}${unpaidHere ? ", amount missing" : ""}`}
             >
               <span className="n">{Number(date.slice(8))}</span>
+              {hol.has(date) && <span className="hol-h" aria-hidden="true">H</span>}
               {first && (
                 <>
                   <span className="amt">${Math.round(total).toLocaleString("en-US")}</span>

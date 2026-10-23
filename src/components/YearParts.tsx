@@ -83,7 +83,9 @@ export function YearTable({ section, open }: { section: YearSection; open?: bool
     ));
   return (
     <details className="ytable" open={open}>
-      <summary><span>{section.title}</span><span className="c-gross">{money(sum(gross))}</span></summary>
+      <summary onClick={(e) => { const d = e.currentTarget.parentElement as HTMLDetailsElement; if (d.open) requestAnimationFrame(() => d.scrollIntoView({ block: "nearest" })); }}>
+        <span>{section.title}</span><span className="yt-end"><span className="c-gross">{money(sum(gross))}</span><span className="yt-caret" aria-hidden="true" /></span>
+      </summary>
 
       <h3>Income</h3>
       <table className="ym">

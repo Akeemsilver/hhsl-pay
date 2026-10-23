@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useBarHeight } from "../barHeight";
 import { valueOn, type TaxRules } from "../engine";
 import { useStore } from "../store";
 import { PageHeader } from "../components/TopBar";
@@ -9,6 +10,7 @@ import { applyFrom, diffObject } from "../rateEdit";
 import { dmy, todayISO } from "../format";
 
 export function TaxPage() {
+  useBarHeight();
   const { data, update } = useStore();
   const versions = data.history.tax;
   const [asOf, setAsOf] = useState(todayISO());
