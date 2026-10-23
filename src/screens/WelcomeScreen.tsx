@@ -66,10 +66,10 @@ export function WelcomeScreen() {
       <ol className="steps">
         <li>Ask the person who sent you the link to this app to send you the <strong>starter kit file</strong>. They find it in the app under Settings, Share this app.</li>
         <li>They send it to you on WhatsApp.</li>
-        <li>In WhatsApp, tap the file to download it to your phone.</li>
+        <li>In WhatsApp, tap the file. <strong>Android:</strong> it downloads. <strong>iPhone:</strong> tap it to open, then tap the Share icon, then <strong>Save to Files</strong>.</li>
         <li>Come back here, tap <strong>Choose starter kit file</strong>, and pick it from your Downloads.</li>
       </ol>
-      <input ref={input} type="file" accept=".json,.txt,application/json,text/plain" hidden aria-label="Starter kit file"
+      <input ref={input} type="file" accept=".json,.txt,.pdf,application/json,text/plain,application/pdf" hidden aria-label="Starter kit file"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) void pick(f); e.target.value = ""; }} />
       <button className="primary wide" disabled={busy} onClick={() => input.current?.click()}>{busy ? "Reading…" : "Choose starter kit file…"}</button>
       {message && <p className="notice warn" role="alert">{message}</p>}

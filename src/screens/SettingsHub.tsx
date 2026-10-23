@@ -3,7 +3,8 @@ import { useBarHeight } from "../barHeight";
 import { ShareGuide } from "../components/ShareGuide";
 import { InstallHelp } from "../components/InstallHelp";
 import { appLink, siteCount } from "../kit";
-import { backupFileName, deliver, download, ratesKitOf, serialize, SHARE_TYPES, shareFile, withTime } from "../backup";
+import { kitToPdf } from "../kitPdf";
+import { backupFileName, deliver, download, ratesKitOf, serialize, KIT_ATTEMPTS, shareFile, withTime } from "../backup";
 import { useNav } from "../nav";
 import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -16,8 +17,8 @@ import { useTheme, type ThemePref } from "../theme";
 import { PageHeader } from "../components/TopBar";
 import { CalendarIcon, ChevronRight, FileIcon, MapPinIcon, SaveIcon, ShieldIcon, UsersIcon } from "../components/Icons";
 
-/** The starter kit is saved as a .txt so the download and the share are the same file. */
-const kitFileName = () => backupFileName("rates", false).replace(/\.json$/, ".txt");
+/** The starter kit is saved as a PDF: WhatsApp opens a .txt as text with no way to save it, but lets a PDF be downloaded. */
+const kitFileName = () => backupFileName("rates", false).replace(/\.json$/, ".pdf");
 
 /** The mobile guide (a PDF with no rates in it) is served with the app, so it can be shared from here. */
 const GUIDE_FILE = "HHSL-pay-app-mobile-guide.pdf";
@@ -84,20 +85,20 @@ export function SettingsHub() {
     if (!kit) { setKitMessage("Getting the starter kit ready, try again in a moment."); return; }
     const tried = attempt.current;
     // Saved to Downloads first, in the same tap, so the file is safe even if the share menu is refused.
-    if (saveFirst && !savedKit.current) { download(withTime(kitFileName()), kit, "text/plain"); savedKit.current = true; }
-    const { result, error, type } = await shareFile(backupFileName("rates", false), kit, tried);
+    if (saveFirst && !savedKit.current) { download(withTime(kitFileName()), kitToPdf(kit, backupFileName("rates", false)), "application/pdf"); savedKit.current = true; }
+    const { result, error, type } = await shareFile(backupFileName("rates", false), tried === 0 ? kitToPdf(kit, backupFileName("rates", false)) : kit, tried, KIT_ATTEMPTS);
     if (result === "shared") { attempt.current = 0; savedKit.current = false; setKitMessage("Starter kit saved to your Downloads and shared."); }
     else if (result === "cancelled") { savedKit.current = false; setKitMessage("Starter kit saved to your Downloads."); }
-    else if (result === "failed" && tried < SHARE_TYPES.length - 1) {
+    else if (result === "failed" && tried < KIT_ATTEMPTS.length - 1) {
       attempt.current = tried + 1;
       setKitMessage(`The file is saved to your Downloads, but the share menu did not open (${error}). Tap “Share starter kit” again to try another way.`);
     } else if (result === "failed") {
       attempt.current = 0;
-      setKitMessage(`The share menu would not open (${error}; tried ${SHARE_TYPES.length} ways, last as ${type}). Use “Download starter kit”, then send the file from your Downloads.`);
+      setKitMessage(`The share menu would not open (${error}; tried ${KIT_ATTEMPTS.length} ways, last as ${type}). Use “Download starter kit”, then send the file from your Downloads.`);
     } else setKitMessage("This browser cannot open the share menu. Use “Download starter kit” and send the file from your Downloads.");
   };
   const saveKit = async () => {
-    download(withTime(kitFileName()), await kitText(), "text/plain");
+    download(withTime(kitFileName()), kitToPdf(await kitText(), backupFileName("rates", false)), "application/pdf");
     setKitMessage("Starter kit saved to your Downloads. Send that file on WhatsApp.");
   };
   const sites = new Set(data.history.sites.flatMap((v) => Object.keys(v.value))).size;
