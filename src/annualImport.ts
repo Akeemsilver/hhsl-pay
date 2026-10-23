@@ -246,14 +246,70 @@ export const annualToEntry = (d: AnnualDay, a: Assignment): Entry => {
   return e;
 };
 
-export interface AnnualResult { data: AppData; added: number; skipped: number; removed: number; months: string[] }
+export type ImportMode = "update" | "add" | "replace";
 
-/** "replace" clears the jobs of every month the file has days for, then adds them; "add" keeps what is there and skips same-site days already logged. */
-export function applyAnnual(data: AppData, sheet: AnnualSheet, assign: Record<string, Assignment | undefined>, mode: "add" | "replace"): AnnualResult {
+export interface DayChange {
+  date: string;
+  site: string;
+  kind: "new" | "same" | "changed";
+  /** What differs for a changed day, e.g. "10 h to 11.5 h, holiday on". */
+  detail: string;
+}
+
+export interface ImportPlan {
+  rows: DayChange[];
+  counts: { new: number; same: number; changed: number; onlyInApp: number };
+  /** Days in the app, in the file's months, that the file does not have (they stay, except when replacing). */
+  onlyInApp: Entry[];
+  /** How many logged jobs "Replace these months" would remove first. */
+  removeCount: number;
+  months: string[];
+}
+
+const hoursText = (h: number) => `${Math.round(h * 100) / 100} h`;
+
+function differences(e: Entry, d: AnnualDay): { patch: Partial<Entry>; detail: string[] } {
+  const patch: Partial<Entry> = {};
+  const detail: string[] = [];
+  // A day with start and end times gets its hours from them, so the file's hours do not override it. A flat-pay day has no hours in the file.
+  if (!(e.startTime && e.endTime) && d.hours > 0 && Math.abs((e.hours ?? 0) - d.hours) > 0.001) { patch.hours = d.hours; detail.push(`${hoursText(e.hours ?? 0)} to ${hoursText(d.hours)}`); }
+  if (!!e.lead !== d.lead) { patch.lead = d.lead || undefined; detail.push(d.lead ? "lead on" : "lead off"); }
+  if (!!e.holiday !== d.holiday) { patch.holiday = d.holiday || undefined; detail.push(d.holiday ? "holiday on" : "holiday off"); }
+  return { patch, detail };
+}
+
+/** What importing the file would do to each day, without changing anything: new, the same, or changed (and which of your days it does not mention). */
+export function planAnnual(data: AppData, sheet: AnnualSheet, assign: Record<string, Assignment | undefined>): ImportPlan {
+  const usable = sheet.days.filter((d) => assign[d.client]?.site);
+  const months = [...new Set(usable.map((d) => d.date.slice(0, 7)))].sort();
+  const mine = data.entries.filter((e) => e.kind !== "other");
+  const rows: DayChange[] = usable.map((d) => {
+    const site = assign[d.client]!.site;
+    const have = mine.find((e) => e.date === d.date && e.site === site);
+    if (!have) return { date: d.date, site, kind: "new", detail: "" };
+    const diff = differences(have, d).detail;
+    return diff.length ? { date: d.date, site, kind: "changed", detail: diff.join(", ") } : { date: d.date, site, kind: "same", detail: "" };
+  });
+  const inFile = new Set(usable.map((d) => `${d.date}|${assign[d.client]!.site}`));
+  const inMonths = mine.filter((e) => months.includes(e.date.slice(0, 7)));
+  const onlyInApp = inMonths.filter((e) => !inFile.has(`${e.date}|${e.site}`));
+  const count = (k: DayChange["kind"]) => rows.filter((r) => r.kind === k).length;
+  return { rows, counts: { new: count("new"), same: count("same"), changed: count("changed"), onlyInApp: onlyInApp.length }, onlyInApp, removeCount: inMonths.length, months };
+}
+
+export interface AnnualResult { data: AppData; added: number; updated: number; skipped: number; removed: number; months: string[] }
+
+/**
+ * "update" adds new days and brings changed days (same site and date) in line with the file; days only in the app stay.
+ * "add" adds new days and leaves every logged day as it is.
+ * "replace" clears the jobs of every month the file has days for, then adds them.
+ */
+export function applyAnnual(data: AppData, sheet: AnnualSheet, assign: Record<string, Assignment | undefined>, mode: ImportMode): AnnualResult {
   const usable = sheet.days.filter((d) => assign[d.client]?.site);
   const months = [...new Set(usable.map((d) => d.date.slice(0, 7)))].sort();
   let entries = data.entries;
   let removed = 0;
+  let updated = 0;
   if (mode === "replace") {
     const kept = entries.filter((e) => e.kind === "other" || !months.includes(e.date.slice(0, 7)));
     removed = entries.length - kept.length;
@@ -263,10 +319,18 @@ export function applyAnnual(data: AppData, sheet: AnnualSheet, assign: Record<st
   let skipped = sheet.days.length - usable.length;
   for (const d of usable) {
     const a = assign[d.client]!;
-    if (mode === "add" && entries.some((e) => e.kind !== "other" && e.date === d.date && e.site === a.site)) { skipped++; continue; }
+    const at = mode === "replace" ? -1 : entries.findIndex((e) => e.kind !== "other" && e.date === d.date && e.site === a.site);
+    if (at >= 0) {
+      if (mode === "update") {
+        const { patch } = differences(entries[at]!, d);
+        if (Object.keys(patch).length) { entries = entries.map((e, i) => (i === at ? { ...e, ...patch } : e)); updated++; continue; }
+      }
+      skipped++;
+      continue;
+    }
     fresh.push(annualToEntry(d, a));
   }
   const next: AppData = { ...data, entries: [...entries, ...fresh].sort((x, y) => x.date.localeCompare(y.date)) };
   if (!next.userName && !next.timesheet?.name && sheet.name) next.userName = sheet.name;
-  return { data: next, added: fresh.length, skipped, removed, months };
+  return { data: next, added: fresh.length, updated, skipped, removed, months };
 }

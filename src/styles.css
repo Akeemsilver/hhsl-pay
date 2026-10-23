@@ -1028,3 +1028,11 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 .pdf-slot { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.25); flex: none; }
 .pdf-pages { display: flex; flex-direction: column; gap: 10px; width: max-content; min-width: 100%; align-items: center; }
 .viewer-bar h2 small { font-weight: 400; color: var(--muted); }
+
+.import-changes { margin: 10px 0; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 8%, var(--card)); }
+.import-changes .ic-counts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 0 0 4px; text-align: center; font-size: 0.78rem; color: var(--muted); }
+.import-changes .ic-counts span { display: flex; flex-direction: column; line-height: 1.2; }
+.import-changes .ic-counts strong { font-size: 1.25rem; color: var(--text); }
+.import-changes details { margin-top: 6px; }
+.import-changes summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
+.import-changes .row { justify-content: space-between; gap: 8px; }
