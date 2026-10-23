@@ -130,7 +130,8 @@ export async function parseAnnual(bytes: ArrayBuffer | Uint8Array): Promise<Annu
   const calendars: Array<{ month: number; grid: Map<string, string>; year?: number }> = [];
   for (const { month, sheet } of monthSheets) {
     const grid = await gridOf(sheet!);
-    if (grid) calendars.push({ month, grid });
+    // A monthly spreadsheet whose one tab happens to be named after the month still has its year in the header.
+    if (grid) calendars.push({ month, grid, year: monthlyHeader(grid)?.year });
   }
   if (calendars.length === 0) {
     for (const sheet of sheets) {
@@ -145,7 +146,7 @@ export async function parseAnnual(bytes: ArrayBuffer | Uint8Array): Promise<Annu
   const days: AnnualDay[] = [];
   let year = 0, name = "";
   for (const { month, grid, year: tabYear } of calendars) {
-    const sheetYear = tabYear ?? Math.round(num(grid.get("4,9")));
+    const sheetYear = Math.round(num(grid.get("4,9"))) > 2000 ? Math.round(num(grid.get("4,9"))) : tabYear ?? 0;
     if (sheetYear > 2000 && !year) year = sheetYear;
     if (!name) name = /Created by\s+(.+)$/i.exec(grid.get("1,2") ?? "")?.[1]?.trim() ?? "";
     const firstRow = firstWeekRow(grid, sheetYear);

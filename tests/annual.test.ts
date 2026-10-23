@@ -97,7 +97,7 @@ describe("sites and rates from the Settings tab", () => {
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 /** The monthly spreadsheet: one "List1" tab, month and year in the header, dates written as text, money as text, first week on row 6. */
-async function monthlyWorkbook(month: number, year: number, days: Array<{ date: string; site: string; hours?: number; total: string }>) {
+async function monthlyWorkbook(month: number, year: number, days: Array<{ date: string; site: string; hours?: number; total: string }>, tab = "List1") {
   const zip = new JSZip();
   const cells: string[] = [cell(1, 2, "Created by Test Person "), cell(2, 18, MONTH_NAMES[month - 1]!.toUpperCase()), cell(3, 18, year)];
   const first = new Date(Date.UTC(year, month - 1, 1)); first.setUTCDate(1 - first.getUTCDay());
@@ -110,7 +110,7 @@ async function monthlyWorkbook(month: number, year: number, days: Array<{ date: 
     cells.push(cell(row + 2, col, job?.site ?? "All Sites"));
     if (job) { if (job.hours) cells.push(cell(row + 2, col + 2, job.hours)); cells.push(cell(row + 2, col + 3, job.total), cell(row + 3, col + 1, false), cell(row + 4, col + 1, false)); }
   }
-  zip.file("xl/workbook.xml", `<workbook><sheets><sheet name="List1" sheetId="1" r:id="rId1"/><sheet name="DATA" sheetId="2" r:id="rId2"/></sheets></workbook>`);
+  zip.file("xl/workbook.xml", `<workbook><sheets><sheet name="${tab}" sheetId="1" r:id="rId1"/><sheet name="DATA" sheetId="2" r:id="rId2"/></sheets></workbook>`);
   zip.file("xl/_rels/workbook.xml.rels", `<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Target="worksheets/sheet2.xml"/></Relationships>`);
   zip.file("xl/worksheets/sheet1.xml", `<worksheet><sheetData><row r="1">${cells.join("")}</row></sheetData></worksheet>`);
   zip.file("xl/worksheets/sheet2.xml", `<worksheet><sheetData><row r="1">${cell(1, 1, "JANUARY")}${cell(1, 2, 1)}</row></sheetData></worksheet>`);
@@ -131,6 +131,11 @@ describe("monthly spreadsheet import", () => {
       { date: "2026-09-03", client: "Alpha", hours: 10, lead: false, holiday: false, total: 600 },
       { date: "2026-09-15", client: "Offshore", hours: 0, lead: false, holiday: false, total: 1000 },
     ]);
+  });
+  it("reads it the same when its tab is named after the month", async () => {
+    const sheet = await parseAnnual(await monthlyWorkbook(9, 2026, [{ date: "2026-09-03", site: "Alpha", hours: 10, total: " $ 600.00 " }], "September"));
+    expect(sheet.days).toEqual([{ date: "2026-09-03", client: "Alpha", hours: 10, lead: false, holiday: false, total: 600 }]);
+    expect(sheet.year).toBe(2026);
   });
   it("adding several months one after another keeps the earlier months", async () => {
     let d = newData();
