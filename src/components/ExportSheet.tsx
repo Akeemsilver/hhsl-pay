@@ -168,7 +168,12 @@ export function ExportSheet({ month }: { month: string }) {
   // Step 1. iPhone: the share menu (Save to Files). Android: saved straight to Downloads, with the time added to the name.
   const saveTimesheet = async () => {
     if (!payrollFile) return;
-    if (isIos()) { if (await shareFileNow(false)) setSavedToFiles(true); return; }
+    if (isIos()) {
+      // The menu is for Save to Files, but if an email app is picked there instead, the file goes with the subject and message, and the address is on the clipboard.
+      try { await navigator.clipboard.writeText(email.to); } catch { /* the address is shown on screen */ }
+      if (await shareFileNow(true)) setSavedToFiles(true);
+      return;
+    }
     if (savedName) return;
     const name = withTime(payrollFile.fileName);
     download(name, payrollFile.bytes, XLSX_MIME);
