@@ -82,7 +82,7 @@ APPSTORE = "https://apps.apple.com/app/google-sheets/id842849113"
 s = [NextPageTemplate("rest")]
 s.append(Paragraph("The HHSL pay app tracks the days you work, works out your gross pay, PAYE, NIS and net pay, and makes your payslips and the HHSL time sheet. <b>Everything stays on your own phone.</b> There is no account and no sign-in. This guide is for doing every step <b>on your phone</b>.", body))
 toc = Table([[Paragraph(go("p1", "<b>1. Install the app</b>"), body), Paragraph(go("p2", "<b>2. Load your starter kit</b>"), body)],
-             [Paragraph(go("p3", "<b>3. Bring in your spreadsheet</b>"), body), Paragraph(go("p4", "<b>4. Use it day to day</b>"), body)],
+             [Paragraph(go("p3", "<b>3. Bring in your spreadsheet</b>"), body), Paragraph(go("p4", "<b>4. How to add a day</b>"), body)],
              [Paragraph(go("p5", "<b>5. How to: sites, rates, settings</b>"), body), Paragraph(go("p6", "<b>6. Set it up your way</b>"), body)],
              [Paragraph(go("p7", "<b>7. Share the app</b>"), body), ""]], colWidths=[CW/2, CW/2])
 toc.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,-1), SOFT), ("LEFTPADDING", (0,0), (-1,-1), 10), ("TOPPADDING", (0,0), (-1,-1), 4), ("BOTTOMPADDING", (0,0), (-1,-1), 0)]))
@@ -147,12 +147,26 @@ s.append(steps([
  ("Choose <b>Add</b> (keeps what you already have) or <b>Replace these months</b> (clears those months first). Then tap <b>Import</b>, and open the Calendar to see your days.", None)]))
 s.append(Paragraph("Only the days, hours, team lead and holiday flags are read. The app works out pay again from your rates, so check one month against your payslip the first time.", small))
 
-s.append(Paragraph('<a name="p4"/>Part 4. Use it day to day', h1))
+s.append(Paragraph('<a name="p4"/>Part 4. How to add a day', h1))
+s.append(Paragraph("A. Add a job to a day", h2))
 s.append(steps([
- ("<b>Log a day:</b> tap <b>Calendar</b> at the bottom, then tap the date.", A("a-calendar"), 50),
- ("Tap <b>Add job</b>. Pick the site, then type the start and end time, or switch to <b>Simple</b> and type the hours.", A("a-day"), 50),
- ("<b>Time sheet shortcut:</b> under the site there is a tick, <b>Put [site] on the time sheet</b>. It applies to every day at that site, not just that day, and it is remembered from now on. A job on the time sheet always uses start and end time, so the hours come from the times.", A("d-tick"), 50),
- ("Tap a time to set it. Turn the three wheels (AM/PM, hour, minute) or type the time, then tap <b>Set</b>.", Bs("b-time"), 50),
+ ("Tap <b>Calendar</b> at the bottom of the screen, then tap the date you worked.", A("a-calendar"), 50),
+ ("Under the calendar, tap <b>Add job</b>. The day form opens.", A("e-daypanel"), 50),
+ ("<b>Pick the site.</b> Tap the site box at the top. Type to search, or tap the site in the list.", A("e-picker"), 50),
+ ("<b>Role or location.</b> Most sites have a <b>Role</b> list (for example Client medic, or Not applicable). A site set to <b>Type in a location</b> has a box instead: type where you worked, for example Dolphin platform. It goes in the <b>Client assigned</b> column of the time sheet. Tick <b>Team lead / instructor</b> or <b>Holiday / TAR</b> if they apply.", A("e-loc"), 50),
+ ("<b>Time sheet tick.</b> Under the site there is <b>Put [site] on the time sheet</b>. It applies to every day at that site, not just this day, and it is remembered from now on.", A("d-tick"), 50),
+ ("<b>Hours.</b> A job on the time sheet always uses <b>start and end time</b>: tap a time, turn the AM/PM, hour and minute wheels (or type the time) and tap <b>Set</b>. The hours paid come from the times and cannot be typed. Other sites can use <b>Simple</b> (type the hours with the minus and plus buttons) or <b>Detailed</b> (start and end time).", A("b-time"), 50),
+ ("Hourly sites with a lunch check ask if <b>lunch was paid</b>, or how much unpaid lunch comes off (30 minutes or 1 hour). A <b>fixed day rate</b> site has no lunch options.", A("e-hours"), 50),
+ ("The line at the bottom shows the <b>pay for the day</b>. To log a second job on the same day, tap <b>Add another job</b>. Then tap <b>Save</b>. <b>Cancel</b> throws the changes away.", A("e-pay"), 50)]))
+s.append(Paragraph("B. Add an other job (pickup, delivery)", h2))
+s.append(steps([
+ ("On the day form, tap <b>Add other job</b>. Type what it was (for example Airport pickup), or tap a quick suggestion. Start and end time and hours are optional. Add the <b>amount paid</b> once the company confirms it. Tap <b>Save</b>.", None),
+ ("Other jobs show on the time sheet when <b>Other jobs</b> is ticked in Settings, Timesheet.", None)]))
+s.append(Paragraph("C. Change or delete a day", h2))
+s.append(steps([
+ ("Tap the date on the Calendar. Each job has <b>Edit</b> and <b>Delete</b>. Edit opens the same form: change it and tap <b>Save</b>. If you close the form with unsaved changes, the app asks first.", A("e-saved"), 50)]))
+s.append(Paragraph("D. See the month and send the time sheet", h2))
+s.append(steps([
  ("<b>Home</b> shows the month so far: gross, net, PAYE, days and paid hours, with each site underneath. Swipe the calendar left or right to change month. <b>Year</b> and <b>Charts</b> show the whole year.", None),
  ("<b>Time sheet:</b> tap the download icon at the top of any screen, choose <b>Send to payroll</b>, then <b>Download and share</b>, and pick Gmail or WhatsApp.", Bs("b-download"), 50),
  ("<b>Payslips:</b> in the same screen, switch to <b>Payslip</b>. The eye icon lets you look at them first.", None)]))
