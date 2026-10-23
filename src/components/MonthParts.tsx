@@ -239,7 +239,7 @@ export function CalendarGrid({ month, days, result, today, onPick, selected, sli
   );
 }
 
-/** The month by site, like the monthly sheet: income, days, weekdays, weekend/holiday days, hours worked and paid hours. */
+/** The month by site, as two tables like the monthly sheet: gross and days, then hours worked and paid. */
 export function SiteTable({ result }: { result: MonthResult<Entry> }) {
   const { data } = useStore();
   const { site: filterSite } = useSiteFilter();
@@ -247,29 +247,50 @@ export function SiteTable({ result }: { result: MonthResult<Entry> }) {
   if (rows.length === 0) return null;
   const h = (n: number | undefined) => (n === undefined ? "–" : hoursText(n));
   const d = (n: number) => (n === 0 ? "–" : String(n));
-  const line = (r: typeof all, strong = false) => (
-    <div className={`st-row ${strong ? "st-all" : ""}`} role="row" key={r.site}>
-      <span className="st-site" role="cell">{r.site}</span>
-      <span role="cell" className="st-money">{money(r.income)}</span>
-      <span role="cell">{r.days}</span>
-      <span role="cell">{d(r.weekdays)}</span>
-      <span role="cell">{d(r.offdays)}</span>
-      <span role="cell">{h(r.worked)}</span>
-      <span role="cell">{h(r.total)}</span>
-    </div>
-  );
+  const dot = (site: string) => <i className="sw" style={{ background: site === "All sites" || site === "Other jobs" ? "var(--muted)" : SITE_COLORS[siteColorIndex(data, site)]!.hex }} />;
+  const name = (r: typeof all) => <span className="st-site" role="cell">{r.site !== "All sites" && dot(r.site)}{r.site}</span>;
+  const all2 = [all, ...rows];
   return (
-    <section className="card site-table" aria-label="Month by site">
-      <h2>By site</h2>
-      <div role="table">
-        <div className="st-row st-head" role="row">
-          <span role="columnheader">Site</span><span role="columnheader">Income</span><span role="columnheader">Days</span>
-          <span role="columnheader">Wk-<br />day</span><span role="columnheader">Wknd<br />Hol</span><span role="columnheader">Work<br />h</span><span role="columnheader">Total<br />h</span>
+    <>
+      <section className="card site-table st-money-table" aria-label="Month by site: gross and days">
+        <h2>Gross and days</h2>
+        <div role="table" className="st-grid st-a">
+          <div className="st-row st-head" role="row">
+            <span role="columnheader">Site</span>
+            <span role="columnheader" className="t-gross">Gross</span>
+            <span role="columnheader" className="t-days">Days</span>
+            <span role="columnheader" className="t-wkdy">Week-<br />days</span>
+            <span role="columnheader" className="t-off">Wknd /<br />Hol</span>
+          </div>
+          {all2.map((r) => (
+            <div className={`st-row ${r === all ? "st-all" : ""}`} role="row" key={r.site}>
+              {name(r)}
+              <span role="cell" className="t-gross">{money(r.income)}</span>
+              <span role="cell" className="t-days">{r.days}</span>
+              <span role="cell" className="t-wkdy">{d(r.weekdays)}</span>
+              <span role="cell" className="t-off">{d(r.offdays)}</span>
+            </div>
+          ))}
         </div>
-        {line(all, true)}
-        {rows.map((r) => line(r))}
-      </div>
-      <p className="muted small">Total h counts overtime at its multiple (1.5x hours count 1.5). A fixed day rate has no hours.</p>
-    </section>
+      </section>
+      <section className="card site-table st-hours-table" aria-label="Month by site: hours">
+        <h2>Hours</h2>
+        <div role="table" className="st-grid st-b">
+          <div className="st-row st-head" role="row">
+            <span role="columnheader">Site</span>
+            <span role="columnheader" className="t-worked">Worked</span>
+            <span role="columnheader" className="t-paid">Paid</span>
+          </div>
+          {all2.map((r) => (
+            <div className={`st-row ${r === all ? "st-all" : ""}`} role="row" key={r.site}>
+              {name(r)}
+              <span role="cell" className="t-worked">{h(r.worked)}</span>
+              <span role="cell" className="t-paid">{h(r.total)}</span>
+            </div>
+          ))}
+        </div>
+        <p className="muted small">Paid hours count overtime at its multiple (1.5x hours count 1.5). A fixed day rate has no hours.</p>
+      </section>
+    </>
   );
 }
