@@ -1,5 +1,5 @@
 import { COMBINED_PAYER, findSite, valueOn, weightedHours, type MonthResult, type PayerMonth } from "./engine";
-import { isOther, type AppData, type Entry } from "./model";
+import { isOther, otherHours, otherPayerId, type AppData, type Entry } from "./model";
 import { matchRule } from "./timesheet";
 
 /** Days and paid hours of the sites that go on the time sheet, kept apart from their payslip group. */
@@ -17,21 +17,27 @@ export function sheetSplit(result: MonthResult<Entry>, data: AppData): { payers:
   const payerOf = (e: Entry) => combined ? COMBINED_PAYER : (findSite(valueOn(data.history.sites, e.date), e.site)?.payer ?? "main");
   const worked = (e: { entry: Entry; pay: { total: number } }) => !isOther(e.entry) && (e.pay.total > 0 || e.entry.hours > 0);
   const onSheet = result.entries.filter((e) => worked(e) && matchRule(e.entry, rules, false, medic));
-  if (onSheet.length === 0) return { payers };
+  // Other jobs go on the time sheet too (unless that is switched off). Only the paid ones were in their group's line.
+  const others = data.timesheet?.includeOther === false ? [] : data.entries.filter((e) => isOther(e) && e.date.startsWith(result.month));
+  if (onSheet.length === 0 && others.length === 0) return { payers };
 
   const sheetKeys = new Set(onSheet);
-  const sheetDates = new Set(onSheet.map((e) => e.entry.date));
-  const sheetW = onSheet.reduce((t, e) => t + weightedHours(e.pay, e.entry.hours), 0);
+  const sheetDates = new Set([...onSheet.map((e) => e.entry.date), ...others.map((e) => e.date)]);
+  const sheetW = onSheet.reduce((t, e) => t + weightedHours(e.pay, e.entry.hours), 0) + others.reduce((t, e) => t + otherHours(e), 0);
+  const otherPayer = combined ? COMBINED_PAYER : otherPayerId(data);
+  const paidOthers = others.filter((e) => (e.amount ?? 0) > 0);
   const adjusted = payers.map((p) => {
     const mine = onSheet.filter((e) => payerOf(e.entry) === p.payer);
-    if (mine.length === 0) return p;
-    const w = mine.reduce((t, e) => t + weightedHours(e.pay, e.entry.hours), 0);
-    const otherDates = new Set(result.entries.filter((e) => !sheetKeys.has(e) && e.pay.total > 0 && payerOf(e.entry) === p.payer).map((e) => e.entry.date));
-    const gone = new Set(mine.map((e) => e.entry.date).filter((d) => !otherDates.has(d))).size;
+    const theirs = p.payer === otherPayer ? paidOthers : [];
+    if (mine.length === 0 && theirs.length === 0) return p;
+    const w = mine.reduce((t, e) => t + weightedHours(e.pay, e.entry.hours), 0) + theirs.reduce((t, e) => t + otherHours(e), 0);
+    const stay = new Set(result.entries.filter((e) => !sheetKeys.has(e) && e.pay.total > 0 && payerOf(e.entry) === p.payer).map((e) => e.entry.date));
+    const gone = new Set([...mine.map((e) => e.entry.date), ...theirs.map((e) => e.date)].filter((d) => !stay.has(d))).size;
     return { ...p, days: Math.max(0, p.days - gone), weighted: Math.max(0, Math.round((p.weighted - w) * 100) / 100) };
   });
+  const names = [...new Set(onSheet.map((e) => e.entry.site))].sort((a, b) => a.localeCompare(b));
   return {
     payers: adjusted,
-    sheet: { days: sheetDates.size, weighted: Math.round(sheetW * 100) / 100, sites: [...new Set(onSheet.map((e) => e.entry.site))].sort((a, b) => a.localeCompare(b)) },
+    sheet: { days: sheetDates.size, weighted: Math.round(sheetW * 100) / 100, sites: others.length ? [...names, "Other jobs"] : names },
   };
 }
