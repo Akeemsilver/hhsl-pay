@@ -6,7 +6,7 @@ import { CalendarScreen } from "./screens/CalendarScreen";
 import { YearScreen } from "./screens/YearScreen";
 import { ChartsScreen } from "./screens/ChartsScreen";
 import { SettingsHub } from "./screens/SettingsHub";
-import { SitesPage } from "./screens/SitesPage";
+import { AddSitePage, SitesPage } from "./screens/SitesPage";
 import { TaxPage } from "./screens/TaxPage";
 import { PayslipsPage } from "./screens/PayslipsPage";
 import { TimesheetPage } from "./screens/TimesheetPage";
@@ -36,6 +36,7 @@ function Shell() {
       <main>
         {loc.page === "settings" && <SettingsHub />}
         {loc.page === "sites" && <SitesPage />}
+        {loc.page === "addsite" && <AddSitePage />}
         {loc.page === "tax" && <TaxPage />}
         {loc.page === "payslips" && <PayslipsPage />}
         {loc.page === "timesheet" && <TimesheetPage />}

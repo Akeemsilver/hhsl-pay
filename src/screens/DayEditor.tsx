@@ -11,7 +11,7 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { HoursField } from "../components/HoursField";
 import { TimeField, quickTimes } from "../components/TimeField";
 import { ChevronDown, ChevronUp } from "../components/Icons";
-import { matchRule } from "../timesheet";
+import { emptyTimesheetSettings, matchRule, type TimesheetRule } from "../timesheet";
 
 const QUICK_JOBS = ["Airport pickup", "Delivery", "Drop-off", "Yard run"];
 
@@ -30,10 +30,14 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
   const [confirming, setConfirming] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const wd = new Date(`${date}T00:00:00Z`).getUTCDay();
-  const dirty = JSON.stringify(draft) !== JSON.stringify(original.current);
+  // The "Include on the time sheet" tick changes the site's time sheet rule, so it is held here until Save too.
+  const originalRules = useRef<TimesheetRule[]>(data.timesheet?.rules ?? []);
+  const [rulesDraft, setRulesDraft] = useState<TimesheetRule[]>(() => structuredClone(originalRules.current));
+  const rulesChanged = JSON.stringify(rulesDraft) !== JSON.stringify(originalRules.current);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(original.current) || rulesChanged;
   // Only jobs were taken off (nothing else edited): the button says Remove instead of Save.
   const removingOnly = dirty && draft.length < original.current.length
-    && draft.every((e) => JSON.stringify(original.current.find((o) => o.id === e.id)) === JSON.stringify(e));
+    && !rulesChanged && draft.every((e) => JSON.stringify(original.current.find((o) => o.id === e.id)) === JSON.stringify(e));
   const quick = quickTimes(data.entries.flatMap((e) => [e.startTime, e.endTime]));
 
   useEffect(() => closeRef.current?.focus(), []);
@@ -58,7 +62,11 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
   const leave = () => { setGuard(null); onClose(); };
   const requestClose = () => (dirty ? setConfirming(true) : leave());
   const save = () => {
-    update((d) => ({ ...d, entries: [...d.entries.filter((e) => e.date !== date), ...draft] }));
+    update((d) => ({
+      ...d,
+      entries: [...d.entries.filter((e) => e.date !== date), ...draft],
+      ...(rulesChanged ? { timesheet: { ...(d.timesheet ?? emptyTimesheetSettings()), rules: rulesDraft } } : {}),
+    }));
     leave();
   };
 
@@ -73,9 +81,17 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
   const holidayName = holidayMap([Number(date.slice(0, 4))], data).get(date);
   const lunchAt = (name: string) => siteHasLunch(findSite(sites, name));
   // A job that goes on the time sheet always uses start and end time: the hours come from the times and cannot be typed.
-  const tsRules = data.timesheet?.rules ?? [];
+  const tsRules = rulesDraft;
   const medicAll = data.timesheet?.medicEverywhere !== false;
   const onSheet = (e: Entry) => !isOther(e) && !!matchRule(e, tsRules, false, medicAll);
+  const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+  const siteRuleOf = (site: string) => rulesDraft.find((r) => !r.role && sameName(r.site, site));
+  const toggleSheet = (site: string, on: boolean) => {
+    const next = on ? [...rulesDraft, { site, label: site }] : rulesDraft.filter((r) => r.role || !sameName(r.site, site));
+    setRulesDraft(next);
+    // Jobs at this site switch to start and end time right away; their hours stay until the times are set.
+    if (on) setDraft((list) => list.map((e) => (!isOther(e) && sameName(e.site, site) && !isDetailed(e) ? { ...e, detailed: true } : e)));
+  };
   const patch = (id: string, changes: Partial<Entry>) =>
     setDraft((list) => list.map((e) => {
       if (e.id !== id) return e;
@@ -162,6 +178,19 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
           return (
             <div className="entry" key={entry.id} data-entry-id={entry.id}>
               <SitePicker value={entry.site} names={siteNames} onPick={(n) => changeSite(entry, n)} />
+              {entry.site && (() => {
+                const own = !!siteRuleOf(entry.site);
+                const viaRole = !own && forced;
+                return (
+                  <label className="check ts-check">
+                    <input type="checkbox" checked={own || viaRole} disabled={viaRole} onChange={(e) => toggleSheet(entry.site, e.target.checked)} />
+                    <span>
+                      Include {entry.site} on the time sheet
+                      <small className="muted">{viaRole ? "Included by a role rule. Change it in Settings, Timesheet." : "Every day at this site, not just this day. Remembered from now on."}</small>
+                    </span>
+                  </label>
+                );
+              })()}
               {findSite(sites, entry.site)?.roleField ? (
                 <label>
                   {findSite(sites, entry.site)!.roleField!.label}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { valueOn, type RoleRates, type SiteRates, type SiteTable, type TierCaps } from "../engine";
 import { DEFAULT_ROLES, emptySite, isFixedDay, isOther, payerLabel, rolesFor } from "../model";
 import { useStore } from "../store";
+import { useNav } from "../nav";
 import { SITE_COLORS, siteColorIndex } from "../siteColor";
 import { PageHeader } from "../components/TopBar";
 import { NumInput, TakeEffect, versionLabel, type Num } from "../components/settingsParts";
@@ -43,7 +44,7 @@ function LunchChoice({ value, onChange }: { value: boolean; onChange: (v: boolea
   );
 }
 
-/** Role list, or a box you type in (for example the platform), which goes in the time sheet's Client column. */
+/** Role list, or a box you type the location in, which goes in the time sheet's Client assigned column. */
 function RoleFieldChoice({ value, onChange }: { value: SiteRates["roleField"]; onChange: (v: SiteRates["roleField"]) => void }) {
   const typed = !!value;
   return (
@@ -52,14 +53,12 @@ function RoleFieldChoice({ value, onChange }: { value: SiteRates["roleField"]; o
       <Seg label="Role box" value={typed ? "typed" : "fixed"} options={[["fixed", "Standard roles"], ["typed", "Type in a location"]]} onChange={(v) => onChange(v === "fixed" ? undefined : (value ?? { label: "Location", placeholder: "Dolphin platform" }))} />
       {typed ? (
         <>
-          <div className="grid2">
-            <label>Name of the box<input aria-label="Name of the role box" value={value!.label} placeholder="Location" onChange={(e) => onChange({ ...value!, label: e.target.value })} /></label>
-            <label>Faint example text<input aria-label="Example text for the role box" value={value!.placeholder ?? ""} placeholder="Dolphin platform" onChange={(e) => onChange({ ...value!, placeholder: e.target.value })} /></label>
-          </div>
-          <span className="muted small">The day form has a box named “{value!.label || "Location"}” instead of the Role list. What you type goes in the <b>Client assigned</b> column of the time sheet.</span>
+          <span className="muted small">On the day form you type the location, for example:</span>
+          <input readOnly tabIndex={-1} aria-label="Example of the location box" className="example-box" placeholder={value!.placeholder ?? "Dolphin platform"} />
+          <span className="muted small">The location you type goes in the Client assigned column of the timesheet.</span>
         </>
       ) : (
-        <span className="muted small">The day form shows the Role list (Client medic, Offshore, Paramedic and your own roles).</span>
+        <span className="muted small">The day form shows the Role list. Example: Client medic and your own roles.</span>
       )}
     </div>
   );
@@ -82,6 +81,7 @@ function FixedDayEditor({ site, onChange }: { site: SiteRates; onChange: (s: Sit
   const [weekendOwn, setWeekendOwn] = useState(!(sameCaps(site.weekend, site.weekday) && !site.dailyWeekend));
   const [holidayOwn, setHolidayOwn] = useState(!(sameCaps(site.holiday, site.weekday) && !site.dailyHoliday));
   const put = (next: SiteRates) => onChange(fixify(next));
+  const hasOvertime = [site.weekday, site.weekend, site.holiday].some((c) => (c.x15 ?? 0) > 0 || (c.x2 ?? 0) > 0 || (c.x3 ?? 0) > 0) || (site.rateAboveHrs ?? 0) > 0;
   const setWeekday = (c: TierCaps) => put({ ...site, weekday: c, ...(weekendOwn ? {} : { weekend: { ...c } }), ...(holidayOwn ? {} : { holiday: { ...c } }) });
   return (
     <div className="pay-block">
@@ -91,8 +91,13 @@ function FixedDayEditor({ site, onChange }: { site: SiteRates; onChange: (s: Sit
         <label>Team lead day rate ($, if different)<NumInput label="Team lead day rate" value={site.dailyLead !== site.dailyStd ? site.dailyLead : undefined} onChange={(v) => put({ ...site, dailyLead: v })} /></label>
       </div>
       <div className="caps">{CAPS_HEAD}<CapsRow label="Hours" caps={site.weekday} onChange={setWeekday} /></div>
-      <p className="muted small">Under 1x, the hours the fixed day rate covers (for example 12). Then the hours paid at 1.5x, 2x and 3x after that. Type 1000 for “no limit”.</p>
-      <label>Hourly rate for the hours after that ($/h)<NumInput label="Hourly rate after the fixed hours" value={site.rateAboveHrs} onChange={(v) => put({ ...site, rateAboveHrs: v })} /></label>
+      <p className="muted small">1x: the hours the fixed day rate covers (for example 12). Leave it blank for a flat rate that pays the whole day, like HHSL Compound. Then the hours paid at 1.5x, 2x and 3x. Type 1000 for “no limit”.</p>
+      {hasOvertime && (
+        <>
+          <label>Hourly rate for the hours after 1x ($/h)<NumInput label="Hourly rate after the fixed hours" value={site.rateAboveHrs} onChange={(v) => put({ ...site, rateAboveHrs: v })} /></label>
+          <p className="muted small">{(site.weekday.x1 ?? 0) > 0 ? `1x is the first ${site.weekday.x1} hours, paid by the fixed day rate. Each hour after that is paid at this rate times 1.5, 2 or 3.` : "Set the 1x hours above first."}</p>
+        </>
+      )}
 
       <h4>Weekend</h4>
       <label className="check">
@@ -404,11 +409,11 @@ function GroupRates({ payer, name, table, firstDate, impactFor, farBack, onApply
 
 const newFixedSite = (): SiteRates => ({ ...emptySite("main"), weekday: { x1: 12, x15: 1000 }, weekend: { x1: 12, x15: 1000 }, holiday: { x1: 12, x2: 1000 } });
 
-function AddSiteForm({ table, payers, onAdd }: {
+function AddSiteForm({ table, payers, onAdd, onDone }: {
   table: SiteTable; payers: Record<string, string>;
   onAdd: (name: string, payer: string, site: SiteRates, newGroupName?: string) => void;
+  onDone: () => void;
 }) {
-  const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const groupIds = Object.keys(payers);
   const [group, setGroup] = useState(groupIds[0] ?? "main");
@@ -430,7 +435,7 @@ function AddSiteForm({ table, payers, onAdd }: {
   const finalLead = isNew ? (lead ?? std) : (groupLead ?? groupStd);
   const taken = Object.keys(table).some((k) => k.toLowerCase() === name.trim().toLowerCase());
   const ok = !!name.trim() && !taken && (!isNew || !!groupName.trim()) && (fixed ? (fx.dailyStd ?? 0) > 0 : !isNew || (std ?? 0) > 0);
-  const reset = () => { setOpen(false); setName(""); setGroupName(""); setStd(undefined); setLead(undefined); setTemplate(undefined); setLunch(true); setRoleField(undefined); setFixed(false); setFx(newFixedSite()); };
+  const reset = () => { onDone(); setName(""); setGroupName(""); setStd(undefined); setLead(undefined); setTemplate(undefined); setLunch(true); setRoleField(undefined); setFixed(false); setFx(newFixedSite()); };
   const add = () => {
     const id = isNew ? slug(groupName, groupIds) : group;
     const extra: Partial<SiteRates> = { ...(roleField ? { roleField } : {}), ...(!fixed && !lunch ? { lunch: false } : {}) };
@@ -440,16 +445,8 @@ function AddSiteForm({ table, payers, onAdd }: {
     onAdd(name.trim(), id, site, isNew ? groupName.trim() : undefined);
     reset();
   };
-  if (!open) {
-    return (
-      <div className="add-site">
-        <button className="wide" onClick={() => setOpen(true)}>＋ Add new location</button>
-      </div>
-    );
-  }
   return (
-    <div className="add-site">
-      <h3 className="section-title">Add a site</h3>
+    <div className="add-site page-form">
       <label>Site name<input placeholder="New site name" aria-label="New site name" value={name} onChange={(e) => setName(e.target.value)} /></label>
       <label>Group (which payslip it goes on)
         <select aria-label="Group for the new site" value={group} onChange={(e) => { setGroup(e.target.value); setTemplate(undefined); }}>
@@ -506,6 +503,7 @@ function slug(name: string, taken: string[]): string {
 
 export function SitesPage() {
   const { data, update } = useStore();
+  const { open } = useNav();
   const versions = data.history.sites;
   const [asOf, setAsOf] = useState(todayISO());
   const [pending, setPending] = useState<{ title: string; message: string; run: () => void } | null>(null);
@@ -593,14 +591,7 @@ export function SitesPage() {
             onRemove={() => setVersions((list) => list.map((v) => ({ ...v, value: Object.fromEntries(Object.entries(v.value).filter(([k]) => k !== name)) })))}
           />
         ))}
-        <AddSiteForm
-          table={table} payers={payers}
-          onAdd={(name, payer, site, groupName) => update((d) => ({
-            ...d,
-            payerNames: groupName ? { ...d.payerNames, [payer]: groupName } : d.payerNames,
-            history: { ...d.history, sites: d.history.sites.map((v) => ({ ...v, value: { ...v.value, [name]: structuredClone(site) } })) },
-          }))}
-        />
+        <button className="primary wide" onClick={() => open({ page: "addsite" })}>＋ Add new location</button>
       </section>
 
       {pending && (
@@ -623,6 +614,31 @@ export function SitesPage() {
           ))}
         </ul>
       </details>
+    </>
+  );
+}
+
+/** The "Add new location" page: its own screen, so the sites list stays out of the way. */
+export function AddSitePage() {
+  const { data, update } = useStore();
+  const { back } = useNav();
+  const versions = data.history.sites;
+  const table = valueOn(versions, todayISO() < versions[0]!.effectiveFrom ? versions[0]!.effectiveFrom : todayISO());
+  const payers = { ...data.payerNames };
+  for (const v of versions) for (const s of Object.values(v.value)) payers[s.payer] ??= payerLabel(data.payerNames, s.payer);
+  return (
+    <>
+      <PageHeader title="Add new location" />
+      <section className="card">
+        <AddSiteForm
+          table={table} payers={payers} onDone={back}
+          onAdd={(name, payer, site, groupName) => update((d) => ({
+            ...d,
+            payerNames: groupName ? { ...d.payerNames, [payer]: groupName } : d.payerNames,
+            history: { ...d.history, sites: d.history.sites.map((v) => ({ ...v, value: { ...v.value, [name]: structuredClone(site) } })) },
+          }))}
+        />
+      </section>
     </>
   );
 }

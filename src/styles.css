@@ -863,3 +863,8 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .grid2 > label, .grid3 > label { display: flex; flex-direction: column; justify-content: flex-end; }
 .pay-block { margin: 6px 0; padding-top: 4px; }
 .pay-block h4 { margin: 12px 0 4px; font-size: 0.95rem; }
+
+.ts-check { align-items: flex-start; margin: 6px 0 4px; }
+.ts-check span { display: grid; gap: 1px; line-height: 1.25; }
+.ts-check small { font-size: 0.78rem; }
+.example-box { pointer-events: none; opacity: 0.9; }
