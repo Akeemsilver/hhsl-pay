@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import { useLayer } from "./layers";
 import type { PayrollEmail } from "../payroll";
+import { AppleMailIcon, GmailIcon, OutlookIcon } from "./MailIcons";
 
 /**
  * Send your time sheet to payroll, in two steps on every phone: 1. save the time sheet, 2. open an email app with the address, subject
@@ -37,10 +38,10 @@ export function PayrollDialog({ email, fileName, onCancel, onShare, ready = true
           <div>
             <strong>2. Open your email app</strong>
             {ios ? (
-              <div className="row">
-                <button onClick={() => onOpenEmail?.("mail")}>Mail</button>
-                <button onClick={() => onOpenEmail?.("gmail")}>Gmail</button>
-                <button onClick={() => onOpenEmail?.("outlook")}>Outlook</button>
+              <div className="mail-apps">
+                <button onClick={() => onOpenEmail?.("mail")}><AppleMailIcon /><span>Open email</span></button>
+                <button onClick={() => onOpenEmail?.("gmail")}><GmailIcon /><span>Open Gmail</span></button>
+                <button onClick={() => onOpenEmail?.("outlook")}><OutlookIcon /><span>Open Outlook</span></button>
               </div>
             ) : (
               <button className="primary" disabled={!ready} onClick={() => onOpenEmail?.("mail")}>Open email</button>
