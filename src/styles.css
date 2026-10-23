@@ -580,7 +580,7 @@ td.c-gross, td.c-net, td.c-paye { font-weight: 600; }
 .viewer-bar h2 { margin: 0; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .viewer-bar .zoom { width: 48px; padding: 0; font-size: 1.4rem; }
 .viewer-note { margin: 0; padding: 10px 14px; color: var(--muted); font-size: 0.9rem; }
-.viewer-scroll { flex: 1; overflow: auto; background: color-mix(in srgb, var(--line) 60%, var(--bg)); padding: 4px; -webkit-overflow-scrolling: touch; }
+.viewer-scroll { flex: 1; overflow: auto; touch-action: pan-x pan-y; overscroll-behavior: contain; background: color-mix(in srgb, var(--line) 60%, var(--bg)); padding: 4px; -webkit-overflow-scrolling: touch; }
 .viewer-foot { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: var(--card); border-top: 1px solid var(--edge); }
 .paper { position: relative; transform-origin: 0 0; background: #ffffff; color: #000000; font-family: Calibri, Carlito, Arial, sans-serif; }
 .paper table { border-collapse: collapse; table-layout: fixed; width: 100%; }
@@ -1024,3 +1024,7 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 /* An opened site card, band table or the Share this app card keeps its header under the title bar once you scroll past it. */
 .site[open] > summary { position: sticky; top: var(--bar-h, 52px); z-index: 3; box-shadow: 0 10px 14px -10px rgba(15, 23, 42, 0.45); }
 .share-app[open] > summary { position: sticky; top: var(--bar-h, 52px); z-index: 3; background: var(--card); margin: -14px -14px 8px; padding: 0 14px; border-radius: 14px 14px 0 0; box-shadow: 0 10px 14px -10px rgba(15, 23, 42, 0.45); }
+
+.pdf-slot { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.25); flex: none; }
+.pdf-pages { display: flex; flex-direction: column; gap: 10px; width: max-content; min-width: 100%; align-items: center; }
+.viewer-bar h2 small { font-weight: 400; color: var(--muted); }
