@@ -9,6 +9,7 @@ import { useStore } from "../store";
 import { BottomSheet } from "../components/BottomSheet";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { MessageDialog } from "../components/MessageDialog";
+import { FitLine } from "../components/FitLine";
 import { HoursField } from "../components/HoursField";
 import { TimeField, quickTimes } from "../components/TimeField";
 import { ChevronDown, ChevronUp } from "../components/Icons";
@@ -293,11 +294,12 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                       )}
                     </div>
                     {entry.site && (() => {
-                      const hint = viaOther ? (siteRule ? "The whole site is on the time sheet (Settings, Timesheet)." : "On it by a role rule (Settings, Timesheet).") : own
-                        ? `On the time sheet: all ${entry.site}${role ? ` ${role}` : ""} days, not just this one.`
-                        : `${entry.site}${role ? ` ${role}` : ""} is not on your time sheet.`;
-                      // One line on any phone: the text shrinks with the screen width.
-                      return <p className="muted ts-hint" style={{ "--n": hint.length } as React.CSSProperties}>{hint}</p>;
+                      const label = `${entry.site}${role ? ` ${role}` : ""}`;
+                      const hint = viaOther ? (siteRule ? "The whole site is on the time sheet (Settings, Timesheet)." : "On it by a role rule (Settings, Timesheet).")
+                        : own ? `On time sheet: all ${label} days, not just this one.`
+                        : `${label} not on personal time sheet. Pay still counts.`;
+                      // Always one line, on any phone: the text shrinks until it fits.
+                      return <FitLine className="muted ts-hint" text={hint} />;
                     })()}
                   </>
                 );
