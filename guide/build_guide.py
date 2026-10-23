@@ -192,7 +192,7 @@ s.append(Paragraph("C. Change a rate", h2))
 s.append(steps([
  ("In <b>Site locations &amp; rates</b>, tap the site to open it. Change the <b>Standard rate</b> or the <b>Team lead rate</b>.", A("c-rate"), 50),
  ("A bar appears at the bottom. Pick the date the new rate starts under <b>Take effect from</b>: today (earlier days keep their old rate), a future date, or <b>Apply to all days</b> to recalculate every day. Then tap <b>Save</b>.", A("c-effect"), 50),
- ("To change a whole group at once, use the group card above the site list and tap <b>Change for all sites</b>. You can leave out sites that have their own rate.", None)]))
+ ("To change a whole group at once, use the group card above the site list: change the <b>Standard rate</b> and <b>Team lead rate</b> and tap <b>Change for all sites</b>. Tap <b>More...</b> to set the hours at 1x, 1.5x, 2x and 3x, to leave out sites that have their own rate (<b>Except</b>), and to pick the <b>Take effect from</b> date.", None)]))
 s.append(Paragraph("D. Give a role its own pay", h2))
 s.append(steps([
  ("Open the site. Under <b>Role rates</b>, type a role (for example Offshore) in <b>Add another role</b> and tap <b>Add role</b>. Give the role its own rate and, if needed, its own hours. Leave it blank to use the site's standard rate.", A("c-roles"), 50),
