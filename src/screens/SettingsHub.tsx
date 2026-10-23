@@ -117,7 +117,7 @@ export function SettingsHub() {
           <button onClick={copyLink}>{copied ? "Copied ✓" : "Copy link"}</button>
           <button onClick={() => void shareLink()}>Share link</button>
         </div>
-        <p className="muted small">Starter kit: your sites, rates, tax rules and the timesheet form (no days, no pay, no name). It has to be sent as a file because this app's code is public, and company rates must never be put in public code. Only send it to colleagues.</p>
+        <p className="muted small">Starter kit: everything you have set up, such as sites, rates, colours, NIS, PAYE, health surcharge, payslip groups, holidays and the timesheet settings and form (no days, no pay, no name). It has to be sent as a file because this app's code is public, and company rates must never be put in public code. Only send it to colleagues.</p>
         <div className="row">
           <button className="primary" disabled={sitesCount === 0} onClick={() => setAskShare(true)}>Share starter kit</button>
           <button disabled={sitesCount === 0} onClick={() => setAskDownload(true)}>Download starter kit</button>
