@@ -939,3 +939,7 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 .site-table + .site-table { margin-top: 0; }
 .site-table > p { margin: 8px 0 0; }
 .st-head > span:first-child { text-align: left; }
+.sheet-footer button.wide { width: 100%; }
+
+/* The month and its arrows stay under the title bar while the page scrolls, so the month can always be changed. */
+.monthbar.sticky { position: sticky; top: var(--bar-h, 52px); z-index: 4; background: var(--bg); padding: 6px 0 8px; margin-bottom: 0; }

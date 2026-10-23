@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { MONTHS } from "../format";
+import { MONTHS, dmy } from "../format";
 import { useStore } from "../store";
 import { ImportError, applyTimesheet, guessAssignment, parseTimesheet, type Assignment, type ImportedTimesheet } from "../timesheetImport";
 
@@ -68,7 +68,7 @@ export function TimesheetImport() {
               const total = r.hours.t + r.hours.t15 + r.hours.t2 + r.hours.t3;
               return (
                 <li key={r.date} className="row">
-                  <span>{Number(r.date.slice(8))} {MONTHS[Number(r.date.slice(5, 7)) - 1]?.slice(0, 3)} · {r.client || "-"}{assign[r.client]?.role ? ` (${assign[r.client]!.role})` : ""}</span>
+                  <span>{dmy(r.date)} · {r.client || "-"}{assign[r.client]?.role ? ` (${assign[r.client]!.role})` : ""}</span>
                   <span>{r.onDuty && r.offDuty ? `${r.onDuty}-${r.offDuty} · ` : ""}{total} h</span>
                 </li>
               );

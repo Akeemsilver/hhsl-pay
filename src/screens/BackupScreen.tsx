@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { loadTemplate, saveTemplate } from "../storage";
+import { localDMY } from "../format";
 import { applyKit, fromB64, ratesKitOf, BadBackup, PasswordRequired, backupFileName, deliver, isEncrypted, parse, serialize } from "../backup";
 import { newData } from "../model";
 import { useStore } from "../store";
@@ -70,7 +71,7 @@ export function BackupScreen() {
       <section className="card">
         <h2>Back up everything</h2>
         <p className="muted small">
-          {data.lastBackupAt ? `Last backup: ${new Date(data.lastBackupAt).toLocaleString()}` : "Not backed up yet."} · {data.entries.length} entries
+          {data.lastBackupAt ? `Last backup: ${localDMY(new Date(data.lastBackupAt), true)}` : "Not backed up yet."} · {data.entries.length} entries
         </p>
         <label className="check"><input type="checkbox" checked={lock} onChange={(e) => setLock(e.target.checked)} /> Lock the file with a password</label>
         {lock && (

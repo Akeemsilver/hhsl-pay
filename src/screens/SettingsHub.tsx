@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { newData, isCombined, userNameOf } from "../model";
 import { OtherJobsPayer, TaxSegment } from "../components/TaxMode";
-import { todayISO } from "../format";
+import { localDMY, todayISO } from "../format";
 import { useStore } from "../store";
 import { useTheme, type ThemePref } from "../theme";
 import { PageHeader } from "../components/TopBar";
@@ -117,7 +117,7 @@ export function SettingsHub() {
           <button onClick={copyLink}>{copied ? "Copied ✓" : "Copy link"}</button>
           <button onClick={() => void shareLink()}>Share link</button>
         </div>
-        <p className="muted small">Starter kit: your sites, rates, tax rules and the timesheet form (no days, no pay, no name). It has to be sent as a file because this app's code is public, and company rates must never be put in public code. Only send it to colleagues.</p>
+        <p className="muted small">Starter kit: everything you have set up, such as sites, rates, colours, NIS, PAYE, health surcharge, payslip groups, holidays and the timesheet settings and form (no days, no pay, no name). It has to be sent as a file because this app's code is public, and company rates must never be put in public code. Only send it to colleagues.</p>
         <div className="row">
           <button className="primary" disabled={sitesCount === 0} onClick={() => setAskShare(true)}>Share starter kit</button>
           <button disabled={sitesCount === 0} onClick={() => setAskDownload(true)}>Download starter kit</button>
@@ -205,7 +205,7 @@ export function SettingsHub() {
         <li>
           <button onClick={() => open({ page: "backup" })}>
             <SaveIcon />
-            <span><strong>Backup &amp; restore</strong><small>{data.lastBackupAt ? `Last backup ${new Date(data.lastBackupAt).toLocaleDateString()}` : "Not backed up yet"}</small></span>
+            <span><strong>Backup &amp; restore</strong><small>{data.lastBackupAt ? `Last backup ${localDMY(new Date(data.lastBackupAt))}` : "Not backed up yet"}</small></span>
             <ChevronRight />
           </button>
         </li>
@@ -256,7 +256,7 @@ export function SettingsHub() {
       {askShare && (
         <ConfirmDialog
           title="Download and share the starter kit?"
-          message="The file with your sites, pay rates, tax rules and the timesheet form is saved to this phone's Downloads, then the share menu opens so you can send it on WhatsApp or Gmail. It has your company rates, so only send it to colleagues."
+          message="The file with everything you have set up (sites, pay rates and colours, NIS, PAYE and health surcharge, payslip groups, public holidays and the timesheet settings and form) is saved to this phone's Downloads, then the share menu opens so you can send it on WhatsApp or Gmail. It has your company rates, so only send it to colleagues."
           confirmLabel="Yes, download and share" cancelLabel="Cancel" safe
           onCancel={() => setAskShare(false)}
           onConfirm={() => { setAskShare(false); void shareKit(true); }}
@@ -265,7 +265,7 @@ export function SettingsHub() {
       {askDownload && (
         <ConfirmDialog
           title="Download the starter kit?"
-          message="It saves a file with your sites, pay rates, tax rules and the timesheet form to this phone's Downloads. It has no days and no pay, but it does have your company rates. Only send it to colleagues."
+          message="It saves a file with everything you have set up (sites, pay rates and colours, NIS, PAYE and health surcharge, payslip groups, public holidays and the timesheet settings and form) to this phone's Downloads. It has no days and no pay, but it does have your company rates. Only send it to colleagues."
           confirmLabel="Download" cancelLabel="Cancel" safe
           onCancel={() => setAskDownload(false)}
           onConfirm={() => { setAskDownload(false); void saveKit(); }}

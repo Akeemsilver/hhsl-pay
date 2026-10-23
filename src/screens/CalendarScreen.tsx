@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useSessionState } from "../session";
 import { valueOn } from "../engine";
 import { daysOfMonth, shiftMonth, todayISO } from "../format";
@@ -20,19 +20,44 @@ export function CalendarScreen() {
   // The tapped date, if it is in the month on screen; otherwise today when it is in that month, otherwise nothing.
   const [picked, setPicked] = useState<string | null>(null);
   const selected = picked && picked.startsWith(month) ? picked : todayISO().startsWith(month) ? todayISO() : null;
-  const slide = useMonthSlide(month, (by) => setMonth(shiftMonth(month, by)));
+  // Changing the month while scrolled keeps the page on the same spot: the page is held at its old height until the new month has drawn.
+  const spot = useRef<number | null>(null);
+  const keepSpot = () => {
+    if (window.scrollY <= 0) return;
+    spot.current = window.scrollY;
+    document.body.style.minHeight = `${document.documentElement.scrollHeight}px`;
+  };
+  useLayoutEffect(() => {
+    if (spot.current === null) return;
+    window.scrollTo(0, spot.current);
+    spot.current = null;
+  }, [month]);
+  useEffect(() => () => { document.body.style.minHeight = ""; }, []);
+  const changeMonth = (m: string) => { keepSpot(); setMonth(m); };
+  const slide = useMonthSlide(month, (by) => changeMonth(shiftMonth(month, by)));
   const result = useMonth(month);
   const days = daysOfMonth(month);
   const today = todayISO();
   const year = Number(month.slice(0, 4));
   const noSites = Object.keys(valueOn(data.history.sites, `${month}-01`)).length === 0;
 
+  // The month bar sticks right under the title bar, whatever height that bar has on this phone.
+  useEffect(() => {
+    const bar = document.querySelector<HTMLElement>(".bar");
+    if (!bar) return;
+    const set = () => document.documentElement.style.setProperty("--bar-h", `${bar.getBoundingClientRect().height}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(bar);
+    return () => { ro.disconnect(); document.documentElement.style.removeProperty("--bar-h"); };
+  }, []);
+
   return (
     <>
       <TopBar title="Month" month={month} />
-      <div className="monthbar">
+      <div className="monthbar sticky">
         <button className="icon" onClick={() => slide.go(-1)} aria-label="Previous month"><BackIcon /></button>
-        <MonthPicker month={month} onChange={setMonth} />
+        <MonthPicker month={month} onChange={changeMonth} />
         <button className="icon" onClick={() => slide.go(1)} aria-label="Next month"><ForwardIcon /></button>
       </div>
 

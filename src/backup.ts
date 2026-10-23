@@ -7,12 +7,19 @@ const APP = "hhsl-salary-tracker";
 
 export type BackupKind = "full" | "rates";
 
-/** A rates file ("starter kit"): the sites, rates and tax rules, plus the payslip group names and timesheet job rules. No days and no name. */
+/**
+ * A rates file ("starter kit"): everything that is set up rather than worked: sites with their rates and rate history,
+ * calendar colours, NIS, PAYE and health surcharge rules, payslip groups, tax mode, public holiday edits and the time
+ * sheet settings (jobs, switches, header, payroll email, the form). No days, no name and no payslip corrections.
+ */
 export interface RatesKit extends RuleHistory {
   payerNames?: Record<string, string>;
   timesheetRules?: TimesheetRule[];
   siteLabel?: string;
   payrollEmail?: string;
+  /** Other jobs and client medic jobs on the time sheet (the two switches on the Timesheet page). */
+  includeOther?: boolean;
+  medicEverywhere?: boolean;
   /** Which payslip group other jobs are paid and taxed on. */
   otherPayer?: string;
   /** Split or combined tax, and from which month. */
@@ -44,6 +51,8 @@ export function ratesKitOf(data: AppData, template?: { name: string; bytes: Arra
     timesheetRules: data.timesheet?.rules,
     siteLabel: data.timesheet?.siteLabel,
     payrollEmail: data.timesheet?.payrollEmail,
+    includeOther: data.timesheet?.includeOther,
+    medicEverywhere: data.timesheet?.medicEverywhere,
     otherPayer: data.otherPayer,
     combinedTax: isCombined(data),
     holidays: data.holidays,
@@ -62,8 +71,8 @@ export function applyKit(data: AppData, kit: RatesKit): AppData {
     taxMode: kit.combinedTax !== undefined || kit.taxMode ? undefined : data.taxMode,
     holidays: kit.holidays ?? data.holidays,
     siteColors: kit.siteColors ? { ...data.siteColors, ...kit.siteColors } : data.siteColors,
-    timesheet: kit.timesheetRules || kit.siteLabel || kit.payrollEmail
-      ? { name: data.timesheet?.name ?? "", siteLabel: kit.siteLabel ?? data.timesheet?.siteLabel ?? "ERT Offsite", rules: kit.timesheetRules ?? data.timesheet?.rules ?? [], payrollEmail: kit.payrollEmail ?? data.timesheet?.payrollEmail, includeOther: data.timesheet?.includeOther, medicEverywhere: data.timesheet?.medicEverywhere }
+    timesheet: kit.timesheetRules || kit.siteLabel || kit.payrollEmail || kit.includeOther !== undefined || kit.medicEverywhere !== undefined
+      ? { name: data.timesheet?.name ?? "", siteLabel: kit.siteLabel ?? data.timesheet?.siteLabel ?? "ERT Offsite", rules: kit.timesheetRules ?? data.timesheet?.rules ?? [], payrollEmail: kit.payrollEmail ?? data.timesheet?.payrollEmail, includeOther: kit.includeOther ?? data.timesheet?.includeOther, medicEverywhere: kit.medicEverywhere ?? data.timesheet?.medicEverywhere }
       : data.timesheet,
   };
 }

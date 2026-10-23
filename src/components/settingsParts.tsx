@@ -1,6 +1,6 @@
 import type { Dated } from "../engine";
 import type { Impact } from "../rateEdit";
-import { money } from "../format";
+import { dmy, money } from "../format";
 import { FIRST_VERSION_DATE } from "../model";
 import { todayISO } from "../format";
 
@@ -16,15 +16,14 @@ export function NumInput({ value, onChange, label, step = "any" }: { value: Num;
   );
 }
 
-const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const prettyDate = (iso: string) => `${Number(iso.slice(8))} ${MONTH_SHORT[Number(iso.slice(5, 7)) - 1]} ${iso.slice(0, 4)}`;
+const prettyDate = dmy;
 const dayBefore = (iso: string) => {
   const d = new Date(`${iso}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() - 1);
   return d.toISOString().slice(0, 10);
 };
 
-/** Plain-words name for a version, based on where it sits in the list: "Original rates, until 30 Sep 2026" or "From 1 Oct 2026". */
+/** Plain-words name for a version, based on where it sits in the list: "Original rates, until 30-Sep-2026" or "From 1-Oct-2026". */
 export function versionLabel(v: Dated<unknown>, all?: Array<Dated<unknown>>): string {
   const sorted = [...(all ?? [v])].sort((a, b) => a.effectiveFrom.localeCompare(b.effectiveFrom));
   const i = sorted.findIndex((x) => x.effectiveFrom === v.effectiveFrom);
@@ -85,7 +84,7 @@ export function TakeEffect({ from, setFrom, firstDate, impact, label, what = "ra
       {from < today && impact && (
         <p className={`notice ${impact.days > 0 ? "" : "muted"}`}>
           {impact.days > 0
-            ? <>This recalculates <strong>{impact.days}</strong> logged day{impact.days === 1 ? "" : "s"} since {impact.first}. Gross changes by <strong>{impact.delta >= 0 ? "+" : "-"}{money(Math.abs(impact.delta))}</strong>.</>
+            ? <>This recalculates <strong>{impact.days}</strong> logged day{impact.days === 1 ? "" : "s"} since {impact.first ? dmy(impact.first) : ""}. Gross changes by <strong>{impact.delta >= 0 ? "+" : "-"}{money(Math.abs(impact.delta))}</strong>.</>
             : "No logged days change."}
         </p>
       )}

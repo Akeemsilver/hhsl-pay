@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { computeDay, valueOn } from "../engine";
-import { WEEKDAYS, hoursText, money, timeRange } from "../format";
+import { dayDMY, dmy, hoursText, money, timeRange } from "../format";
 import { isOther, type Entry } from "../model";
 import { useNav } from "../nav";
 import { useSiteFilter } from "../filter";
 import { useStore } from "../store";
 import { ConfirmDialog } from "./ConfirmDialog";
-
-const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /** The selected day's jobs, shown under the calendar, with Edit, Delete and Add job. */
 export function DayPanel({ date }: { date: string }) {
@@ -17,14 +15,13 @@ export function DayPanel({ date }: { date: string }) {
   const sites = valueOn(data.history.sites, date);
   const { site: filterSite } = useSiteFilter();
   const jobs = data.entries.filter((e) => e.date === date && (!filterSite || e.site === filterSite));
-  const wd = new Date(`${date}T00:00:00Z`).getUTCDay();
   const total = jobs.reduce((s, e) => s + (isOther(e) ? (e.amount ?? 0) : computeDay(e, sites).total), 0);
   const noSites = Object.keys(sites).length === 0;
 
   return (
-    <section className="card day-panel" aria-label={`Jobs on ${date}`}>
+    <section className="card day-panel" aria-label={`Jobs on ${dmy(date)}`}>
       <div className="card-head">
-        <h2>{WEEKDAYS[wd]} {Number(date.slice(8))} {MONTH_SHORT[Number(date.slice(5, 7)) - 1]}</h2>
+        <h2>{dayDMY(date)}</h2>
         {total > 0 && <strong>{money(total)}</strong>}
       </div>
 
@@ -65,7 +62,7 @@ export function DayPanel({ date }: { date: string }) {
       {deleting && (
         <ConfirmDialog
           title="Delete this job?"
-          message={`${isOther(deleting) ? deleting.description || "This other job" : deleting.site} on ${date} will be removed.`}
+          message={`${isOther(deleting) ? deleting.description || "This other job" : deleting.site} on ${dmy(date)} will be removed.`}
           cancelLabel="Keep it"
           confirmLabel="Delete"
           onCancel={() => setDeleting(null)}

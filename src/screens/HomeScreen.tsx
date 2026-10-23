@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { valueOn } from "../engine";
-import { MONTHS, WEEKDAYS, daysOfMonth, hoursText, money, shiftMonth, todayISO } from "../format";
+import { MONTHS, dayDMY, daysOfMonth, hoursText, money, shiftMonth, todayISO } from "../format";
 import { useInstall } from "../install";
 import { useSiteFilter } from "../filter";
 import { useMonth, useMonthSplit, useYear } from "../hooks";
@@ -23,15 +23,9 @@ function greeting(): string {
   return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }
 
-function longDate(iso: string): string {
-  const d = new Date(`${iso}T00:00:00Z`);
-  return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
-}
-
-function shortDate(iso: string): string {
-  const d = new Date(`${iso}T00:00:00Z`);
-  return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]?.slice(0, 3)}`;
-}
+const longDate = (iso: string) => dayDMY(iso);
+// The list is narrow, so it uses the short form: Sun 20/9/2026.
+const shortDate = (iso: string) => dayDMY(iso, true);
 
 export function HomeScreen() {
   const { data } = useStore();

@@ -6,7 +6,8 @@ import { VitePWA } from "vite-plugin-pwa";
 const base = process.env.BASE_PATH || "/hhsl-salary-tracker/";
 
 // Shown in Settings so you can tell which version is running.
-const buildId = `${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC · ${(process.env.GITHUB_SHA || "local").slice(0, 7)}`;
+const now = new Date().toISOString();
+const buildId = `${Number(now.slice(8, 10))}-${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][Number(now.slice(5, 7)) - 1]}-${now.slice(0, 4)} ${now.slice(11, 16)} UTC · ${(process.env.GITHUB_SHA || "local").slice(0, 7)}`;
 
 export default defineConfig(({ command }) => ({
   define: { __BUILD_ID__: JSON.stringify(buildId) },
