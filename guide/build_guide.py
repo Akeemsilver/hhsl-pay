@@ -144,13 +144,13 @@ s.append(steps([
  ("Scroll down and tap <b>Backup &amp; restore</b>.", A("a-settings"), 50),
  ("Under <b>Import from your yearly spreadsheet</b>, tap <b>Choose yearly spreadsheet</b> and pick your .xlsx file from Downloads.", A("a-import"), 50),
  ("A <b>preview</b> shows your name, the year and how many days were found in each month. <b>Nothing changes until you confirm.</b> For each client name in the sheet, choose which of your <b>sites</b> it is, or <b>Skip these days</b>.", I("import-preview")),
- ("Choose <b>Add</b> (keeps what you already have) or <b>Replace these months</b> (clears those months first). Then tap <b>Import</b>, and open the Calendar to see your days.", None)]))
+ ("Choose <b>Add</b> (keeps what you already have) or <b>Replace these months</b> (clears those months first). Then tap <b>Import</b>, and open the Month tab to see your days.", None)]))
 s.append(Paragraph("Only the days, hours, team lead and holiday flags are read. The app works out pay again from your rates, so check one month against your payslip the first time.", small))
 
 s.append(Paragraph('<a name="p4"/>Part 4. How to add a day', h1))
 s.append(Paragraph("A. Add a job to a day", h2))
 s.append(steps([
- ("Tap <b>Calendar</b> at the bottom of the screen, then tap the date you worked.", A("a-calendar"), 50),
+ ("Tap <b>Month</b> at the bottom of the screen, then tap the date you worked.", A("a-calendar"), 50),
  ("Under the calendar, tap <b>Add job</b>. The day form opens.", A("e-daypanel"), 50),
  ("<b>Pick the site.</b> Tap the site box at the top. Type to search, or tap the site in the list.", A("e-picker"), 50),
  ("<b>Role or location.</b> Most sites have a <b>Role</b> list (for example Client medic, or Not applicable). A site set to <b>Type in a location</b> has a box instead: type where you worked, for example Dolphin platform. It goes in the <b>Client assigned</b> column of the time sheet. Tick <b>Team lead / instructor</b> or <b>Holiday / TAR</b> if they apply (they are this day only).", A("e-loc"), 50),
@@ -164,11 +164,11 @@ s.append(steps([
  ("At the top of the job is the tick <b>Put other jobs on the time sheet</b>. It covers <b>all</b> other jobs, whatever they are called. Leave it ticked and every other job goes on the time sheet. The same switch is in Settings, Timesheet.", None)]))
 s.append(Paragraph("C. Change or delete a day", h2))
 s.append(steps([
- ("Tap the date on the Calendar. Each job has <b>Edit</b> and <b>Delete</b>. Edit opens the same form: change it and tap <b>Save</b>. If you close the form with unsaved changes, the app asks first.", A("e-saved"), 50)]))
+ ("Tap the date on the Month tab. Each job has <b>Edit</b> and <b>Delete</b>. Edit opens the same form: change it and tap <b>Save</b>. If you close the form with unsaved changes, the app asks first.", A("e-saved"), 50)]))
 s.append(Paragraph("D. See the month and send the time sheet", h2))
 s.append(steps([
- ("<b>Home</b> shows the month so far: gross, net, PAYE, days and paid hours, with each payslip group underneath (days, paid hours and its tax: PAYE, NIS and the health surcharge). This is shown for every month with pay, even with only one group. Every job that goes on the time sheet (the sites ticked for it, and other jobs) is counted on its own <b>Time sheet</b> line: its days, the hours of jobs paid by the hour (such as Client medic), and a small note with the pay counted there. <b>Fixed rate and other jobs add days and pay but no hours</b>, and the note says so. The pay and tax still belong to the group they came from, so PAYE, NIS and the surcharge are worked out from everything in that group. A day is counted once, so the lines add up to the Days and Paid hours at the top. Swipe the calendar left or right to change month. <b>Year</b> and <b>Charts</b> show the whole year.", None),
- ("<b>Time sheet:</b> tap the download icon at the top of any screen, choose <b>Send to payroll</b>, then <b>Share</b>, and pick Gmail or WhatsApp. Tap <b>Copy the message</b> first if you want to paste the ready-made message into the email, and <b>Save a copy to Downloads</b> if you also want a copy of the file.", Bs("b-download"), 50),
+ ("<b>Home</b> shows the month so far: gross, net, PAYE, days and paid hours, with each payslip group underneath (days, paid hours and its tax: PAYE, NIS and the health surcharge). This is shown for every month with pay, even with only one group. Every job that goes on the time sheet (the sites ticked for it, and other jobs) is counted on its own <b>Time sheet</b> line: its days, the hours of jobs paid by the hour (such as Client medic), and a small note with the pay counted there. <b>Fixed rate and other jobs add days and pay but no hours</b>, and the note says so. The pay and tax still belong to the group they came from, so PAYE, NIS and the surcharge are worked out from everything in that group. A day is counted once, so the lines add up to the Days and Paid hours at the top. Swipe the calendar left or right to change month. The <b>Month</b> tab shows the same month with the calendar and, under its summary, two colour tables like the monthly sheet: <b>Gross and days</b> (for each site the gross, the days, and how many were weekdays and weekend or holiday days) and <b>Hours</b> (the hours worked and the paid hours, with overtime counted). A fixed day rate shows no hours. <b>Year</b> and <b>Charts</b> show the whole year.", None),
+ ("<b>Time sheet:</b> tap the download icon at the top of any screen, choose <b>Send to payroll</b>, then <b>Open email</b>. The time sheet is saved to your Downloads (the time is added to the file name, so it never clashes with an earlier one) and your email app (Gmail or Outlook) opens with the payroll address, subject and message ready. Attach the file from Downloads and send. To send it on WhatsApp instead, tap <b>Share the file with another app instead</b>.", Bs("b-download"), 50),
  ("<b>Payslips:</b> in the same screen, switch to <b>Payslip</b>. The eye icon lets you look at them first.", None)]))
 s.append(Spacer(1, 3))
 s.append(callout("Back up now and then", ["Your days live only on your phone. If it is lost or its browser data is cleared, they are gone. Go to <b>Settings, Backup &amp; restore</b> and save a backup file every month or so, somewhere safe such as " + lk("https://drive.google.com/", "Google Drive") + "."]))
@@ -220,7 +220,7 @@ s.append(Paragraph("To give a colleague the app you send them <b>three things</b
 s.append(steps([
  ("Open <b>Settings</b> (the gear) and scroll to <b>Share this app</b>. The three buttons are here.", A("a-share"), 50),
  ("<b>Send the link.</b> Tap <b>Share link</b>, pick <b>WhatsApp</b> and the person.", None),
- ("<b>Send the starter kit.</b> Tap <b>Share starter kit</b>, then <b>Yes, download and share</b>.", Bs("b-share-ask"), 50),
+ ("<b>Send the starter kit.</b> Tap <b>Share starter kit</b>, then <b>Yes, download and share</b>. The time is added to the saved file's name so it never clashes with an earlier copy.", Bs("b-share-ask"), 50),
  ("The share menu opens. Pick <b>WhatsApp</b> (or Gmail) and the same person, and send the file.", Bs("b-share-after"), 50),
  ("<b>Send this guide.</b> Tap <b>Share guide (PDF)</b> and pick the same person. The guide is built into the app, so it is always the latest one. It needs a signal to load.", None)]))
 s.append(Paragraph(f"This guide is also here, if you ever need to download it again: {lk(LINK + GUIDE_FILE, GUIDE_FILE)}", small))

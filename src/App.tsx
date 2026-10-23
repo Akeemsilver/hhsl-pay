@@ -21,7 +21,7 @@ import { CalendarIcon, HomeIcon, PieIcon, TableIcon } from "./components/Icons";
 
 const TABS: Array<{ id: Tab; label: string; Icon: () => JSX.Element }> = [
   { id: "home", label: "Home", Icon: HomeIcon },
-  { id: "calendar", label: "Calendar", Icon: CalendarIcon },
+  { id: "calendar", label: "Month", Icon: CalendarIcon },
   { id: "year", label: "Year", Icon: TableIcon },
   { id: "charts", label: "Charts", Icon: PieIcon },
 ];

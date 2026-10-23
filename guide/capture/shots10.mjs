@@ -25,7 +25,7 @@ await page.locator(".page-form").getByLabel("Fixed day rate", { exact: true }).l
 await page.locator(".page-form").getByLabel("Hourly rate after the fixed hours").fill("55");
 await page.getByRole("button", { name: "Add site" }).click(); await page.waitForTimeout(500);
 await page.goBack(); await page.goBack(); await page.waitForTimeout(300);
-await page.getByRole("button", { name: "Calendar", exact: true }).last().click(); await page.waitForTimeout(500);
+await page.getByRole("button", { name: "Month", exact: true }).last().click(); await page.waitForTimeout(500);
 await page.getByRole("button", { name: /^Wed 21,/ }).click(); await page.waitForTimeout(400);
 await snap("day-panel", { add: page.getByRole("button", { name: /Add job/ }) });
 await page.getByRole("button", { name: /Add job/ }).first().click(); await page.waitForTimeout(500);

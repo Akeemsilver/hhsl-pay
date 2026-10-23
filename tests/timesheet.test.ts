@@ -274,3 +274,11 @@ describe("other jobs without times", () => {
     expect(warnings).toEqual([]);
   });
 });
+
+import { withTime } from "../src/backup";
+describe("withTime", () => {
+  it("adds the time before the extension so a saved copy never has an existing name", () => {
+    expect(withTime("HHSL-Time-Sheet-Name-2026-10.xlsx", new Date(2026, 9, 23, 5, 7))).toBe("HHSL-Time-Sheet-Name-2026-10-0507.xlsx");
+    expect(withTime("rates-2026-10-23.txt", new Date(2026, 9, 23, 13, 45))).toBe("rates-2026-10-23-1345.txt");
+  });
+});

@@ -16,7 +16,7 @@ import { TemplateError, extractLogo, timesheetFileName } from "../timesheetFile"
 import { BottomSheet } from "./BottomSheet";
 import { PayrollDialog } from "./PayrollDialog";
 import { MailIcon } from "./Icons";
-import { download } from "../backup";
+import { download, withTime } from "../backup";
 import { mailtoLink, payrollEmail } from "../payroll";
 
 
@@ -103,9 +103,8 @@ export function ExportSheet({ month }: { month: string }) {
   const openPayroll = async () => {
     setMessage(null);
     setPayrollFile(null);
-    setPayrollSaved(false);
     setPayrollError(null);
-    setPayrollCopied(false);
+    setPayrollTry(0);
     setPayrollOpen(true);
     try {
       const made = await makeTimesheetXlsx(template!.bytes, settings, month, data.entries, data.history);
@@ -115,33 +114,42 @@ export function ExportSheet({ month }: { month: string }) {
       setMessage({ text: e instanceof TemplateError ? e.message : "Could not create the file.", ok: false });
     }
   };
-  const [payrollSaved, setPayrollSaved] = useState(false);
   const [payrollError, setPayrollError] = useState<string | null>(null);
-  // A copy for the Downloads folder is its own tap: a download in the same tap as the share can stop the phone opening its share menu.
-  const copyPayrollMessage = () => { navigator.clipboard?.writeText(`${email.subject}\n\n${email.body}`).then(() => setPayrollCopied(true), () => {}); };
-  const [payrollCopied, setPayrollCopied] = useState(false);
-  const savePayrollCopy = () => { if (payrollFile) { download(payrollFile.fileName, payrollFile.bytes, XLSX_MIME); setPayrollSaved(true); } };
-  const sendToPayroll = async () => {
+  // Android Chrome sometimes refuses a file type ("Permission denied"). Each tap tries the next way of labelling the same file.
+  const SHARE_TYPES = [XLSX_MIME, "application/octet-stream", "application/zip"];
+  const [payrollTry, setPayrollTry] = useState(0);
+  // Secondary: share the file with any app (WhatsApp, ...).
+  const shareToPayroll = async () => {
     if (!payrollFile) return;
     const { fileName, bytes } = payrollFile;
     setPayrollError(null);
-    const file = new File([bytes as BlobPart], fileName, { type: XLSX_MIME });
+    const type = SHARE_TYPES[payrollTry % SHARE_TYPES.length]!;
+    const file = new File([bytes as BlobPart], fileName, { type });
     const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
     if (nav.share && (!nav.canShare || nav.canShare({ files: [file] }))) {
       try {
-        // Exactly what the other downloads share (file and file name): adding the email text made Android refuse with "Permission denied".
+        // Only the file and its name: adding the email text made Android refuse the share.
         await nav.share({ files: [file], title: fileName });
-        setPayrollOpen(false); setPayrollSaved(false);
+        setPayrollOpen(false); setPayrollTry(0);
         setMessage({ text: "Time sheet shared.", ok: true });
       } catch (e) {
-        // Closing the share menu is fine; any other refusal is shown so it can be fixed, and the copy button still works.
-        if ((e as DOMException)?.name !== "AbortError") setPayrollError(`${(e as DOMException)?.name ?? "Error"}${(e as Error)?.message ? `: ${(e as Error).message}` : ""}`);
+        // Closing the share menu is fine. Any other refusal is shown, and the next tap tries another file type.
+        if ((e as DOMException)?.name !== "AbortError") {
+          setPayrollError((e as Error)?.message || (e as DOMException)?.name || "Error");
+          setPayrollTry((t) => t + 1);
+        }
       }
       return;
     }
-    // No share menu on this phone: save the file, then open the mail app for the message.
-    download(fileName, bytes, XLSX_MIME);
-    setPayrollOpen(false); setPayrollSaved(false);
+    setPayrollError("this phone cannot share files");
+  };
+  // Main way: save the file, then open the phone's mail app (Gmail, Outlook, ...) with the address, subject and message ready.
+  const openMailApp = () => {
+    if (!payrollFile) return;
+    // A new name each time (the time is added): when the same name is already in Downloads, Chrome asks "Download file again?" and that question ends up hidden behind the mail app.
+    const fileName = withTime(payrollFile.fileName);
+    download(fileName, payrollFile.bytes, XLSX_MIME);
+    setPayrollOpen(false); setPayrollTry(0);
     setMessage({ text: `${fileName} is in your Downloads. Attach it to the email that opens, then send.`, ok: true });
     setTimeout(() => { window.location.href = mailtoLink(email); }, 700);
   };
@@ -236,7 +244,7 @@ export function ExportSheet({ month }: { month: string }) {
           </>
         )}
       </div>
-      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={sendToPayroll} ready={!!payrollFile} saved={payrollSaved} error={payrollError} onSave={savePayrollCopy} onCopy={copyPayrollMessage} copied={payrollCopied} />}
+      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={openMailApp} onShare={shareToPayroll} ready={!!payrollFile} error={payrollError} />}
     </BottomSheet>
   );
 }

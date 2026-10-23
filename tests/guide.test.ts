@@ -13,7 +13,7 @@ describe("the mobile guide", () => {
   });
 
   it("covers the main tabs", () => {
-    for (const t of ["Home", "Calendar", "Year", "Charts"]) expect(guide).toContain(t);
+    for (const t of ["Home", "Month", "Year", "Charts"]) expect(guide).toContain(t);
   });
 
   it("is shipped with the app", () => {
