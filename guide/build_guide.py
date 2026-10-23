@@ -205,7 +205,7 @@ s.append(Paragraph("F. The other settings", h2))
 s.append(steps([
  ("<b>Public holidays:</b> Settings, <b>Public holidays</b>. Holidays show in red on the calendar and new jobs on them are marked. Divali and Eid change every year, so add them with <b>Add a holiday</b>.", None),
  ("<b>NIS &amp; tax:</b> Settings, <b>NIS &amp; tax</b>. The NIS table, PAYE and health surcharge. A saved change starts on its <b>Take effect from</b> date; older months keep the rules in force on their date.", None),
- ("<b>Payslips:</b> Settings, <b>Payslips</b>. Choose <b>Split</b> (each payslip is taxed on its own) or <b>Combined</b> (everything is taxed once), and the payslip names. The Home screen also has a Split switch.", None),
+ ("<b>Payslips:</b> Settings, <b>Payslips</b>. Choose <b>Split</b> (each payslip is taxed on its own) or <b>Combined</b> (everything is taxed once), and the payslip names. The same Split / Combined switch is on the Home screen, at the top right of the Year summary, and beside <b>View as table</b> under <b>Gross by payslip</b> on the Charts tab. It is one setting for the whole app: change it anywhere and every screen, including this one, follows and recalculates.", None),
  ("<b>Timesheet:</b> Settings, <b>Timesheet</b>. Your name, the HHSL time sheet form and which jobs go on it (see Part 6).", None),
  ("<b>Backup &amp; restore:</b> Settings, <b>Backup &amp; restore</b>. Save a backup file, restore one, or import from a spreadsheet (see Part 3).", None)]))
 

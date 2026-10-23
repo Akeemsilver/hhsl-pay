@@ -8,6 +8,7 @@ import { MONTHS, money, todayISO } from "../format";
 import { isCombined, overridesFor } from "../model";
 import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
+import { TaxSwitch } from "../components/TaxMode";
 import { BackIcon, ForwardIcon } from "../components/Icons";
 import { YearByPayslip, YearSites } from "../components/YearParts";
 import { AverageLine } from "../components/AverageLine";
@@ -45,7 +46,8 @@ export function YearScreen() {
         <button className="icon" onClick={() => setYear(year + 1)} aria-label="Next year"><ForwardIcon /></button>
       </div>
 
-      <section className="card summary">
+      <section className="card summary year-summary">
+        <div className="summary-switch"><TaxSwitch /></div>
         <div className="big"><span className="label"><i className="dot dot-gross" />Gross for the year</span><span className="value">{money(gross)}</span></div>
         <dl>
           <div><dt><i className="dot dot-net" />Net</dt><dd className="c-net">{money(total((m) => m.net))}</dd></div>

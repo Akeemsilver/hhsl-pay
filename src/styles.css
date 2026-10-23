@@ -1003,5 +1003,12 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 
 /* Public holidays: the date number is gold (weekends keep red) and a small circled H sits at the other end of the tile. */
 .cal-cell.holiday .n, .cal-cell.holiday.worked .n, .cal-cell.holiday.today .n, .cal-cell.weekend.holiday .n { color: var(--hol); font-weight: 800; }
-.cal-cell .hol-h { position: absolute; top: 4px; right: 3px; width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid var(--hol); color: var(--hol); font-size: 0.56rem; font-weight: 800; line-height: 12px; text-align: center; }
+.cal-cell .hol-h { position: absolute; top: 4px; right: 3px; width: 15px; height: 15px; box-sizing: border-box; border-radius: 50%; border: 1.5px solid var(--hol); color: var(--hol); font-size: 0.58rem; font-weight: 800; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 2px 0 0; }
 .cal-cell .unp-dot { top: auto; bottom: 5px; right: 5px; }
+
+/* The split / combined switch beside "View as table" (Charts) and on the Year summary. It flips the whole app. */
+.table-wrap { position: relative; }
+.tv-action { position: absolute; top: 0; right: 0; height: 36px; display: flex; align-items: center; }
+.tv-action .tax-switch, .summary-switch .tax-switch { display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 8px 0 12px; border: 1.5px solid var(--field-edge); border-radius: 999px; background: var(--card); font-size: 0.82rem; font-weight: 600; color: var(--text); }
+.year-summary { position: relative; }
+.summary-switch { position: absolute; top: 10px; right: 12px; }

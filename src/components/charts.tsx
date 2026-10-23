@@ -80,8 +80,8 @@ export function Legend({ items }: { items: LegendItem[] }) {
   );
 }
 
-export function ChartCard({ title, note, legend, table, children }: {
-  title: string; note?: string; legend?: LegendItem[];
+export function ChartCard({ title, note, legend, table, action, children }: {
+  title: string; note?: string; legend?: LegendItem[]; /** Sits on the same row as "View as table", at the far right. */ action?: ReactNode;
   table: { head: string[]; rows: string[][]; foot?: string[] };
   children: ReactNode;
 }) {
@@ -91,6 +91,7 @@ export function ChartCard({ title, note, legend, table, children }: {
       {note && <p className="muted small">{note}</p>}
       {legend && <Legend items={legend} />}
       {children}
+      <div className="table-wrap">
       <details className="table-view">
         <summary>View as table</summary>
         <table>
@@ -99,6 +100,8 @@ export function ChartCard({ title, note, legend, table, children }: {
           {table.foot && <tfoot><tr>{table.foot.map((c, i) => <td key={i}>{c}</td>)}</tr></tfoot>}
         </table>
       </details>
+      {action && <div className="tv-action">{action}</div>}
+      </div>
     </section>
   );
 }
