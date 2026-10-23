@@ -11,7 +11,7 @@ import type { MonthResult } from "../engine";
 import { sheetSplit, type SheetInfo } from "../sheetSplit";
 import type { Entry } from "../model";
 
-/** Small print under a total: each place's own PAYE, NIS and health surcharge. Only shown when payslips are taxed separately. */
+
 /**
  * The tax of each payslip in small print. `groups` is how many payslip groups have income: when tax is combined there is
  * one "All sites" line, shown whenever split would have shown several, so flipping the tax method changes figures only.
@@ -19,7 +19,8 @@ import type { Entry } from "../model";
 export function PayerTax({ payers, groups, sheet }: { payers: Array<{ payer: string; paye: number; nis: number; surcharge: number; weighted?: number; days?: number }>; groups?: number; sheet?: SheetInfo }) {
   const { data } = useStore();
   const combinedNote = payers.length === 1 && payers[0]!.payer === "all" && (groups ?? 0) >= 2;
-  if (payers.length < 2 && !combinedNote && !sheet) return null;
+  // Shown for every month with income, even with one group, so NIS and the surcharge are always visible.
+  if (payers.length === 0 && !combinedNote && !sheet) return null;
   return (
     <ul className="payer-tax" aria-label="Tax for each payslip">
       {payers.map((p) => (

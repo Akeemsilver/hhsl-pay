@@ -105,6 +105,7 @@ export function ExportSheet({ month }: { month: string }) {
     setPayrollFile(null);
     setPayrollSaved(false);
     setPayrollError(null);
+    setPayrollCopied(false);
     setPayrollOpen(true);
     try {
       const made = await makeTimesheetXlsx(template!.bytes, settings, month, data.entries, data.history);
@@ -117,6 +118,8 @@ export function ExportSheet({ month }: { month: string }) {
   const [payrollSaved, setPayrollSaved] = useState(false);
   const [payrollError, setPayrollError] = useState<string | null>(null);
   // A copy for the Downloads folder is its own tap: a download in the same tap as the share can stop the phone opening its share menu.
+  const copyPayrollMessage = () => { navigator.clipboard?.writeText(`${email.subject}\n\n${email.body}`).then(() => setPayrollCopied(true), () => {}); };
+  const [payrollCopied, setPayrollCopied] = useState(false);
   const savePayrollCopy = () => { if (payrollFile) { download(payrollFile.fileName, payrollFile.bytes, XLSX_MIME); setPayrollSaved(true); } };
   const sendToPayroll = async () => {
     if (!payrollFile) return;
@@ -126,7 +129,8 @@ export function ExportSheet({ month }: { month: string }) {
     const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
     if (nav.share && (!nav.canShare || nav.canShare({ files: [file] }))) {
       try {
-        await nav.share({ files: [file], title: email.subject, text: email.body });
+        // Exactly what the other downloads share (file and file name): adding the email text made Android refuse with "Permission denied".
+        await nav.share({ files: [file], title: fileName });
         setPayrollOpen(false); setPayrollSaved(false);
         setMessage({ text: "Time sheet shared.", ok: true });
       } catch (e) {
@@ -232,7 +236,7 @@ export function ExportSheet({ month }: { month: string }) {
           </>
         )}
       </div>
-      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={sendToPayroll} ready={!!payrollFile} saved={payrollSaved} error={payrollError} onSave={savePayrollCopy} />}
+      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={sendToPayroll} ready={!!payrollFile} saved={payrollSaved} error={payrollError} onSave={savePayrollCopy} onCopy={copyPayrollMessage} copied={payrollCopied} />}
     </BottomSheet>
   );
 }
