@@ -221,3 +221,8 @@ export function payerLabel(names: Record<string, string>, id: string): string {
   if (given) return given;
   return id.replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
+
+/** Orders a day's jobs by when they start; jobs with no start time follow, in the order they were added. */
+export function byStartTime<T extends { startTime?: string }>(list: T[]): T[] {
+  return list.map((e, i) => ({ e, i })).sort((a, b) => (a.e.startTime && b.e.startTime ? a.e.startTime.localeCompare(b.e.startTime) : a.e.startTime ? -1 : b.e.startTime ? 1 : 0) || a.i - b.i).map((x) => x.e);
+}

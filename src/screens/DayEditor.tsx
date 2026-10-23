@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { SitePicker } from "../components/SitePicker";
 import { computeDay, findSite, valueOn } from "../engine";
 import { dayDMY, dmy, durationText, hoursText, money, timeRange } from "../format";
-import { isDetailed, isOther, newId, rolesFor, siteHasLunch, toDetailed, toSimple, withComputedHours, type Entry } from "../model";
+import { byStartTime, isDetailed, isOther, newId, rolesFor, siteHasLunch, toDetailed, toSimple, withComputedHours, type Entry } from "../model";
 import { useNav } from "../nav";
 import { holidayMap } from "../holidays";
 import { useStore } from "../store";
@@ -164,7 +164,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
         {mode === "overview" ? (
           <>
             {draft.length === 0 && <p className="muted">No jobs on this day.</p>}
-            {draft.map((e) => {
+            {byStartTime(draft).map((e) => {
               const other = isOther(e);
               const pay = other ? null : computeDay(e, sites);
               const times = timeRange(e.startTime, e.endTime);

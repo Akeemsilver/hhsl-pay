@@ -43,3 +43,11 @@ describe("month by site", () => {
     expect(siteTable(result() as never, data, { others: false }).rows.some((r) => r.site === "Other jobs")).toBe(false);
   });
 });
+
+import { byStartTime } from "../src/model";
+describe("a day's jobs in the order they start", () => {
+  it("puts the morning job first and keeps jobs with no times after, in order", () => {
+    const l = [{ id: "a", startTime: "18:00" }, { id: "b" }, { id: "c", startTime: "06:00" }, { id: "d" }];
+    expect(byStartTime(l).map((x) => x.id)).toEqual(["c", "a", "b", "d"]);
+  });
+});

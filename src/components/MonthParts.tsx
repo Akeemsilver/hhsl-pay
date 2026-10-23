@@ -196,15 +196,19 @@ export function CalendarGrid({ month, days, result, today, onPick, selected, sli
           const priced = result.entries.filter((e) => e.entry.date === date);
           const extra = others.get(date) ?? [];
           const total = priced.reduce((s, e) => s + e.pay.total, 0);
+          // The jobs of the day in the order they start (jobs with no times follow, in the order they were added):
+          // the first one gives the tile its site and colour, and there is one dot for each job.
+          const ordered = [
+            ...priced.map((p, i) => ({ i, t: p.entry.startTime, other: false, site: p.entry.site })),
+            ...extra.map((o, i) => ({ i: priced.length + i, t: o.startTime, other: true, site: "" })),
+          ].sort((a, b) => (a.t && b.t ? a.t.localeCompare(b.t) : a.t ? -1 : b.t ? 1 : 0) || a.i - b.i);
+          const lead1 = ordered[0];
           const first = priced[0];
-          const tone = first ? siteColorIndex(data, first.entry.site) : 0;
-          const state = first ? `worked tone${tone}` : extra.length ? "worked other" : "";
-          const jobCount = priced.length + extra.length;
+          const tone = lead1 && !lead1.other ? siteColorIndex(data, lead1.site) : 0;
+          const state = first && lead1 && !lead1.other ? `worked tone${tone}` : first ? "worked other" : extra.length ? "worked other" : "";
+          const jobCount = ordered.length;
           const unpaidHere = extra.some((o) => !((o.amount ?? 0) > 0));
-          const dotTones = [
-            ...priced.map((p) => siteColorIndex(data, p.entry.site)),
-            ...extra.map(() => "o"),
-          ].slice(0, 4);
+          const dotTones = ordered.map((j) => (j.other ? "o" : siteColorIndex(data, j.site))).slice(0, 4);
           return (
             <button
               key={date}
@@ -217,7 +221,7 @@ export function CalendarGrid({ month, days, result, today, onPick, selected, sli
               {first && (
                 <>
                   <span className="amt">${Math.round(total).toLocaleString("en-US")}</span>
-                  {jobCount === 1 && <span className="cal-site">{first.entry.site.slice(0, 5)}</span>}
+                  <span className="cal-site">{lead1 && !lead1.other ? lead1.site.slice(0, 5) : "Other"}</span>
                 </>
               )}
               {!first && extra[0] && (
