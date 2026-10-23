@@ -154,7 +154,7 @@ s.append(steps([
  ("Under the calendar, tap <b>Add job</b>. The day form opens.", A("e-daypanel"), 50),
  ("<b>Pick the site.</b> Tap the site box at the top. Type to search, or tap the site in the list.", A("e-picker"), 50),
  ("<b>Role or location.</b> Most sites have a <b>Role</b> list (for example Client medic, or Not applicable). A site set to <b>Type in a location</b> has a box instead: type where you worked, for example Dolphin platform. It goes in the <b>Client assigned</b> column of the time sheet. Tick <b>Team lead / instructor</b> or <b>Holiday / TAR</b> if they apply.", A("e-loc"), 50),
- ("<b>Time sheet tick.</b> Under the site there is <b>Put [site] on the time sheet</b>. It applies to every day at that site, not just this day, and it is remembered from now on.", A("d-tick"), 50),
+ ("<b>Time sheet tick.</b> Below the role there is <b>Put [site] on the time sheet</b>. With a role chosen (for example Client medic at PLNL) it reads <b>Put PLNL Client medic on the time sheet</b> and covers only that role. It applies to every such day at that site, not just this day, and it is remembered from now on.", A("d-tick"), 50),
  ("<b>Hours.</b> A job on the time sheet always uses <b>start and end time</b>: tap a time, turn the AM/PM, hour and minute wheels (or type the time) and tap <b>Set</b>. The hours paid come from the times and cannot be typed. Other sites can use <b>Simple</b> (type the hours with the minus and plus buttons) or <b>Detailed</b> (start and end time).", A("b-time"), 50),
  ("Hourly sites with a lunch check ask if <b>lunch was paid</b>, or how much unpaid lunch comes off (30 minutes or 1 hour). A <b>fixed day rate</b> site has no lunch options.", A("e-hours"), 50),
  ("The line at the bottom shows the <b>pay for the day</b>. To log a second job on the same day, tap <b>Add another job</b>. Then tap <b>Save</b>. <b>Cancel</b> throws the changes away.", A("e-pay"), 50)]))
@@ -167,7 +167,7 @@ s.append(steps([
  ("Tap the date on the Calendar. Each job has <b>Edit</b> and <b>Delete</b>. Edit opens the same form: change it and tap <b>Save</b>. If you close the form with unsaved changes, the app asks first.", A("e-saved"), 50)]))
 s.append(Paragraph("D. See the month and send the time sheet", h2))
 s.append(steps([
- ("<b>Home</b> shows the month so far: gross, net, PAYE, days and paid hours, with each site underneath. Swipe the calendar left or right to change month. <b>Year</b> and <b>Charts</b> show the whole year.", None),
+ ("<b>Home</b> shows the month so far: gross, net, PAYE, days and paid hours, with each payslip group underneath (days, paid hours and its tax). Every job that goes on the time sheet (the sites ticked for it, and other jobs) is counted on its own <b>Time sheet</b> line with just the days, and its days and hours are taken out of its group's line. A day is counted once, so the lines add up to the Days and Paid hours at the top. Swipe the calendar left or right to change month. <b>Year</b> and <b>Charts</b> show the whole year.", None),
  ("<b>Time sheet:</b> tap the download icon at the top of any screen, choose <b>Send to payroll</b>, then <b>Download and share</b>, and pick Gmail or WhatsApp.", Bs("b-download"), 50),
  ("<b>Payslips:</b> in the same screen, switch to <b>Payslip</b>. The eye icon lets you look at them first.", None)]))
 s.append(Spacer(1, 3))

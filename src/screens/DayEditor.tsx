@@ -86,11 +86,15 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
   const onSheet = (e: Entry) => !isOther(e) && !!matchRule(e, tsRules, false, medicAll);
   const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
   const siteRuleOf = (site: string) => rulesDraft.find((r) => !r.role && sameName(r.site, site));
-  const toggleSheet = (site: string, on: boolean) => {
-    const next = on ? [...rulesDraft, { site, label: site }] : rulesDraft.filter((r) => r.role || !sameName(r.site, site));
+  const roleRuleOf = (site: string, role: string) => rulesDraft.find((r) => r.role && sameName(r.site, site) && sameName(r.role, role));
+  // With a role chosen the tick is for that role only (for example PLNL Client medic); with none it is for the whole site.
+  const toggleSheet = (site: string, role: string | undefined, on: boolean) => {
+    const next = on
+      ? [...rulesDraft, role ? { site, role, label: `${site} ${role}` } : { site, label: site }]
+      : rulesDraft.filter((r) => (role ? !(r.role && sameName(r.site, site) && sameName(r.role, role)) : r.role || !sameName(r.site, site)));
     setRulesDraft(next);
-    // Jobs at this site switch to start and end time right away; their hours stay until the times are set.
-    if (on) setDraft((list) => list.map((e) => (!isOther(e) && sameName(e.site, site) && !isDetailed(e) ? { ...e, detailed: true } : e)));
+    // Those jobs switch to start and end time right away; their hours stay until the times are set.
+    if (on) setDraft((list) => list.map((e) => (!isOther(e) && sameName(e.site, site) && (!role || sameName(e.role ?? "", role)) && !isDetailed(e) ? { ...e, detailed: true } : e)));
   };
   const patch = (id: string, changes: Partial<Entry>) =>
     setDraft((list) => list.map((e) => {
@@ -178,24 +182,11 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
           return (
             <div className="entry" key={entry.id} data-entry-id={entry.id}>
               <SitePicker value={entry.site} names={siteNames} onPick={(n) => changeSite(entry, n)} />
-              {entry.site && (() => {
-                const own = !!siteRuleOf(entry.site);
-                const viaRole = !own && forced;
-                return (
-                  <label className="check ts-check">
-                    <input type="checkbox" checked={own || viaRole} disabled={viaRole} onChange={(e) => toggleSheet(entry.site, e.target.checked)} />
-                    <span>
-                      Put {entry.site} on the time sheet
-                      <small className="muted">{viaRole ? "On it by a role rule (Settings, Timesheet)." : "All days at this site, not just this one."}</small>
-                    </span>
-                  </label>
-                );
-              })()}
               {findSite(sites, entry.site)?.roleField ? (
                 <label>
                   {findSite(sites, entry.site)!.roleField!.label}
-                  <input
-                    value={entry.role ?? ""} placeholder={findSite(sites, entry.site)!.roleField!.placeholder}
+                  <input aria-label={findSite(sites, entry.site)!.roleField!.label}
+                    value={entry.role ?? ""} placeholder={`e.g. ${findSite(sites, entry.site)!.roleField!.placeholder ?? ""}`.trim()}
                     onChange={(e) => patch(entry.id, { role: e.target.value || undefined })}
                   />
                 </label>
@@ -210,6 +201,22 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                       {roleNames.map((r) => <option key={r} value={r}>{r}</option>)}
                       {orphan && <option value={entry.role}>{entry.role} (not in rates)</option>}
                     </select>
+                  </label>
+                );
+              })()}
+              {entry.site && (() => {
+                const typedSite = !!findSite(sites, entry.site)?.roleField;
+                const role = !typedSite && entry.role?.trim() ? entry.role.trim() : undefined;
+                const siteRule = siteRuleOf(entry.site);
+                const own = role ? !!roleRuleOf(entry.site, role) : !!siteRule;
+                const viaOther = !own && forced;
+                return (
+                  <label className="check ts-check">
+                    <input type="checkbox" checked={own || viaOther} disabled={viaOther} onChange={(e) => toggleSheet(entry.site, role, e.target.checked)} />
+                    <span>
+                      {role ? `Put ${entry.site} ${role} on the time sheet` : `Put ${entry.site} on the time sheet`}
+                      <small className="muted">{viaOther ? (siteRule ? "The whole site is on it (Settings, Timesheet)." : "On it by a role rule (Settings, Timesheet).") : role ? `All ${role} days at this site, not just this one.` : "All days at this site, not just this one."}</small>
+                    </span>
                   </label>
                 );
               })()}

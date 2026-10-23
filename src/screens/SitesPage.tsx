@@ -54,7 +54,7 @@ function RoleFieldChoice({ value, onChange }: { value: SiteRates["roleField"]; o
       {typed ? (
         <>
           <span className="muted small">On the day form you type the location, for example:</span>
-          <input readOnly tabIndex={-1} aria-label="Example of the location box" className="example-box" placeholder={value!.placeholder ?? "Dolphin platform"} />
+          <input readOnly tabIndex={-1} aria-label="Example of the location box" className="example-box" placeholder={`e.g. ${value!.placeholder ?? "Dolphin platform"}`} />
           <span className="muted small">The location you type goes in the Client assigned column of the timesheet.</span>
         </>
       ) : (
