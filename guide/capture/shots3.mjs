@@ -40,7 +40,7 @@ const card = page.locator(".tj"); await card.scrollIntoViewIfNeeded(); await pag
 await snap("ts-jobs", { summary: page.locator(".tj-summary") });
 await page.goBack(); await page.goBack(); await page.waitForTimeout(300);
 // time picker
-await page.getByRole("button", { name: "Calendar", exact: true }).last().click(); await page.waitForTimeout(500);
+await page.getByRole("button", { name: "Month", exact: true }).last().click(); await page.waitForTimeout(500);
 await page.getByRole("button", { name: /^Wed 21,/ }).click(); await page.waitForTimeout(400);
 await page.getByRole("button", { name: /Add job/ }).first().click(); await page.waitForTimeout(400);
 await page.getByRole("button", { name: /Detailed/ }).click(); await page.waitForTimeout(300);

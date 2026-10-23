@@ -31,7 +31,7 @@ await snap("fixed", { fixed, rate: page.locator(".page-form").getByLabel("Fixed 
 await page.locator(".page-form").getByLabel("Weekend same as weekday").scrollIntoViewIfNeeded(); await page.evaluate(() => window.scrollBy(0, -200));
 await snap("weekend", { wk: page.locator(".page-form").getByLabel("Weekend same as weekday"), hol: page.locator(".page-form").getByLabel("Holiday same as weekday") });
 await page.goBack(); await page.goBack(); await page.goBack(); await page.waitForTimeout(300);
-await page.getByRole("button", { name: "Calendar", exact: true }).last().click(); await page.waitForTimeout(500);
+await page.getByRole("button", { name: "Month", exact: true }).last().click(); await page.waitForTimeout(500);
 await page.getByRole("button", { name: /^Wed 21,/ }).click(); await page.waitForTimeout(400);
 await page.getByRole("button", { name: /Add job/ }).first().click(); await page.waitForTimeout(500);
 await snap("tick", { tick: page.locator(".ts-switch") });

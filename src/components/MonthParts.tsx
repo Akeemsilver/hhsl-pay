@@ -9,6 +9,7 @@ import { AverageLine } from "./AverageLine";
 import { useYear } from "../hooks";
 import type { MonthResult } from "../engine";
 import { sheetSplit, type SheetInfo } from "../sheetSplit";
+import { siteTable } from "../siteTable";
 import type { Entry } from "../model";
 
 
@@ -234,6 +235,41 @@ export function CalendarGrid({ month, days, result, today, onPick, selected, sli
         </p>
       )}
       </div>
+    </section>
+  );
+}
+
+/** The month by site, like the monthly sheet: income, days, weekdays, weekend/holiday days, hours worked and paid hours. */
+export function SiteTable({ result }: { result: MonthResult<Entry> }) {
+  const { data } = useStore();
+  const { site: filterSite } = useSiteFilter();
+  const { rows, all } = siteTable(result, data, { others: !filterSite });
+  if (rows.length === 0) return null;
+  const h = (n: number | undefined) => (n === undefined ? "–" : hoursText(n));
+  const d = (n: number) => (n === 0 ? "–" : String(n));
+  const line = (r: typeof all, strong = false) => (
+    <div className={`st-row ${strong ? "st-all" : ""}`} role="row" key={r.site}>
+      <span className="st-site" role="cell">{r.site}</span>
+      <span role="cell" className="st-money">{money(r.income)}</span>
+      <span role="cell">{r.days}</span>
+      <span role="cell">{d(r.weekdays)}</span>
+      <span role="cell">{d(r.offdays)}</span>
+      <span role="cell">{h(r.worked)}</span>
+      <span role="cell">{h(r.total)}</span>
+    </div>
+  );
+  return (
+    <section className="card site-table" aria-label="Month by site">
+      <h2>By site</h2>
+      <div role="table">
+        <div className="st-row st-head" role="row">
+          <span role="columnheader">Site</span><span role="columnheader">Income</span><span role="columnheader">Days</span>
+          <span role="columnheader">Wk-<br />day</span><span role="columnheader">Wknd<br />Hol</span><span role="columnheader">Work<br />h</span><span role="columnheader">Total<br />h</span>
+        </div>
+        {line(all, true)}
+        {rows.map((r) => line(r))}
+      </div>
+      <p className="muted small">Total h counts overtime at its multiple (1.5x hours count 1.5). A fixed day rate has no hours.</p>
     </section>
   );
 }

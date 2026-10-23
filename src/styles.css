@@ -916,3 +916,15 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 :root[data-theme="dark"] .sheet-backdrop { background: rgba(0, 0, 0, 0.68); }
 :root[data-theme="dark"] .sheet { --bg: #1c262e; --card: #26333d; --edge: #3c4b57; border-top: 1px solid #55646f; box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.7); }
 :root[data-theme="dark"] .grabber::after { background: #6b7a87; }
+
+.site-table h2 { margin-bottom: 6px; }
+.site-table [role="table"] { font-size: 0.74rem; }
+.st-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.45fr) 0.5fr 0.55fr 0.6fr 0.8fr 0.75fr; gap: 4px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--edge); font-variant-numeric: tabular-nums; }
+.st-row > span { text-align: right; min-width: 0; }
+.st-row > .st-site { text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.st-head { color: var(--muted); font-size: 0.6rem; line-height: 1.15; text-transform: uppercase; align-items: end; padding-top: 0; }
+.st-head > span { white-space: nowrap; overflow: visible; }
+.st-head > span:first-child { text-align: left; }
+.st-all { background: var(--bg); font-weight: 700; margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 8px; border-bottom: 0; }
+.st-money { color: var(--text); }
+.site-table > p { margin: 8px 0 0; }

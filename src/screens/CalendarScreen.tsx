@@ -10,7 +10,7 @@ import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
 import { BackIcon, ForwardIcon } from "../components/Icons";
 import { DayPanel } from "../components/DayPanel";
-import { CalendarGrid, CorrectionBox, DayList, MonthSummary } from "../components/MonthParts";
+import { CalendarGrid, CorrectionBox, DayList, MonthSummary, SiteTable } from "../components/MonthParts";
 
 export function CalendarScreen() {
   const { data } = useStore();
@@ -29,7 +29,7 @@ export function CalendarScreen() {
 
   return (
     <>
-      <TopBar title="Calendar" month={month} />
+      <TopBar title="Month" month={month} />
       <div className="monthbar">
         <button className="icon" onClick={() => slide.go(-1)} aria-label="Previous month"><BackIcon /></button>
         <MonthPicker month={month} onChange={setMonth} />
@@ -53,6 +53,7 @@ export function CalendarScreen() {
       )}
 
       <MonthSummary result={result} label={month} />
+      <SiteTable result={result} />
       <CorrectionBox month={month} result={result} />
     </>
   );

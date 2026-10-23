@@ -22,7 +22,7 @@ const hhsl = page.locator(".tj-site", { has: page.locator(":scope > .tj-row .tj-
 await hhsl.scrollIntoViewIfNeeded(); await page.evaluate(() => window.scrollBy(0, 150));
 await snap("sites", { change: hhsl.locator(".tj-text summary"), roles: page.locator(".tj-roles summary").first() });
 await page.goBack(); await page.goBack(); await page.waitForTimeout(300);
-await page.getByRole("button", { name: "Calendar", exact: true }).last().click(); await page.waitForTimeout(500);
+await page.getByRole("button", { name: "Month", exact: true }).last().click(); await page.waitForTimeout(500);
 await page.getByRole("button", { name: /^Wed 21,/ }).click(); await page.waitForTimeout(400);
 await page.getByRole("button", { name: /Other job/ }).first().click(); await page.waitForTimeout(500);
 await page.getByRole("button", { name: "Delivery" }).first().click(); await page.waitForTimeout(300);

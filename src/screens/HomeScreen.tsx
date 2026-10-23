@@ -168,7 +168,7 @@ export function HomeScreen() {
 
       <div className="actions">
         <button className="primary" disabled={shown === month} onClick={() => setShown(month)}>{shown === month ? "This month" : `Back to ${MONTHS[Number(month.slice(5)) - 1]?.slice(0, 3)}`}</button>
-        <button onClick={() => selectTab("calendar")}>Calendar</button>
+        <button onClick={() => selectTab("calendar")}>Month</button>
         <TaxSwitch />
       </div>
 

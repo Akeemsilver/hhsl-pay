@@ -30,7 +30,7 @@ await bk.scrollIntoViewIfNeeded(); await bk.click(); await page.waitForTimeout(5
 const ch = page.getByRole("button", { name: /Choose yearly spreadsheet/ }); await ch.scrollIntoViewIfNeeded(); await page.waitForTimeout(300);
 await snap("backup-import", { choose: ch });
 await page.goBack(); await page.goBack(); await page.waitForTimeout(400);
-await page.getByRole("button", { name: "Calendar", exact: true }).last().click(); await page.waitForTimeout(500);
+await page.getByRole("button", { name: "Month", exact: true }).last().click(); await page.waitForTimeout(500);
 await snap("calendar", { day: page.getByRole("button", { name: /^Wed 21,/ }) });
 await page.getByRole("button", { name: /^Wed 21,/ }).click(); await page.waitForTimeout(500);
 await snap("day", { add: page.getByRole("button", { name: /Add job/ }) });
