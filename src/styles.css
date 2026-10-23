@@ -5,6 +5,8 @@
   --muted: #5b6672;
   --line: #e1e5ea;
   --edge: var(--line);
+  /* The outline of boxes you type or pick in: stronger than the card lines so the boxes are easy to see. */
+  --field-edge: #8795a3;
   --accent: #0f766e;
   --accent-text: #ffffff;
   --weekend: #f0f4f8;
@@ -40,6 +42,7 @@
     --muted: #9aa7b4;
     --line: #2a343d;
     --edge: #2a343d;
+    --field-edge: #6f808f;
     --accent: #2dd4bf;
     --accent-text: #06201c;
     --weekend: #1b242c;
@@ -75,6 +78,7 @@
     --muted: #9aa7b4;
     --line: #2a343d;
     --edge: #2a343d;
+    --field-edge: #6f808f;
     --accent: #2dd4bf;
     --accent-text: #06201c;
     --weekend: #1b242c;
@@ -239,7 +243,7 @@ label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 
 label.check { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; color: var(--text); }
 input:not([type="checkbox"]), select {
   display: block; width: 100%; min-height: 44px; margin-top: 4px; padding: 0 10px;
-  border: 1px solid var(--edge); border-radius: 10px; background: var(--card); color: var(--text);
+  border: 1.5px solid var(--field-edge); border-radius: 10px; background: var(--card); color: var(--text);
 }
 input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); }
 
@@ -409,7 +413,7 @@ button.pill { min-height: 32px; padding: 0 12px; border-radius: 999px; font-size
 /* Time fields and picker */
 .field { margin-bottom: 10px; }
 .field .lbl, .lunch-length .lbl, .hours-tile .lbl { display: block; font-size: 0.85rem; color: var(--muted); }
-.time-btn { width: 100%; margin-top: 4px; justify-content: flex-start; text-align: left; font-variant-numeric: tabular-nums; background: var(--weekend); }
+.time-btn { border: 1.5px solid var(--field-edge); width: 100%; margin-top: 4px; justify-content: flex-start; text-align: left; font-variant-numeric: tabular-nums; background: var(--weekend); }
 .time-btn.empty { color: var(--muted); }
 .checks.lunch { margin-top: 0; }
 .lunch-length { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
@@ -943,3 +947,6 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 
 /* The month and its arrows stay under the title bar while the page scrolls, so the month can always be changed. */
 .monthbar.sticky { position: sticky; top: var(--bar-h, 52px); z-index: 4; background: var(--bg); padding: 6px 0 8px; margin-bottom: 0; }
+.confirm .row.one { grid-template-columns: 1fr; }
+
+.site-btn { border: 1.5px solid var(--field-edge); }
