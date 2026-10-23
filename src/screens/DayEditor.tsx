@@ -152,7 +152,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
 
   return (
     <>
-      <BottomSheet modeless label={`Entries for ${dmy(date)}`} onRequestClose={requestClose} onPullDismiss={leave}>
+      <BottomSheet modeless={mode === "overview"} label={`Entries for ${dmy(date)}`} onRequestClose={requestClose} onPullDismiss={leave}>
         <header className="bar">
           <h2>{dayDMY(date)}</h2>
           {holidayName && <p className="hol-name">{holidayName}</p>}
