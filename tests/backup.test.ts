@@ -61,6 +61,38 @@ describe("starter kit (rates file)", () => {
   });
 });
 
+describe("starter kit carries everything that is set up", () => {
+  it("round trips sites, colours, tax rules, groups, holidays and every timesheet setting", async () => {
+    const { ratesKitOf, applyKit, serialize, parse } = await import("../src/backup");
+    const { newData } = await import("../src/model");
+    const source = newData();
+    source.history.sites[0]!.value = { Alpha: { payer: "main", baseRate: 51, leadRate: 52, weekday: { x1: 8 }, weekend: { x1: 8 }, holiday: { x1: 8 } } };
+    source.history.tax[0]!.value.nisBands = [[0, 11], [500, 22]];
+    source.history.tax[0]!.value.surchargeBands = [[0, 5], [300, 9]];
+    source.history.tax[0]!.value.monthlyAllowance = 1234;
+    source.siteColors = { alpha: 7 };
+    source.payerNames = { main: "Group One" };
+    source.otherPayer = "main";
+    source.combinedTax = true;
+    source.holidays = { added: [{ date: "2026-11-08", name: "Divali" }], removed: [] };
+    source.timesheet = { name: "Someone", siteLabel: "Site X", payrollEmail: "pay@example.com", includeOther: false, medicEverywhere: false, rules: [{ site: "Alpha", role: "Client medic", label: "Alpha Medic" }] };
+    const parsed = await parse(await serialize("rates", ratesKitOf(source)));
+    const out = applyKit({ ...newData(), userName: "Me" }, parsed.kit!);
+    expect(out.history.sites[0]!.value.Alpha!.baseRate).toBe(51);
+    expect(out.history.tax[0]!.value.nisBands).toEqual([[0, 11], [500, 22]]);
+    expect(out.history.tax[0]!.value.surchargeBands).toEqual([[0, 5], [300, 9]]);
+    expect(out.history.tax[0]!.value.monthlyAllowance).toBe(1234);
+    expect(out.siteColors?.alpha).toBe(7);
+    expect(out.payerNames.main).toBe("Group One");
+    expect(out.otherPayer).toBe("main");
+    expect(out.combinedTax).toBe(true);
+    expect(out.holidays?.added[0]?.name).toBe("Divali");
+    expect(out.timesheet).toMatchObject({ name: "", siteLabel: "Site X", payrollEmail: "pay@example.com", includeOther: false, medicEverywhere: false });
+    expect(out.timesheet?.rules[0]?.label).toBe("Alpha Medic");
+    expect(out.userName).toBe("Me");
+  });
+});
+
 describe("starter kit with the timesheet form", () => {
   it("carries the form as base64 and leaves it out when there is none", async () => {
     const { ratesKitOf, fromB64, toB64 } = await import("../src/backup");

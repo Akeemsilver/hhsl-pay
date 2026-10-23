@@ -114,7 +114,7 @@ s.append(steps([
 s.append(Paragraph("iPhone note: Safari can clear data for websites you have not opened in a while. Opening the app from its icon and making a backup now and then (Settings, Backup &amp; restore) keeps your days safe.", small))
 
 s.append(Paragraph('<a name="p2"/>Part 2. Load your starter kit', h1))
-s.append(Paragraph("The starter kit is a small file with the pay rates for each site, the tax rules and the time sheet form, so you do not have to type any of it in. It has <b>no days, no pay and no personal information</b>. It is sent to you as a file, and not built into the app, because the rates belong to the company and the app itself is public.", body))
+s.append(Paragraph("The starter kit is a small file with everything that is set up: the sites with their pay rates and calendar colours, the NIS, PAYE and health surcharge rules, the payslip groups, the public holidays, and the time sheet settings and form, so you do not have to type any of it in. It has <b>no days, no pay and no personal information</b>. It is sent to you as a file, and not built into the app, because the rates belong to the company and the app itself is public.", body))
 s.append(Paragraph("Get the file (in WhatsApp on your phone)", h2))
 s.append(steps([
  ("Ask the person who sent you this guide to send you the <b>starter kit file</b>, called <b>HHSL-starter-kit-rates.txt</b>, on WhatsApp.", None),
