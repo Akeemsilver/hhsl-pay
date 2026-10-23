@@ -160,8 +160,8 @@ s.append(steps([
  ("The line at the bottom shows the <b>pay for the day</b>. To log a second job on the same day, tap <b>Add another job</b>. Then tap <b>Save</b>. <b>Cancel</b> throws the changes away.", A("e-pay"), 50)]))
 s.append(Paragraph("B. Add an other job (pickup, delivery)", h2))
 s.append(steps([
- ("On the day form, tap <b>Add other job</b>. Type what it was (for example Airport pickup), or tap a quick suggestion. Start and end time and hours are optional. Add the <b>amount paid</b> once the company confirms it. Tap <b>Save</b>.", None),
- ("Other jobs show on the time sheet when <b>Other jobs</b> is ticked in Settings, Timesheet.", None)]))
+ ("On the day form, tap <b>Add other job</b>. Type what it was (for example Airport pickup), or tap a quick suggestion. Start and end time and hours are optional. Add the <b>amount paid</b> once the company confirms it. Tap <b>Save</b>.", A("f-other"), 50),
+ ("At the top of the job is the tick <b>Put other jobs on the time sheet</b>. It covers <b>all</b> other jobs, whatever they are called. Leave it ticked and every other job goes on the time sheet. The same switch is in Settings, Timesheet.", None)]))
 s.append(Paragraph("C. Change or delete a day", h2))
 s.append(steps([
  ("Tap the date on the Calendar. Each job has <b>Edit</b> and <b>Delete</b>. Edit opens the same form: change it and tap <b>Save</b>. If you close the form with unsaved changes, the app asks first.", A("e-saved"), 50)]))
@@ -212,7 +212,8 @@ s.append(steps([
 s.append(Paragraph('<a name="p6"/>Part 6. Set it up your way', h1))
 s.append(steps([
  ("<b>Colour and lunch for each site:</b> Settings, <b>Site locations &amp; rates</b>, open a site. Pick its calendar colour. For an hourly site, set <b>Job requires lunch check</b> to <b>No</b> if it has no lunch deduction, and the day form hides the lunch options. A fixed day rate site never has a lunch check.", Bs("b-site"), 50),
- ("<b>Which jobs go on your time sheet:</b> Settings, <b>Timesheet</b>. Tick the sites and roles that go on the form. The sentence at the top reads out what is included. Press <b>Save</b>.", Bs("b-tsjobs"), 50)]))
+ ("<b>Which jobs go on your time sheet:</b> Settings, <b>Timesheet</b>. The sentence at the top reads out what is included. Tick <b>Client medic at every site</b> and <b>Other jobs</b> if you want all of them on the form.", A("f-top"), 50),
+ ("Below that there is one row for each site. <b>Tick the site</b> to put every day at that site on the time sheet. Leave it unticked and open <b>Roles</b> to tick only certain roles (for example Client medic at PLNL). A ticked site shows <b>Shows as … · change</b>: tap it to change the text in the Client assigned column. Press <b>Save</b>.", A("f-sites"), 50)]))
 
 s.append(Paragraph('<a name="p7"/>Part 7. Share the app with someone else', h1))
 s.append(Paragraph("To give a colleague the app you send them <b>three things</b> on WhatsApp: <b>1. the app link</b>, <b>2. the starter kit file</b> and <b>3. this guide</b>. All three buttons are in one place in the app, and you do it all from your phone.", ParagraphStyle("kw", parent=body, keepWithNext=1)))
