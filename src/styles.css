@@ -900,4 +900,4 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 .ts-switch input:checked + i::after { transform: translateX(16px); }
 .ts-switch input:focus-visible + i { outline: 2px solid var(--accent); outline-offset: 2px; }
 .ts-switch input:disabled + i { opacity: .55; }
-.ts-hint { margin: 2px 0 12px; }
+.ts-hint { margin: 2px 0 12px; white-space: nowrap; font-size: min(0.78rem, calc((100vw - 64px) / (var(--n, 48) * 0.52))); }
