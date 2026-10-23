@@ -79,3 +79,25 @@ describe("other jobs on the time sheet", () => {
     expect(split.totalDays).toBe(2);
   });
 });
+
+describe("a role on the time sheet (PLNL Client medic)", () => {
+  const data = newData();
+  data.history.sites[0]!.value = { PLNL: { payer: "main", baseRate: 60, ...free }, Atlantic: { payer: "atl", baseRate: 60, ...free } };
+  data.timesheet = { name: "T", siteLabel: "ERT Offsite", rules: [{ site: "PLNL", role: "Client medic", label: "PLNL Medic" }], medicEverywhere: false };
+  const entries = [
+    { id: "1", date: "2026-10-12", site: "PLNL", role: "Client medic", hours: 12 },
+    { id: "2", date: "2026-10-13", site: "PLNL", hours: 10 },
+    { id: "3", date: "2026-10-14", site: "Atlantic", hours: 12 },
+  ] as never;
+  it("takes only the medic day and its hours out of the group", () => {
+    const month = computeMonth("2026-10", entries, data.history, {}, false, []);
+    expect(month.payers.find((p) => p.payer === "main")!.days).toBe(2);
+    const split = sheetSplit(month as never, data);
+    const main = split.payers.find((p) => p.payer === "main")!;
+    expect(main.days).toBe(1); // the plain PLNL day stays
+    expect(main.weighted).toBe(10); // the medic day's 12 hours are gone
+    expect(split.sheet).toEqual({ days: 1, sites: ["PLNL"] });
+    expect(split.totalDays).toBe(3);
+    expect(split.totalHours).toBe(22);
+  });
+});
