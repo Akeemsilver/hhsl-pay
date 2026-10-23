@@ -9,6 +9,8 @@
   --field-edge: #8795a3;
   /* The yellow highlighter around the tapped date. */
   --hl: #e6b800;
+  /* A public holiday: its date number and the H on its tile. */
+  --hol: #c58a00;
   /* The circle around today's date number. */
   --today-hl: #2f6fe0;
   --accent: #0f766e;
@@ -48,6 +50,7 @@
     --edge: #2a343d;
     --field-edge: #6f808f;
     --hl: #ffd633;
+    --hol: #ffd633;
     --today-hl: #5aa2ff;
     --accent: #2dd4bf;
     --accent-text: #06201c;
@@ -86,6 +89,7 @@
     --edge: #2a343d;
     --field-edge: #6f808f;
     --hl: #ffd633;
+    --hol: #ffd633;
     --today-hl: #5aa2ff;
     --accent: #2dd4bf;
     --accent-text: #06201c;
@@ -996,3 +1000,8 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 }
 :root[data-theme="dark"] .sheet-backdrop:not(.modeless) { background: rgba(0, 0, 0, 0.6); }
 :root[data-theme="dark"] .confirm-backdrop { background: rgba(0, 0, 0, 0.66); }
+
+/* Public holidays: the date number is gold (weekends keep red) and a small circled H sits at the other end of the tile. */
+.cal-cell.holiday .n, .cal-cell.holiday.worked .n, .cal-cell.holiday.today .n, .cal-cell.weekend.holiday .n { color: var(--hol); font-weight: 800; }
+.cal-cell .hol-h { position: absolute; top: 4px; right: 3px; width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid var(--hol); color: var(--hol); font-size: 0.56rem; font-weight: 800; line-height: 12px; text-align: center; }
+.cal-cell .unp-dot { top: auto; bottom: 5px; right: 5px; }
