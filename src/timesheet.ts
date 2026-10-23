@@ -67,7 +67,10 @@ export function buildTimesheet(month: string, entries: Entry[], history: RuleHis
   const byDate = new Map<string, Array<{ entry: Entry; rule: TimesheetRule }>>();
   for (const entry of entries) {
     if (!entry.date.startsWith(month)) continue;
-    const rule = matchRule(entry, rules, includeOther, medicEverywhere);
+    let rule = matchRule(entry, rules, includeOther, medicEverywhere);
+    // A site with a typed-in field (for example a platform) puts what was typed in the Client column.
+    const typed = !isOther(entry) && findSite(valueOn(history.sites, entry.date), entry.site)?.roleField ? entry.role?.trim() : "";
+    if (rule && typed) rule = { ...rule, label: typed };
     if (rule) byDate.set(entry.date, [...(byDate.get(entry.date) ?? []), { entry, rule }]);
   }
 

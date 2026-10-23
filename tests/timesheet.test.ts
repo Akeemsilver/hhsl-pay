@@ -226,3 +226,28 @@ describe("sites without a lunch check", () => {
     expect(siteHasLunch({ lunch: false } as never)).toBe(false);
   });
 });
+
+import { buildTimesheet as _bt } from "../src/timesheet";
+describe("a site with a typed-in role box", () => {
+  it("puts what was typed in the Client column", () => {
+    const sites = { effectiveFrom: "2000-01-01", value: { "Offshore 2": { payer: "main", weekday: {}, weekend: {}, holiday: {}, dailyStd: 1000, roleField: { label: "Location", placeholder: "Dolphin platform" } } } };
+    const entries = [
+      { id: "1", date: "2026-10-12", site: "Offshore 2", role: "Dolphin platform", hours: 12, startTime: "07:00", endTime: "19:00", detailed: true },
+      { id: "2", date: "2026-10-13", site: "Offshore 2", hours: 12, startTime: "07:00", endTime: "19:00", detailed: true },
+    ] as never;
+    const { rows } = _bt("2026-10", entries, { sites: [sites], tax: [] } as never, [{ site: "Offshore 2", label: "Offshore" }]);
+    expect(rows.map((r) => r.client)).toEqual(["Dolphin platform", "Offshore"]);
+  });
+});
+
+import { computeDay as _cd } from "../src/engine";
+describe("a fixed day rate site", () => {
+  it("pays the day rate for the first hours, then every extra hour at the hourly rate x 1.5", () => {
+    const after = { x1: 12, x15: 1000 };
+    const site = { payer: "main", dailyStd: 1000, dailyLead: 1000, dailyHoliday: 2000, showRateAboveHrs: 12, rateAboveHrs: 60, weekday: after, weekend: after, holiday: { x1: 12, x2: 1000 } };
+    const day = (hours: number, holiday = false) => _cd({ id: "1", date: "2026-10-14", site: "X", hours, holiday } as never, { X: site } as never).total;
+    expect(day(12)).toBe(1000);
+    expect(day(14)).toBe(1000 + 2 * 60 * 1.5);
+    expect(day(14, true)).toBe(2000 + 2 * 60 * 2);
+  });
+});

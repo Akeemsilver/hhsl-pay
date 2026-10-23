@@ -37,6 +37,29 @@ function LunchChoice({ value, onChange }: { value: boolean; onChange: (v: boolea
   );
 }
 
+/** Role list, or a box you type in (for example the platform), which goes in the time sheet's Client column. */
+function RoleFieldChoice({ value, onChange }: { value: SiteRates["roleField"]; onChange: (v: SiteRates["roleField"]) => void }) {
+  const typed = !!value;
+  return (
+    <div className="lunch-choice" role="group" aria-label="Role field">
+      <span className="lbl">Role field on the day form</span>
+      <div className="segmented">
+        <button type="button" aria-pressed={!typed} className={!typed ? "on" : ""} onClick={() => onChange(undefined)}>Fixed roles</button>
+        <button type="button" aria-pressed={typed} className={typed ? "on" : ""} onClick={() => onChange(value ?? { label: "Location", placeholder: "Dolphin platform" })}>Type your own</button>
+      </div>
+      {typed ? (
+        <>
+          <label>Name of the box<input aria-label="Name of the role box" value={value!.label} placeholder="Location" onChange={(e) => onChange({ ...value!, label: e.target.value })} /></label>
+          <label>Faint example text<input aria-label="Example text for the role box" value={value!.placeholder ?? ""} placeholder="Dolphin platform" onChange={(e) => onChange({ ...value!, placeholder: e.target.value })} /></label>
+          <span className="muted small">On the day form there is a box named “{value!.label || "Location"}” instead of the Role list. What you type goes in the <b>Client assigned</b> column of the time sheet.</span>
+        </>
+      ) : (
+        <span className="muted small">The day form shows the Role list (Client medic, Offshore, Paramedic and your own roles).</span>
+      )}
+    </div>
+  );
+}
+
 function pickTemplate(id: string) {
   const t = templateById(id)!;
   return { weekday: { ...t.weekday }, weekend: { ...t.weekend }, holiday: { ...t.holiday } };
@@ -135,6 +158,7 @@ function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename,
         </div>
       </div>
       <LunchChoice value={site.lunch !== false} onChange={(v) => set("lunch", v ? undefined : false)} />
+      <RoleFieldChoice value={site.roleField} onChange={(v) => set("roleField", v)} />
       <label>Payslip
         <select value={site.payer} onChange={(e) => set("payer", e.target.value)}>
           {Object.entries(payers).map(([id, n]) => <option key={id} value={id}>{n}</option>)}
@@ -308,6 +332,14 @@ function AddSiteForm({ table, payers, onAdd }: {
   const [lead, setLead] = useState<Num>();
   const [template, setTemplate] = useState<string | undefined>();
   const [lunch, setLunch] = useState(true);
+  const [roleField, setRoleField] = useState<SiteRates["roleField"]>();
+  const [payMode, setPayMode] = useState<"hourly" | "fixed">("hourly");
+  const [dayRate, setDayRate] = useState<Num>();
+  const [dayHours, setDayHours] = useState<Num>(12);
+  const [afterRate, setAfterRate] = useState<Num>();
+  const [afterMult, setAfterMult] = useState<"x15" | "x2">("x15");
+  const [holidayDay, setHolidayDay] = useState<Num>();
+  const fixed = payMode === "fixed";
   const isNew = group === "__new";
   const mine = Object.values(table).filter((s) => s.payer === group && (s.baseRate ?? 0) > 0);
   const groupStd = commonValue(mine.map((m) => m.baseRate));
@@ -317,12 +349,18 @@ function AddSiteForm({ table, payers, onAdd }: {
   const finalStd = isNew ? std : groupStd;
   const finalLead = isNew ? (lead ?? std) : (groupLead ?? groupStd);
   const taken = Object.keys(table).some((k) => k.toLowerCase() === name.trim().toLowerCase());
-  const ok = !!name.trim() && !taken && (!isNew || (!!groupName.trim() && (std ?? 0) > 0));
+  const fixedOk = (dayRate ?? 0) > 0 && (dayHours ?? 0) > 0 && (afterRate ?? 0) > 0;
+  const ok = !!name.trim() && !taken && (fixed ? fixedOk && (!isNew || !!groupName.trim()) : (!isNew || (!!groupName.trim() && (std ?? 0) > 0)));
   const add = () => {
     const id = isNew ? slug(groupName, groupIds) : group;
-    const site = applyTemplate({ ...emptySite(id), baseRate: finalStd, leadRate: finalLead, ...(lunch ? {} : { lunch: false }) }, tpl);
+    const extra: Partial<SiteRates> = { ...(lunch ? {} : { lunch: false }), ...(roleField ? { roleField } : {}) };
+    // A fixed day rate pays the first N hours, then every extra hour is paid at the hourly rate times 1.5 or 2.
+    const n = dayHours ?? 12, after = { x1: n, [afterMult]: 1000 };
+    const site: SiteRates = fixed
+      ? { ...emptySite(id), ...extra, dailyStd: dayRate, dailyLead: dayRate, ...(holidayDay ? { dailyHoliday: holidayDay } : {}), showRateAboveHrs: n, rateAboveHrs: afterRate, weekday: after, weekend: after, holiday: { x1: n, x2: 1000 } }
+      : applyTemplate({ ...emptySite(id), baseRate: finalStd, leadRate: finalLead, ...extra }, tpl);
     onAdd(name.trim(), id, site, isNew ? groupName.trim() : undefined);
-    setName(""); setGroupName(""); setStd(undefined); setLead(undefined); setTemplate(undefined); setLunch(true); setGroup(isNew ? id : group);
+    setName(""); setGroupName(""); setStd(undefined); setLead(undefined); setTemplate(undefined); setLunch(true); setRoleField(undefined); setPayMode("hourly"); setDayRate(undefined); setAfterRate(undefined); setHolidayDay(undefined); setGroup(isNew ? id : group);
   };
   return (
     <div className="add-site">
@@ -334,25 +372,60 @@ function AddSiteForm({ table, payers, onAdd }: {
           <option value="__new">＋ New group…</option>
         </select>
       </label>
-      {isNew ? (
+      <div className="lunch-choice" role="group" aria-label="How the site is paid">
+        <span className="lbl">How the site is paid</span>
+        <div className="segmented">
+          <button type="button" aria-pressed={!fixed} className={!fixed ? "on" : ""} onClick={() => setPayMode("hourly")}>Hourly</button>
+          <button type="button" aria-pressed={fixed} className={fixed ? "on" : ""} onClick={() => setPayMode("fixed")}>Fixed day rate</button>
+        </div>
+      </div>
+      {fixed ? (
         <>
-          <label>New group name<input aria-label="New group name" placeholder="e.g. Trinidad Offshore" value={groupName} onChange={(e) => setGroupName(e.target.value)} /></label>
-          <p className="muted small">A group is its own payslip: in Split mode it pays its own PAYE, NIS and health surcharge. Its sites share these rates.</p>
+          {isNew && <label>New group name<input aria-label="New group name" placeholder="e.g. Trinidad Offshore" value={groupName} onChange={(e) => setGroupName(e.target.value)} /></label>}
           <div className="grid2">
-            <label>Standard rate ($/h)<NumInput label="New group standard rate" value={std} onChange={setStd} /></label>
-            <label>Team lead rate ($/h)<NumInput label="New group team lead rate" value={lead ?? std} onChange={setLead} /></label>
+            <label>Fixed day rate ($)<NumInput label="Fixed day rate" value={dayRate} onChange={setDayRate} /></label>
+            <label>Covers the first (hours)<NumInput label="Hours the fixed rate covers" value={dayHours} onChange={setDayHours} /></label>
           </div>
+          <div className="grid2">
+            <label>Hourly rate after that ($/h)<NumInput label="Hourly rate after the fixed hours" value={afterRate} onChange={setAfterRate} /></label>
+            <label>Paid at
+              <select aria-label="Multiple after the fixed hours" value={afterMult} onChange={(e) => setAfterMult(e.target.value as "x15" | "x2")}>
+                <option value="x15">× 1.5 (time and a half)</option>
+                <option value="x2">× 2 (double time)</option>
+              </select>
+            </label>
+          </div>
+          <label>Holiday day rate ($, optional)<NumInput label="Holiday day rate" value={holidayDay} onChange={setHolidayDay} /></label>
+          <p className="muted small">Example: $1,000 covers the first 12 hours of the day. Every hour after the 12th is paid at the hourly rate × 1.5. On a holiday or TAR day the holiday day rate is used, and hours after the fixed hours are double time.</p>
         </>
       ) : (
-        <p className="muted small">Uses the group's rates: {groupStd !== undefined ? `$${groupStd}/h standard, $${finalLead ?? groupStd}/h team lead` : "no hourly rates set yet; edit the site after adding it"}.</p>
+        <>
+      {isNew ? (
+          <>
+            <label>New group name<input aria-label="New group name" placeholder="e.g. Trinidad Offshore" value={groupName} onChange={(e) => setGroupName(e.target.value)} /></label>
+            <p className="muted small">A group is its own payslip: in Split mode it pays its own PAYE, NIS and health surcharge. Its sites share these rates.</p>
+            <div className="grid2">
+              <label>Standard rate ($/h)<NumInput label="New group standard rate" value={std} onChange={setStd} /></label>
+              <label>Team lead rate ($/h)<NumInput label="New group team lead rate" value={lead ?? std} onChange={setLead} /></label>
+            </div>
+          </>
+        ) : (
+          <p className="muted small">Uses the group's rates: {groupStd !== undefined ? `$${groupStd}/h standard, $${finalLead ?? groupStd}/h team lead` : "no hourly rates set yet; edit the site after adding it"}.</p>
+        )}
+        </>
       )}
+      <RoleFieldChoice value={roleField} onChange={setRoleField} />
       <LunchChoice value={lunch} onChange={setLunch} />
-      <label>Overtime hours
-        <select aria-label="Hours template for the new site" value={tpl} onChange={(e) => setTemplate(e.target.value)}>
-          {HOURS_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-        </select>
-      </label>
-      <p className="muted small">{templateById(tpl)?.description}</p>
+      {!fixed && (
+        <>
+          <label>Overtime hours
+            <select aria-label="Hours template for the new site" value={tpl} onChange={(e) => setTemplate(e.target.value)}>
+              {HOURS_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+          </label>
+          <p className="muted small">{templateById(tpl)?.description}</p>
+        </>
+      )}
       <button className="primary wide" disabled={!ok} onClick={add}>Add site</button>
       {taken && <p className="bad" role="alert">There is already a site with that name.</p>}
     </div>

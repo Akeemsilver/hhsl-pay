@@ -25,6 +25,8 @@ export interface SiteRates {
   payer: string;
   /** Does a job here have a lunch check (unpaid lunch taken off)? Yes unless set to false. */
   lunch?: boolean;
+  /** Instead of the Role list, the day form has a box where you type something (for example the platform), shown with this label and faint example text. It goes in the time sheet's Client column. */
+  roleField?: { label: string; placeholder?: string };
   baseRate?: number;
   leadRate?: number;
   /** If set, the hourly rate only applies once hours exceed this; otherwise it is blank (rate 0). */

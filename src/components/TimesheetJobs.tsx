@@ -28,6 +28,8 @@ export function TimesheetJobs() {
   const listed = new Set(siteNames.flatMap((n) => [key({ site: n }), ...[...sites.get(n)!].map((r) => key({ site: n, role: r }))]));
   const stray = rules.filter((r) => !listed.has(key(r)));
 
+  const latest = data.history.sites[data.history.sites.length - 1]?.value ?? {};
+  const typedField = (site: string) => Object.entries(latest).find(([n]) => n.toLowerCase() === site.toLowerCase())?.[1].roleField;
   const find = (site: string, role?: string) => rules.find((r) => key(r) === key({ site, role }));
   const toggle = (site: string, role?: string) =>
     setRules((list) => (find(site, role) ? list.filter((r) => key(r) !== key({ site, role })) : [...list, { site, role, label: suggested(site, role) }]));
@@ -51,6 +53,7 @@ export function TimesheetJobs() {
             <input value={rule.label} onChange={(e) => relabel(site, role, e.target.value)} placeholder={suggested(site, role)} />
           </label>
         )}
+        {rule && !role && typedField(site) && <p className="muted small">The Client column uses what you type in “{typedField(site)!.label}” on each day. The text above is only used when that box is empty.</p>}
       </div>
     );
   };

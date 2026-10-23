@@ -11,6 +11,7 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { HoursField } from "../components/HoursField";
 import { TimeField, quickTimes } from "../components/TimeField";
 import { ChevronDown, ChevronUp } from "../components/Icons";
+import { matchRule } from "../timesheet";
 
 const QUICK_JOBS = ["Airport pickup", "Delivery", "Drop-off", "Yard run"];
 
@@ -64,16 +65,22 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
   /** Changing the site keeps the role when the new site offers it, otherwise it goes back to "Not applicable". */
   const changeSite = (entry: Entry, name: string) => {
     const next = findSite(sites, name);
-    const keep = entry.role && rolesFor(next).some((r) => r.toLowerCase() === entry.role!.toLowerCase());
+    const was = findSite(sites, entry.site);
+    const keep = next?.roleField ? !!was?.roleField : entry.role && rolesFor(next).some((r) => r.toLowerCase() === entry.role!.toLowerCase());
     patch(entry.id, { site: name, role: keep ? entry.role : undefined });
   };
 
   const holidayName = holidayMap([Number(date.slice(0, 4))], data).get(date);
   const lunchAt = (name: string) => siteHasLunch(findSite(sites, name));
+  // A job that goes on the time sheet always uses start and end time: the hours come from the times and cannot be typed.
+  const tsRules = data.timesheet?.rules ?? [];
+  const medicAll = data.timesheet?.medicEverywhere !== false;
+  const onSheet = (e: Entry) => !isOther(e) && !!matchRule(e, tsRules, false, medicAll);
   const patch = (id: string, changes: Partial<Entry>) =>
     setDraft((list) => list.map((e) => {
       if (e.id !== id) return e;
       const next = { ...e, ...changes };
+      if (onSheet(next) && !isDetailed(next)) next.detailed = true;
       return withComputedHours(next, lunchAt(next.site));
     }));
   const remove = (id: string) => setDraft((list) => list.filter((e) => e.id !== id));
@@ -149,12 +156,21 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
 
           const pay = computeDay(entry, sites);
           const known = siteNames.some((n) => n.toLowerCase() === entry.site.trim().toLowerCase());
-          const detailed = isDetailed(entry);
+          const forced = onSheet(entry);
+          const detailed = isDetailed(entry) || forced;
           const bump = (delta: number) => patch(entry.id, { hours: Math.min(24, Math.max(0, Math.round((entry.hours + delta) * 4) / 4)) });
           return (
             <div className="entry" key={entry.id} data-entry-id={entry.id}>
               <SitePicker value={entry.site} names={siteNames} onPick={(n) => changeSite(entry, n)} />
-              {(() => {
+              {findSite(sites, entry.site)?.roleField ? (
+                <label>
+                  {findSite(sites, entry.site)!.roleField!.label}
+                  <input
+                    value={entry.role ?? ""} placeholder={findSite(sites, entry.site)!.roleField!.placeholder}
+                    onChange={(e) => patch(entry.id, { role: e.target.value || undefined })}
+                  />
+                </label>
+              ) : (() => {
                 const roleNames = rolesFor(findSite(sites, entry.site));
                 const orphan = entry.role && !roleNames.some((r) => r.toLowerCase() === entry.role!.toLowerCase());
                 return (
@@ -180,9 +196,9 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                   <div className="hours-tile" aria-label="Hours paid">
                     <strong>{hoursText(entry.hours)} h</strong>
                     <span className="muted small">
-                      {entry.hours > 0 || (entry.startTime && entry.endTime)
+                      {entry.startTime && entry.endTime
                         ? <>{entry.startTime}–{entry.endTime} is {durationText(entry.startTime, entry.endTime)}{!lunchAt(entry.site) ? "" : entry.lunchPaid ? ", lunch paid" : `, minus ${(entry.lunchMinutes ?? 60) === 30 ? "30 min" : "1 hour"} unpaid lunch`}</>
-                        : "Set the start and end time below."}
+                        : forced ? "This job goes on the time sheet. Set the start and end time below: the hours come from them." : "Set the start and end time below."}
                     </span>
                   </div>
                 ) : (
@@ -221,12 +237,12 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                       ))}
                     </div>
                   )}
-                  <div className="mode-switch">
+                  {!forced && <div className="mode-switch">
                     <button type="button" className="circle-btn" aria-label="Simple: type the hours instead" onClick={() => setDraft((list) => list.map((e) => (e.id === entry.id ? toSimple(e) : e)))}>
                       <ChevronUp />Simple
                     </button>
                     <span className="muted small">Type the hours instead of using start and end time.</span>
-                  </div>
+                  </div>}
                 </div>
               ) : (
                 <div className="mode-switch">
