@@ -104,6 +104,7 @@ export function ExportSheet({ month }: { month: string }) {
     setMessage(null);
     setPayrollFile(null);
     setPayrollSaved(false);
+    setPayrollError(null);
     setPayrollOpen(true);
     try {
       const made = await makeTimesheetXlsx(template!.bytes, settings, month, data.entries, data.history);
@@ -114,24 +115,28 @@ export function ExportSheet({ month }: { month: string }) {
     }
   };
   const [payrollSaved, setPayrollSaved] = useState(false);
+  const [payrollError, setPayrollError] = useState<string | null>(null);
+  // A copy for the Downloads folder is its own tap: a download in the same tap as the share can stop the phone opening its share menu.
+  const savePayrollCopy = () => { if (payrollFile) { download(payrollFile.fileName, payrollFile.bytes, XLSX_MIME); setPayrollSaved(true); } };
   const sendToPayroll = async () => {
     if (!payrollFile) return;
     const { fileName, bytes } = payrollFile;
-    // Save a copy to Downloads first (once), staying on this screen, then open the share menu in the same tap.
-    if (!payrollSaved) { download(fileName, bytes, XLSX_MIME); setPayrollSaved(true); }
+    setPayrollError(null);
     const file = new File([bytes as BlobPart], fileName, { type: XLSX_MIME });
     const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-    if (nav.share && nav.canShare?.({ files: [file] })) {
+    if (nav.share && (!nav.canShare || nav.canShare({ files: [file] }))) {
       try {
         await nav.share({ files: [file], title: email.subject, text: email.body });
         setPayrollOpen(false); setPayrollSaved(false);
-        setMessage({ text: "Time sheet saved to your Downloads and shared.", ok: true });
+        setMessage({ text: "Time sheet shared.", ok: true });
       } catch (e) {
-        // The phone did not open the menu (or it was closed). The file is saved; the button now just says Share.
+        // Closing the share menu is fine; any other refusal is shown so it can be fixed, and the copy button still works.
+        if ((e as DOMException)?.name !== "AbortError") setPayrollError(`${(e as DOMException)?.name ?? "Error"}${(e as Error)?.message ? `: ${(e as Error).message}` : ""}`);
       }
       return;
     }
-    // No share menu on this phone: the file is saved, so open the mail app for the message.
+    // No share menu on this phone: save the file, then open the mail app for the message.
+    download(fileName, bytes, XLSX_MIME);
     setPayrollOpen(false); setPayrollSaved(false);
     setMessage({ text: `${fileName} is in your Downloads. Attach it to the email that opens, then send.`, ok: true });
     setTimeout(() => { window.location.href = mailtoLink(email); }, 700);
@@ -227,7 +232,7 @@ export function ExportSheet({ month }: { month: string }) {
           </>
         )}
       </div>
-      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={sendToPayroll} ready={!!payrollFile} saved={payrollSaved} />}
+      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={sendToPayroll} ready={!!payrollFile} saved={payrollSaved} error={payrollError} onSave={savePayrollCopy} />}
     </BottomSheet>
   );
 }
