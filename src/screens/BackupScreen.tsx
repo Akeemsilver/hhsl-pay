@@ -6,7 +6,6 @@ import { applyKit, fromB64, ratesKitOf, BadBackup, PasswordRequired, backupFileN
 import { newData } from "../model";
 import { useStore } from "../store";
 import { AnnualImport } from "../components/AnnualImport";
-import { TimesheetImport } from "../components/TimesheetImport";
 import { PageHeader } from "../components/TopBar";
 
 export function BackupScreen() {
@@ -94,7 +93,6 @@ export function BackupScreen() {
 
       <AnnualImport />
 
-      <TimesheetImport />
 
       <section className="card">
         <h2>Share rates only</h2>

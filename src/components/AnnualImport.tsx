@@ -4,7 +4,7 @@ import { dayDMY, MONTHS } from "../format";
 import type { AppData } from "../model";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { useStore } from "../store";
-import { ImportError, type Assignment } from "../timesheetImport";
+import { ImportError, type Assignment } from "../siteMatch";
 
 
 /** Backup screen card: read the yearly or monthly salary spreadsheet and add its days to the app, after a preview. */

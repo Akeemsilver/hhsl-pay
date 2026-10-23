@@ -1,6 +1,6 @@
 import type { SiteRates } from "./engine";
 import { newId, type AppData, type Entry } from "./model";
-import { guessAssignment, ImportError, type Assignment } from "./timesheetImport";
+import { guessAssignment, ImportError, type Assignment } from "./siteMatch";
 
 /** One day from the yearly salary spreadsheet's month calendar. */
 export interface AnnualDay {
