@@ -3,6 +3,7 @@ import { useBarHeight } from "../barHeight";
 import { ShareGuide } from "../components/ShareGuide";
 import { InstallHelp } from "../components/InstallHelp";
 import { appLink, siteCount } from "../kit";
+import { GUIDE_FILE } from "../guideFile";
 import { kitToPdf } from "../kitPdf";
 import { backupFileName, deliver, download, ratesKitOf, serialize, KIT_ATTEMPTS, shareFile, withTime } from "../backup";
 import { useNav } from "../nav";
@@ -21,7 +22,6 @@ import { CalendarIcon, ChevronRight, FileIcon, MapPinIcon, SaveIcon, ShieldIcon,
 const kitFileName = () => backupFileName("rates", false).replace(/\.json$/, ".pdf");
 
 /** The mobile guide (a PDF with no rates in it) is served with the app, so it can be shared from here. */
-const GUIDE_FILE = "HHSL-pay-app-mobile-guide.pdf";
 
 export function SettingsHub() {
   useBarHeight();

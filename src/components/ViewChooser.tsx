@@ -15,6 +15,7 @@ export function ViewChooser({ month }: { month: string }) {
       <div className="view-choices">
         <button className="primary" onClick={() => open({ sub: "view" })}>View timesheet</button>
         <button className="primary" onClick={() => open({ sub: "viewslip" })}>View payslip (PDF)</button>
+        <button className="primary" onClick={() => open({ sub: "viewguide" })}>Guide (PDF)</button>
       </div>
     </BottomSheet>
   );

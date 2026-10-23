@@ -7,6 +7,7 @@ import { BackIcon, DownloadIcon, EyeIcon, FilterIcon, GearIcon } from "./Icons";
 import { ExportSheet } from "./ExportSheet";
 import { TimesheetViewer } from "./TimesheetViewer";
 import { PayslipViewer } from "./PayslipViewer";
+import { GuideViewer } from "./GuideViewer";
 import { ViewChooser } from "./ViewChooser";
 import { todayISO } from "../format";
 
@@ -50,6 +51,7 @@ export function TopBar({ title, subtitle, month = todayISO().slice(0, 7) }: { ti
     {loc.sub === "view" && !loc.day && !loc.page && <TimesheetViewer month={month} />}
     {loc.sub === "viewpick" && !loc.day && !loc.page && <ViewChooser month={month} />}
     {loc.sub === "viewslip" && !loc.day && !loc.page && <PayslipViewer month={month} />}
+    {loc.sub === "viewguide" && !loc.day && !loc.page && <GuideViewer />}
     {loc.sub === "filter" && !loc.page && (
       <BottomSheet label="Filter by location" onRequestClose={back}>
         <h2>Filter by location</h2>

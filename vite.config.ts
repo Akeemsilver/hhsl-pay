@@ -17,7 +17,11 @@ export default defineConfig(({ command }) => ({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["icon.svg"],
-      workbox: { clientsClaim: true },
+      workbox: {
+        clientsClaim: true,
+        // The guide is read inside the app: the newest copy when there is a signal, the last one seen when there is not.
+        runtimeCaching: [{ urlPattern: /\.pdf$/, handler: "NetworkFirst", options: { cacheName: "guide", networkTimeoutSeconds: 4 } }],
+      },
       manifest: {
         name: "HHSL Salary Tracker",
         short_name: "Salary",
