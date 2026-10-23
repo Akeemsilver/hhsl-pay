@@ -9,10 +9,14 @@ import { CLIENT_MEDIC, matchRule } from "./timesheet";
  */
 export interface SheetInfo { days: number; sites: string[]; hours: number; pay: number; hoursLeftOut: boolean }
 
+/** Other jobs this month that still have no amount: they need to be updated once the company confirms it. */
+export interface UnpaidOthers { count: number; /** The Time sheet line carries them (other jobs are on the time sheet). */ onSheet: boolean; /** The payslip group they belong to. */ payer: string }
+
 export interface SplitResult {
   /** Each payslip group with its days and paid hours, without the jobs that are on the time sheet. */
   payers: PayerMonth[];
   sheet?: SheetInfo;
+  unpaid?: UnpaidOthers;
   /** Every day counted once: the group days plus the time sheet days. */
   totalDays: number;
   /** The paid hours of all groups plus the hourly jobs on the time sheet. */
@@ -70,6 +74,7 @@ export function sheetSplit(result: MonthResult<Entry>, data: AppData, opts: { ot
   const nameOf = (e: Entry) => { const r = matchRule(e, rules, false, medic)?.role; return r ? `${e.site} ${r === CLIENT_MEDIC ? "medic" : r.toLowerCase()}` : e.site; };
   const names = [...new Set(onSheet.map((e) => nameOf(e.entry)))].sort((a, b) => a.localeCompare(b));
   const hasSheet = sheetDays > 0;
+  const unpaidCount = others.filter((e) => !((e.amount ?? 0) > 0)).length;
   const siteOf = (e: Entry) => findSite(valueOn(data.history.sites, e.date), e.site);
   const hourly = onSheet.filter((e) => !isFixedDay(siteOf(e.entry)));
   const sheetHours = r2(hourly.reduce((t, e) => t + weightedHours(e.pay, e.entry.hours), 0));
@@ -78,6 +83,7 @@ export function sheetSplit(result: MonthResult<Entry>, data: AppData, opts: { ot
   return {
     payers,
     sheet: hasSheet ? { days: sheetDays, sites: othersOnSheet.length ? [...names, "Other jobs"] : names, hours: sheetHours, pay: sheetPay, hoursLeftOut } : undefined,
+    unpaid: unpaidCount > 0 ? { count: unpaidCount, onSheet: othersOnSheet.length > 0 && hasSheet, payer: otherPayer } : undefined,
     totalDays: claims.size,
     totalHours: r2(payers.reduce((t, p) => t + p.weighted, 0) + sheetHours),
   };

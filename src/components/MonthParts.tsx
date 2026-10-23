@@ -8,7 +8,7 @@ import type { MonthSlide } from "../slide";
 import { AverageLine } from "./AverageLine";
 import { useYear } from "../hooks";
 import type { MonthResult } from "../engine";
-import { sheetSplit, type SheetInfo } from "../sheetSplit";
+import { sheetSplit, type SheetInfo, type UnpaidOthers } from "../sheetSplit";
 import { siteTable } from "../siteTable";
 import type { Entry } from "../model";
 
@@ -17,22 +17,25 @@ import type { Entry } from "../model";
  * The tax of each payslip in small print. `groups` is how many payslip groups have income: when tax is combined there is
  * one "All sites" line, shown whenever split would have shown several, so flipping the tax method changes figures only.
  */
-export function PayerTax({ payers, groups, sheet }: { payers: Array<{ payer: string; paye: number; nis: number; surcharge: number; weighted?: number; days?: number }>; groups?: number; sheet?: SheetInfo }) {
+export function PayerTax({ payers, groups, sheet, unpaid }: { payers: Array<{ payer: string; paye: number; nis: number; surcharge: number; weighted?: number; days?: number }>; groups?: number; sheet?: SheetInfo; unpaid?: UnpaidOthers }) {
   const { data } = useStore();
   const combinedNote = payers.length === 1 && payers[0]!.payer === "all" && (groups ?? 0) >= 2;
   // Shown for every month with income, even with one group, so NIS and the surcharge are always visible.
-  if (payers.length === 0 && !combinedNote && !sheet) return null;
+  if (payers.length === 0 && !combinedNote && !sheet && !unpaid) return null;
+  // The red "unpaid" goes on a line that is already there: the Time sheet line, or the group the other jobs belong to.
+  const badge = unpaid ? <em className="unp">{unpaid.count} unpaid</em> : null;
+  const onGroup = unpaid && !(unpaid.onSheet && sheet) ? (payers.some((p) => p.payer === unpaid.payer) ? unpaid.payer : payers.length === 1 ? payers[0]!.payer : undefined) : undefined;
   return (
     <ul className="payer-tax" aria-label="Tax for each payslip">
       {payers.map((p) => (
         <li key={p.payer}>
-          <b>{p.payer === "all" ? "All sites" : payerLabel(data.payerNames, p.payer)}{p.days !== undefined && <em className="pd">{p.days} d</em>}{p.weighted !== undefined && <em>{hoursText(p.weighted)} h</em>}</b>
+          <b>{p.payer === "all" ? "All sites" : payerLabel(data.payerNames, p.payer)}{p.days !== undefined && <em className="pd">{p.days} d</em>}{p.weighted !== undefined && <em>{hoursText(p.weighted)} h</em>}{onGroup === p.payer && badge}</b>
           <span>PAYE <i className="c-paye">{money(p.paye)}</i> · NIS {money(p.nis)} · Surcharge {money(p.surcharge)}</span>
         </li>
       ))}
       {sheet && (
         <li className="sheet-line">
-          <b>Time sheet<em className="pd">{sheet.days} d</em>{sheet.hours > 0 && <em>{hoursText(sheet.hours)} h</em>}</b>
+          <b>Time sheet<em className="pd">{sheet.days} d</em>{sheet.hours > 0 && <em>{hoursText(sheet.hours)} h</em>}{unpaid?.onSheet && badge}</b>
           <span>{sheet.sites.join(", ")}</span>
           {(sheet.pay > 0 || sheet.hoursLeftOut) && <span className="sheet-note">{[sheet.pay > 0 && `${money(sheet.pay)} counted`, sheet.hoursLeftOut && "fixed rate/other: no hours"].filter(Boolean).join(" · ")}</span>}
         </li>
@@ -59,7 +62,7 @@ export function MonthSummary({ result, label }: { result: MonthResult<Entry>; la
         <div><dt><i className="dot dot-sur" />Surcharge</dt><dd className="c-sur">{money(result.surcharge)}</dd></div>
       </dl>
       <AverageLine gross={yearMonths.map((m) => m.gross)} net={yearMonths.map((m) => m.net)} index={Number(label.slice(5)) - 1} />
-      <PayerTax payers={split.payers} sheet={split.sheet} />
+      <PayerTax payers={split.payers} sheet={split.sheet} unpaid={split.unpaid} />
       {result.payers.length > 1 && (
         <ul className="payers">
           {result.payers.map((p) => (
@@ -149,8 +152,8 @@ export function DayList({ days, result, today, onPick, slide }: { days: string[]
                   </span>
                 ))}
                 {extra.map((o) => (
-                  <span key={o.id} className="chip other">
-                    Other · {o.description || "no description"}
+                  <span key={o.id} className={`chip other ${(o.amount ?? 0) > 0 ? "" : "unpaid"}`}>
+                    <span className="oth">Other</span> · {o.description || "no description"}{(o.amount ?? 0) > 0 ? "" : " · unpaid"}
                     {timeRange(o.startTime, o.endTime) && ` · ${timeRange(o.startTime, o.endTime)}`}
                   </span>
                 ))}
@@ -165,6 +168,8 @@ export function DayList({ days, result, today, onPick, slide }: { days: string[]
   );
 }
 
+const ordinal = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? "th" : (["th", "st", "nd", "rd"][n % 10] ?? "th")}`;
+
 /** Month grid, Sunday first. Each cell shows the day's total and the site(s) worked, plus other jobs. */
 export function CalendarGrid({ month, days, result, today, onPick, selected, slide }: {
   month: string; days: string[]; result: MonthResult<Entry>; today: string; onPick: (d: string) => void; selected?: string | null;
@@ -176,6 +181,7 @@ export function CalendarGrid({ month, days, result, today, onPick, selected, sli
   const { site: fsite } = useSiteFilter();
   const others = fsite ? new Map<string, Entry[]>() : othersByDate(data.entries, month);
   const legend = [...new Set(result.entries.map((e) => e.entry.site))];
+  const unpaidDays = [...new Set([...others.values()].flat().filter((o) => !((o.amount ?? 0) > 0)).map((o) => Number(o.date.slice(8))))].sort((a, b) => a - b);
   const lead = new Date(`${month}-01T00:00:00Z`).getUTCDay();
   return (
     <section className="card calendar slide-clip" aria-label="Calendar" {...(slide ? slide.bind : {})}>
@@ -194,6 +200,7 @@ export function CalendarGrid({ month, days, result, today, onPick, selected, sli
           const tone = first ? siteColorIndex(data, first.entry.site) : 0;
           const state = first ? `worked tone${tone}` : extra.length ? "worked other" : "";
           const jobCount = priced.length + extra.length;
+          const unpaidHere = extra.some((o) => !((o.amount ?? 0) > 0));
           const dotTones = [
             ...priced.map((p) => siteColorIndex(data, p.entry.site)),
             ...extra.map(() => "o"),
@@ -204,7 +211,7 @@ export function CalendarGrid({ month, days, result, today, onPick, selected, sli
               className={`cal-cell ${wd === 0 || wd === 6 ? "weekend" : ""} ${hol.has(date) ? "holiday" : ""} ${date === today ? "today" : ""} ${selected === date ? "selected" : ""} ${state}`}
               onClick={() => onPick(date)}
               aria-pressed={selected === undefined ? undefined : selected === date}
-              aria-label={`${WEEKDAYS[wd]} ${Number(date.slice(8))}${hol.has(date) ? ` (${hol.get(date)})` : ""}, ${priced.length ? money(total) : "no job"}${extra.length ? `, ${extra.length} other job${extra.length > 1 ? "s" : ""}` : ""}`}
+              aria-label={`${WEEKDAYS[wd]} ${Number(date.slice(8))}${hol.has(date) ? ` (${hol.get(date)})` : ""}, ${priced.length ? money(total) : "no job"}${extra.length ? `, ${extra.length} other job${extra.length > 1 ? "s" : ""}` : ""}${unpaidHere ? ", amount missing" : ""}`}
             >
               <span className="n">{Number(date.slice(8))}</span>
               {first && (
@@ -215,10 +222,11 @@ export function CalendarGrid({ month, days, result, today, onPick, selected, sli
               )}
               {!first && extra[0] && (
                 <>
-                  <span className="amt">Other{extra.length > 1 ? ` ×${extra.length}` : ""}</span>
+                  <span className={`amt ${unpaidHere ? "unpaid" : ""}`}>Other{extra.length > 1 ? ` ×${extra.length}` : ""}</span>
                   <span className="cal-site">{(extra[0].description || "job").slice(0, 6)}</span>
                 </>
               )}
+              {unpaidHere && first && <span className="unp-dot" aria-hidden="true" />}
               {jobCount > 1 && (
                 <span className="dots" aria-hidden="true">
                   {dotTones.map((t, i) => <span key={i} className={`d tone${t}`} />)}
@@ -229,6 +237,9 @@ export function CalendarGrid({ month, days, result, today, onPick, selected, sli
           );
         })}
       </div>
+      {unpaidDays.length > 0 && (
+        <p className="cal-unpaid" role="status">Unpaid other jobs: {unpaidDays.map(ordinal).join(", ")}. Tap the date to add the amount.</p>
+      )}
       {legend.length > 0 && (
         <p className="cal-legend">
           {legend.map((n) => <span key={n} className="k"><i style={{ background: SITE_COLORS[siteColorIndex(data, n)]!.hex }} />{n}</span>)}

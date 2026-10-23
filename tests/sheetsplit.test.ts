@@ -105,3 +105,29 @@ describe("a role on the time sheet (PLNL Client medic)", () => {
     expect(split.totalHours).toBe(34);
   });
 });
+
+describe("other jobs with no amount yet", () => {
+  const data = newData();
+  data.history.sites[0]!.value = { Atlantic: { payer: "atl", baseRate: 60, ...free } };
+  data.timesheet = { name: "T", siteLabel: "ERT Offsite", rules: [], medicEverywhere: false };
+  const all = [
+    { id: "1", date: "2026-10-15", site: "Atlantic", hours: 12 },
+    { id: "2", date: "2026-10-16", kind: "other", site: "", hours: 3, description: "Delivery", amount: 100 },
+    { id: "3", date: "2026-10-17", kind: "other", site: "", hours: 2, description: "Pickup" },
+    { id: "4", date: "2026-10-24", kind: "other", site: "", hours: 1, description: "Run", amount: 0 },
+  ];
+  const sites = all.filter((e) => e.kind !== "other");
+  const month = () => computeMonth("2026-10", sites as never, data.history, {}, false, [{ date: "2026-10-16", payer: "main", amount: 100, hours: 3 }]);
+  it("are counted as unpaid, on the time sheet line when other jobs are on it", () => {
+    const split = sheetSplit(month() as never, { ...data, entries: all as never });
+    expect(split.unpaid).toMatchObject({ count: 2, onSheet: true });
+  });
+  it("are counted on their payslip group when other jobs are off the time sheet", () => {
+    const split = sheetSplit(month() as never, { ...data, timesheet: { ...data.timesheet!, includeOther: false }, entries: all as never });
+    expect(split.unpaid).toMatchObject({ count: 2, onSheet: false });
+  });
+  it("show nothing when every other job has an amount", () => {
+    const paid = all.filter((e) => e.id !== "3" && e.id !== "4");
+    expect(sheetSplit(month() as never, { ...data, entries: paid as never }).unpaid).toBeUndefined();
+  });
+});
