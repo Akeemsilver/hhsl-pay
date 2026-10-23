@@ -32,7 +32,7 @@ export function PayerTax({ payers, groups, sheet }: { payers: Array<{ payer: str
         <li className="sheet-line">
           <b>Time sheet<em className="pd">{sheet.days} d</em>{sheet.hours > 0 && <em>{hoursText(sheet.hours)} h</em>}</b>
           <span>{sheet.sites.join(", ")}</span>
-          {(sheet.pay > 0 || sheet.hoursLeftOut) && <span className="sheet-note">{[sheet.pay > 0 && `${money(sheet.pay)} counted above`, sheet.hoursLeftOut && "fixed/other: no hours"].filter(Boolean).join(" · ")}</span>}
+          {(sheet.pay > 0 || sheet.hoursLeftOut) && <span className="sheet-note">{[sheet.pay > 0 && `${money(sheet.pay)} counted`, sheet.hoursLeftOut && "fixed/other: no hours"].filter(Boolean).join(" · ")}</span>}
         </li>
       )}
     </ul>
