@@ -155,8 +155,8 @@ export function HomeScreen() {
         </div>
         <AverageLine gross={shownYear.map((m) => m.gross)} net={shownYear.map((m) => m.net)} index={Number(shown.slice(5)) - 1} />
         <div className="payer-slot">
-          <PayerTax payers={shownSplit.payers} sheet={shownSplit.sheet} groups={groupCount} />
-          <div className="payer-ghost" aria-hidden="true"><PayerTax payers={ghostSplit.payers} sheet={ghostSplit.sheet} groups={groupCount} /></div>
+          <PayerTax payers={shownSplit.payers} sheet={shownSplit.sheet} unpaid={shownSplit.unpaid} groups={groupCount} />
+          <div className="payer-ghost" aria-hidden="true"><PayerTax payers={ghostSplit.payers} sheet={ghostSplit.sheet} unpaid={ghostSplit.unpaid} groups={groupCount} /></div>
         </div>
       </section>
 

@@ -959,3 +959,12 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 .share-app .sa-more::after { content: "More… ▾"; }
 .share-app[open] .sa-more::after { content: "Less ▴"; }
 .share-app[open] > summary { padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid var(--edge); }
+
+/* Other jobs with no amount yet are red so they get updated. */
+.cal-cell .amt.unpaid { color: var(--danger); font-weight: 700; }
+.cal-cell { position: relative; }
+.cal-cell .unp-dot { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); }
+.cal-unpaid { margin: 8px 2px 0; color: var(--danger); font-weight: 600; white-space: nowrap; font-size: clamp(0.6rem, calc((100vw - 72px) / (var(--n, 60) * 0.55)), 0.8rem); }
+.cal-unpaid.wrap { white-space: normal; font-size: 0.75rem; }
+.chip.other.unpaid .oth, .chip.other.unpaid { color: var(--danger); }
+.payer-tax b em.unp { position: absolute; left: auto; right: 0; color: var(--danger); font-weight: 700; font-style: normal; font-size: 0.78rem; }

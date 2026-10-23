@@ -160,7 +160,7 @@ s.append(steps([
  ("The line at the bottom shows the <b>pay for the day</b>. To log a second job on the same day, tap <b>Add another job</b>. Then tap <b>Save</b>. <b>Cancel</b> throws the changes away.", A("e-pay"), 50)]))
 s.append(Paragraph("B. Add an other job (pickup, delivery)", h2))
 s.append(steps([
- ("On the day form, tap <b>Add other job</b>. Type what it was (for example Airport pickup), or tap a quick suggestion. Start and end time and hours are optional. Add the <b>amount paid</b> once the company confirms it. Tap <b>Save</b>.", A("f-other"), 50),
+ ("On the day form, tap <b>Add other job</b>. Type what it was (for example Airport pickup), or tap a quick suggestion. Start and end time and hours are optional. Until the amount is added the job shows in red: <b>Other</b> in red on the calendar and list, <b>unpaid</b> on the Home summary, and a red line under the calendar lists the dates (for example 3rd, 23rd). Add the <b>amount paid</b> once the company confirms it. Tap <b>Save</b>.", A("f-other"), 50),
  ("At the top of the job is the tick <b>Put other jobs on the time sheet</b>. It covers <b>all</b> other jobs, whatever they are called. Leave it ticked and every other job goes on the time sheet. The same switch is in Settings, Timesheet.", None)]))
 s.append(Paragraph("C. Change or delete a day", h2))
 s.append(steps([
