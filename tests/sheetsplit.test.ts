@@ -99,7 +99,7 @@ describe("a role on the time sheet (PLNL Client medic)", () => {
     expect(main.days).toBe(1); // the plain PLNL day stays
     expect(main.weighted).toBe(10); // the medic day's 12 hours are gone
     // The medic job is hourly, so its 12 hours show on the Time sheet line and still add up to the total.
-    expect(split.sheet).toMatchObject({ days: 1, sites: ["PLNL"], hours: 12, hoursLeftOut: false });
+    expect(split.sheet).toMatchObject({ days: 1, sites: ["PLNL medic"], hours: 12, hoursLeftOut: false });
     expect(split.sheet!.pay).toBe(720);
     expect(split.totalDays).toBe(3);
     expect(split.totalHours).toBe(34);

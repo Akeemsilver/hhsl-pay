@@ -1,6 +1,6 @@
 import { COMBINED_PAYER, findSite, valueOn, weightedHours, type MonthResult, type PayerMonth } from "./engine";
 import { isFixedDay, isOther, otherHours, otherPayerId, type AppData, type Entry } from "./model";
-import { matchRule } from "./timesheet";
+import { CLIENT_MEDIC, matchRule } from "./timesheet";
 
 /**
  * The jobs that go on the time sheet. Hours are only those of hourly jobs: a fixed-rate job or an other job is paid
@@ -66,7 +66,9 @@ export function sheetSplit(result: MonthResult<Entry>, data: AppData, opts: { ot
       + (p.payer === otherPayer ? paidOthersOnSheet.reduce((t, e) => t + otherHours(e), 0) : 0);
     return { ...p, days: days.get(p.payer) ?? 0, weighted: Math.max(0, r2(p.weighted - gone)) };
   });
-  const names = [...new Set(onSheet.map((e) => e.entry.site))].sort((a, b) => a.localeCompare(b));
+  // A site ticked for one role only is named with it ("PLNL medic"), a whole site by its name.
+  const nameOf = (e: Entry) => { const r = matchRule(e, rules, false, medic)?.role; return r ? `${e.site} ${r === CLIENT_MEDIC ? "medic" : r.toLowerCase()}` : e.site; };
+  const names = [...new Set(onSheet.map((e) => nameOf(e.entry)))].sort((a, b) => a.localeCompare(b));
   const hasSheet = sheetDays > 0;
   const siteOf = (e: Entry) => findSite(valueOn(data.history.sites, e.date), e.site);
   const hourly = onSheet.filter((e) => !isFixedDay(siteOf(e.entry)));
