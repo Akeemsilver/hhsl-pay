@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { computeDay, valueOn } from "../engine";
 import { dayDMY, dmy, hoursText, money, timeRange } from "../format";
-import { isOther, type Entry } from "../model";
+import { byStartTime, isOther, type Entry } from "../model";
 import { useNav } from "../nav";
 import { useSiteFilter } from "../filter";
 import { useStore } from "../store";
@@ -14,7 +14,7 @@ export function DayPanel({ date }: { date: string }) {
   const [deleting, setDeleting] = useState<Entry | null>(null);
   const sites = valueOn(data.history.sites, date);
   const { site: filterSite } = useSiteFilter();
-  const jobs = data.entries.filter((e) => e.date === date && (!filterSite || e.site === filterSite));
+  const jobs = byStartTime(data.entries.filter((e) => e.date === date && (!filterSite || e.site === filterSite)));
   const total = jobs.reduce((s, e) => s + (isOther(e) ? (e.amount ?? 0) : computeDay(e, sites).total), 0);
   const noSites = Object.keys(sites).length === 0;
 

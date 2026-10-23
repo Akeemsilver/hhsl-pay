@@ -6,8 +6,8 @@ import type { PayrollEmail } from "../payroll";
 export function PayrollDialog({ email, fileName, onCancel, onContinue, onShare, ready = true, error = null }: { email: PayrollEmail; fileName: string; onCancel: () => void; onContinue: () => void; onShare?: () => void; ready?: boolean; error?: string | null }) {
   useLayer(onCancel);
   return createPortal(
-    <div className="confirm-backdrop" onClick={onCancel}>
-      <div className="confirm payroll" role="dialog" aria-modal="true" aria-label="Send time sheet to payroll" onClick={(e) => e.stopPropagation()}>
+    <div className="confirm-backdrop">
+      <div className="confirm payroll" role="dialog" aria-modal="true" aria-label="Send time sheet to payroll">
         <p className="muted small">Send by email</p>
         <h2>Send your time sheet to payroll</h2>
         <p className="muted small">Your time sheet (<strong>{fileName}</strong>, with the time added) is saved to your Downloads and your email app (Gmail, Outlook, …) opens with this message ready. Attach the file, then send:</p>
