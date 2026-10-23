@@ -18,6 +18,11 @@ export function dmy(iso: string): string {
   return /^\d{4}-\d{2}-\d{2}/.test(iso) ? `${Number(iso.slice(8, 10))}-${MONTH_ABBR[Number(iso.slice(5, 7)) - 1]}-${iso.slice(0, 4)}` : iso;
 }
 
+/** The short form for tight places: 1/9/2026. */
+export function dmyShort(iso: string): string {
+  return /^\d{4}-\d{2}-\d{2}/.test(iso) ? `${Number(iso.slice(8, 10))}/${Number(iso.slice(5, 7))}/${iso.slice(0, 4)}` : iso;
+}
+
 /** A moment on this phone's own clock: "23-Oct-2026" or, with the time, "23-Oct-2026 13:05". */
 export function localDMY(d: Date, withTime = false): string {
   const p = (n: number) => String(n).padStart(2, "0");
@@ -25,9 +30,9 @@ export function localDMY(d: Date, withTime = false): string {
   return withTime ? `${day} ${p(d.getHours())}:${p(d.getMinutes())}` : day;
 }
 
-/** "Thu 1-Sep-2026". */
-export function dayDMY(iso: string): string {
-  return `${WEEKDAYS[new Date(`${iso}T00:00:00Z`).getUTCDay()]} ${dmy(iso)}`;
+/** "Thu 1-Sep-2026", or "Thu 1/9/2026" when `short` (narrow lists). */
+export function dayDMY(iso: string, short = false): string {
+  return `${WEEKDAYS[new Date(`${iso}T00:00:00Z`).getUTCDay()]} ${short ? dmyShort(iso) : dmy(iso)}`;
 }
 
 export function monthLabel(month: string): string {

@@ -283,12 +283,19 @@ describe("withTime", () => {
   });
 });
 
-import { dmy, dayDMY, localDMY } from "../src/format";
+import { dmy, dmyShort, dayDMY, localDMY } from "../src/format";
 describe("dates", () => {
   it("are written 1-Sep-2026", () => {
     expect(dmy("2026-09-01")).toBe("1-Sep-2026");
     expect(dmy("2026-12-25")).toBe("25-Dec-2026");
     expect(dayDMY("2026-09-01")).toBe("Tue 1-Sep-2026");
     expect(localDMY(new Date(2026, 9, 23, 13, 5), true)).toBe("23-Oct-2026 13:05");
+  });
+});
+
+describe("short dates", () => {
+  it("are written 1/9/2026 for tight places", () => {
+    expect(dmyShort("2026-09-01")).toBe("1/9/2026");
+    expect(dayDMY("2026-09-20", true)).toBe("Sun 20/9/2026");
   });
 });

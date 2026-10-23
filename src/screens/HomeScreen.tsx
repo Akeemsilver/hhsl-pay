@@ -24,7 +24,8 @@ function greeting(): string {
 }
 
 const longDate = (iso: string) => dayDMY(iso);
-const shortDate = (iso: string) => dayDMY(iso);
+// The list is narrow, so it uses the short form: Sun 20/9/2026.
+const shortDate = (iso: string) => dayDMY(iso, true);
 
 export function HomeScreen() {
   const { data } = useStore();
