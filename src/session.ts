@@ -9,3 +9,8 @@ export function useSessionState<T>(key: string, initial: T): [T, (next: T) => vo
   const update = useCallback((next: T) => { memory.set(key, next); set(next); }, [key]);
   return [value, update];
 }
+
+/** Forget a remembered value, so the next screen that asks for it starts from its own default. */
+export function clearSessionState(key: string): void {
+  memory.delete(key);
+}

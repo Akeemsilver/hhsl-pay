@@ -228,7 +228,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                     value={entry.amount ?? ""}
                     onChange={(e) => patch(entry.id, { amount: e.target.value === "" ? undefined : Number(e.target.value) })}
                   />
-                  <span className="muted small">Leave blank until the company confirms it, then edit this day and enter it. Once it has an amount it is added to your Point Lisas / other gross and taxed with it.</span>
+                  <span className="muted small">Leave blank until the company confirms it, then tap the date to add the amount. Once it has an amount it is added to your Point Lisas / other gross and taxed with it.</span>
                 </label>
                 <button className="danger" onClick={() => remove(entry.id)}>Remove</button>
               </div>
