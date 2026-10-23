@@ -55,6 +55,7 @@ export function computeDay(entry: DayEntry, sites: SiteTable): DayPay {
   const holidayDaily = cap(role?.dailyHoliday) || cap(site.dailyHoliday);
   if (entry.holiday && holidayDaily > 0) dailyPay = holidayDaily;
   else if (cap(role?.dailyPay) > 0) dailyPay = cap(role?.dailyPay);
+  else if (dayType === "weekend" && cap(site.dailyWeekend) > 0) dailyPay = cap(site.dailyWeekend);
   else if (lead && cap(site.dailyLead) > 0) dailyPay = cap(site.dailyLead);
   else if (cap(site.dailyStd) > 0) dailyPay = cap(site.dailyStd);
 

@@ -852,3 +852,19 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .tj-roles{margin:.25rem 0 .5rem .9rem;padding-left:.7rem;border-left:3px solid rgba(127,127,127,.3)}
 .lunch-choice { display: grid; gap: 6px; margin: 8px 0; }
 .lunch-choice .segmented { max-width: 220px; }
+
+/* Small two-way switch (Hourly / Fixed day rate, Yes / No) */
+.seg-sm { display: inline-flex; gap: 2px; padding: 3px; background: var(--line); border-radius: 10px; width: fit-content; max-width: 100%; }
+.seg-sm button { min-height: 30px; padding: 0 12px; border: 0; background: transparent; border-radius: 8px; color: var(--muted); font-weight: 600; font-size: 0.85rem; box-shadow: none; }
+.seg-sm button.on { background: var(--card); color: var(--text); box-shadow: var(--shadow); }
+.lunch-choice .seg-sm { margin: 2px 0 4px; }
+/* Side-by-side boxes line up at the bottom, even when one label wraps to two lines */
+.grid2, .grid3 { align-items: end; }
+.grid2 > label, .grid3 > label { display: flex; flex-direction: column; justify-content: flex-end; }
+.pay-block { margin: 6px 0; padding-top: 4px; }
+.pay-block h4 { margin: 12px 0 4px; font-size: 0.95rem; }
+
+.ts-check { align-items: flex-start; margin: 6px 0 4px; }
+.ts-check span { display: grid; gap: 1px; line-height: 1.25; }
+.ts-check small { font-size: 0.78rem; }
+.example-box { pointer-events: none; opacity: 0.9; }
