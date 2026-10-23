@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { clearSessionState } from "./session";
 
 export type Tab = "home" | "calendar" | "year" | "charts";
 export type Page = "settings" | "sites" | "tax" | "payslips" | "timesheet" | "holidays" | "backup" | "addsite";
@@ -116,6 +117,8 @@ export function NavProvider({ children }: { children: ReactNode }) {
         return;
       }
       if (tab === loc.tab && !loc.page && !loc.day) return;
+      // Coming to the Month tab from another tab always shows the current month, whatever month was picked last time.
+      if (tab === "calendar" && loc.tab !== "calendar") clearSessionState("calendar-month");
       // From Home we push, so Back returns to Home; between other tabs we replace.
       const l: Loc = { tab, n: loc.tab === "home" && loc.n === 0 ? 1 : loc.n };
       if (loc.n === 0) window.history.pushState(l, "");
