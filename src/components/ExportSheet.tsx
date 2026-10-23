@@ -16,7 +16,7 @@ import { TemplateError, extractLogo, timesheetFileName } from "../timesheetFile"
 import { BottomSheet } from "./BottomSheet";
 import { PayrollDialog } from "./PayrollDialog";
 import { MailIcon } from "./Icons";
-import { download } from "../backup";
+import { download, withTime } from "../backup";
 import { mailtoLink, payrollEmail } from "../payroll";
 
 
@@ -147,9 +147,7 @@ export function ExportSheet({ month }: { month: string }) {
   const openMailApp = () => {
     if (!payrollFile) return;
     // A new name each time (the time is added): when the same name is already in Downloads, Chrome asks "Download file again?" and that question ends up hidden behind the mail app.
-    const now = new Date();
-    const stamp = `${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
-    const fileName = payrollFile.fileName.replace(/\.xlsx$/, `-${stamp}.xlsx`);
+    const fileName = withTime(payrollFile.fileName);
     download(fileName, payrollFile.bytes, XLSX_MIME);
     setPayrollOpen(false); setPayrollTry(0);
     setMessage({ text: `${fileName} is in your Downloads. Attach it to the email that opens, then send.`, ok: true });

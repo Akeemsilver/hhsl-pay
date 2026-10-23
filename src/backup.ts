@@ -175,6 +175,16 @@ export function backupFileName(kind: BackupKind, encrypted: boolean): string {
   return `salary-tracker-${kind === "full" ? "backup" : "rates"}-${date}${encrypted ? "-locked" : ""}.json`;
 }
 
+/**
+ * The file name with the time added before the extension (report.xlsx -> report-1305.xlsx). A download whose name is
+ * already in Downloads makes Chrome ask "Download file again?", and that question can end up hidden behind the app that
+ * opens next, so every saved copy gets a new name.
+ */
+export function withTime(fileName: string, now = new Date()): string {
+  const stamp = `${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
+  return fileName.replace(/(\.[A-Za-z0-9]+)$/, `-${stamp}$1`);
+}
+
 /** Share through the phone's share sheet when possible, otherwise download. */
 export async function deliver(fileName: string, content: string | Uint8Array, type = "application/json"): Promise<"shared" | "downloaded"> {
   const file = new File([content as BlobPart], fileName, { type });
@@ -187,7 +197,7 @@ export async function deliver(fileName: string, content: string | Uint8Array, ty
       if ((e as DOMException)?.name === "AbortError") throw e;
     }
   }
-  return download(fileName, content, type);
+  return download(withTime(fileName), content, type);
 }
 
 /** The ways tried when sharing the file, in order: file type and extension. One is tried each time the share button is tapped. A plain .txt comes first: Android Chrome refuses .json files ("Permission denied") but accepts .txt. */

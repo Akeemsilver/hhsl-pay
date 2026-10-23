@@ -2,7 +2,7 @@ import { loadTemplate } from "../storage";
 import { ShareGuide } from "../components/ShareGuide";
 import { InstallHelp } from "../components/InstallHelp";
 import { appLink, siteCount } from "../kit";
-import { backupFileName, deliver, download, ratesKitOf, serialize, SHARE_TYPES, shareFile } from "../backup";
+import { backupFileName, deliver, download, ratesKitOf, serialize, SHARE_TYPES, shareFile, withTime } from "../backup";
 import { useNav } from "../nav";
 import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -81,7 +81,7 @@ export function SettingsHub() {
     if (!kit) { setKitMessage("Getting the starter kit ready, try again in a moment."); return; }
     const tried = attempt.current;
     // Saved to Downloads first, in the same tap, so the file is safe even if the share menu is refused.
-    if (saveFirst && !savedKit.current) { download(kitFileName(), kit, "text/plain"); savedKit.current = true; }
+    if (saveFirst && !savedKit.current) { download(withTime(kitFileName()), kit, "text/plain"); savedKit.current = true; }
     const { result, error, type } = await shareFile(backupFileName("rates", false), kit, tried);
     if (result === "shared") { attempt.current = 0; savedKit.current = false; setKitMessage("Starter kit saved to your Downloads and shared."); }
     else if (result === "cancelled") { savedKit.current = false; setKitMessage("Starter kit saved to your Downloads."); }
@@ -94,7 +94,7 @@ export function SettingsHub() {
     } else setKitMessage("This browser cannot open the share menu. Use “Download starter kit” and send the file from your Downloads.");
   };
   const saveKit = async () => {
-    download(kitFileName(), await kitText(), "text/plain");
+    download(withTime(kitFileName()), await kitText(), "text/plain");
     setKitMessage("Starter kit saved to your Downloads. Send that file on WhatsApp.");
   };
   const sites = new Set(data.history.sites.flatMap((v) => Object.keys(v.value))).size;
