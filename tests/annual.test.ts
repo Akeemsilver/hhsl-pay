@@ -137,6 +137,24 @@ describe("monthly spreadsheet import", () => {
     expect(sheet.days).toEqual([{ date: "2026-09-03", client: "Alpha", hours: 10, lead: false, holiday: false, total: 600 }]);
     expect(sheet.year).toBe(2026);
   });
+  it("a full September already logged: Add fills only the blank days, Replace swaps the month and keeps the others", async () => {
+    const d = newData();
+    d.history = { sites: [{ effectiveFrom: "2000-01-01", value: demoSites }], tax: [{ effectiveFrom: "2000-01-01", value: demoTax }] };
+    d.entries = [
+      { id: "a", date: "2026-09-03", site: "Alpha", hours: 12 },
+      { id: "b", date: "2026-09-04", site: "Alpha", hours: 12 },
+      { id: "c", date: "2026-09-05", site: "Alpha", hours: 12 },
+      { id: "o", date: "2026-10-05", site: "Alpha", hours: 12 },
+    ];
+    const sheet = await parseAnnual(await monthlyWorkbook(9, 2026, [
+      { date: "2026-09-03", site: "Alpha", hours: 8, total: " $ 100.00 " },
+      { date: "2026-09-10", site: "Alpha", hours: 8, total: " $ 100.00 " },
+    ]));
+    const add = applyAnnual(d, sheet, { Alpha: { site: "Alpha" } }, "add");
+    expect(add.data.entries.map((e) => `${e.date}:${e.hours}`)).toEqual(["2026-09-03:12", "2026-09-04:12", "2026-09-05:12", "2026-09-10:8", "2026-10-05:12"]);
+    const rep = applyAnnual(d, sheet, { Alpha: { site: "Alpha" } }, "replace");
+    expect(rep.data.entries.map((e) => `${e.date}:${e.hours}`)).toEqual(["2026-09-03:8", "2026-09-10:8", "2026-10-05:12"]);
+  });
   it("adding several months one after another keeps the earlier months", async () => {
     let d = newData();
     d.history = { sites: [{ effectiveFrom: "2000-01-01", value: demoSites }], tax: [{ effectiveFrom: "2000-01-01", value: demoTax }] };

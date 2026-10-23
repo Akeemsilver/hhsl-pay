@@ -5,7 +5,7 @@ import { useStore } from "../store";
 import { ImportError, type Assignment } from "../timesheetImport";
 
 
-/** Backup screen card: read the yearly salary spreadsheet and add its days to the app, after a preview. */
+/** Backup screen card: read the yearly or monthly salary spreadsheet and add its days to the app, after a preview. */
 export function AnnualImport() {
   const { data, replace } = useStore();
   const input = useRef<HTMLInputElement>(null);
@@ -53,15 +53,15 @@ export function AnnualImport() {
 
   return (
     <section className="card">
-      <h2>Import from your yearly spreadsheet</h2>
+      <h2>Import from your yearly / monthly spreadsheet</h2>
       <p className="muted small">Bring in the days worked from the yearly salary spreadsheet (a tab for each month) or a monthly one (a single calendar), saved as .xlsx. Months you already have are kept unless you choose Replace. Only days, hours, team lead and holiday flags are read. You see a preview first and nothing changes until you confirm.</p>
       <input ref={input} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden
         onChange={(e) => { const f = e.target.files?.[0]; if (f) void read(f); e.target.value = ""; }} />
-      <button className="wide" disabled={busy} onClick={() => input.current?.click()}>{busy ? "Reading…" : "Choose yearly spreadsheet…"}</button>
+      <button className="wide" disabled={busy} onClick={() => input.current?.click()}>{busy ? "Reading…" : "Choose yearly / monthly spreadsheet…"}</button>
       {message && <p className={`notice ${message.ok ? "" : "warn"}`} role="status">{message.text}</p>}
 
       {sheet && (
-        <div className="import-preview" aria-label="Yearly import preview">
+        <div className="import-preview" aria-label="Spreadsheet import preview">
           <p><strong>{sheet.name || "Name not on the sheet"}</strong> · {sheet.year} · {sheet.days.length} day{sheet.days.length === 1 ? "" : "s"}</p>
           <ul className="plain small">
             {perMonth.map(([m, n]) => <li key={m} className="row"><span>{MONTHS[Number(m.slice(5)) - 1]} {m.slice(0, 4)}</span><span>{n} day{n === 1 ? "" : "s"}</span></li>)}
@@ -87,11 +87,11 @@ export function AnnualImport() {
               </select>
             </label>
           ))}
-          <div className="segmented" role="group" aria-label="How to import the yearly sheet">
+          <div className="segmented" role="group" aria-label="How to import the spreadsheet">
             <button aria-pressed={mode === "add"} className={mode === "add" ? "on" : ""} onClick={() => setMode("add")}>Add</button>
             <button aria-pressed={mode === "replace"} className={mode === "replace" ? "on" : ""} onClick={() => setMode("replace")}>Replace these months</button>
           </div>
-          <p className="muted small">{mode === "add" ? "Adds these days and leaves what you already have. Days already logged at the same site are skipped." : "Removes your logged jobs for every month in this file first, then adds these. Other months and other jobs are kept."}</p>
+          <p className="muted small">{mode === "add" ? "Fills in days you have not logged yet and leaves everything you already have. A day already logged at the same site is skipped, even if its hours differ." : "Clears your logged jobs in the months in this file, then adds these days. Days in those months that are not in the file are removed. Other months and Other jobs are kept."}</p>
           <div className="row">
             <button onClick={() => setSheet(null)}>Cancel</button>
             <button className="primary" disabled={usable === 0} onClick={run}>Import {usable} day{usable === 1 ? "" : "s"}</button>

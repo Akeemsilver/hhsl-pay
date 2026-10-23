@@ -142,9 +142,9 @@ s.append(Paragraph("Step B. Import it into the app", h2))
 s.append(steps([
  ("In the app, tap the <b>gear</b> at the top right (Settings).", A("a-home"), 50),
  ("Scroll down and tap <b>Backup &amp; restore</b>.", A("a-settings"), 50),
- ("Under <b>Import from your yearly spreadsheet</b>, tap <b>Choose yearly spreadsheet</b> and pick your .xlsx file from Downloads.", A("a-import"), 50),
+ ("Under <b>Import from your yearly / monthly spreadsheet</b>, tap <b>Choose yearly / monthly spreadsheet</b> and pick your .xlsx file from Downloads.", A("a-import"), 50),
  ("A <b>preview</b> shows your name, the year and how many days were found in each month. <b>Nothing changes until you confirm.</b> For each client name in the sheet, choose which of your <b>sites</b> it is, or <b>Skip these days</b>.", I("import-preview")),
- ("Choose <b>Add</b> (keeps what you already have) or <b>Replace these months</b> (clears those months first). Then tap <b>Import</b>, and open the Month tab to see your days.", None)]))
+ ("Choose <b>Add</b> (fills in only the days you have not logged yet and keeps everything you already have; a day already logged at the same site is skipped) or <b>Replace these months</b> (clears the jobs in the months in the file, then adds the file\'s days, so days in those months that are not in the file are removed; other months stay). Then tap <b>Import</b>, and open the Month tab to see your days.", None)]))
 s.append(Paragraph("Only the days, hours, team lead and holiday flags are read. The app works out pay again from your rates, so check one month against your payslip the first time.", small))
 
 s.append(Paragraph('<a name="p4"/>Part 4. How to add a day', h1))
