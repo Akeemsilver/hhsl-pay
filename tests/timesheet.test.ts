@@ -282,3 +282,13 @@ describe("withTime", () => {
     expect(withTime("rates-2026-10-23.txt", new Date(2026, 9, 23, 13, 45))).toBe("rates-2026-10-23-1345.txt");
   });
 });
+
+import { dmy, dayDMY, localDMY } from "../src/format";
+describe("dates", () => {
+  it("are written 1-Sep-2026", () => {
+    expect(dmy("2026-09-01")).toBe("1-Sep-2026");
+    expect(dmy("2026-12-25")).toBe("25-Dec-2026");
+    expect(dayDMY("2026-09-01")).toBe("Tue 1-Sep-2026");
+    expect(localDMY(new Date(2026, 9, 23, 13, 5), true)).toBe("23-Oct-2026 13:05");
+  });
+});

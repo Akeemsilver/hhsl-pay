@@ -23,7 +23,7 @@ const dayBefore = (iso: string) => {
   return d.toISOString().slice(0, 10);
 };
 
-/** Plain-words name for a version, based on where it sits in the list: "Original rates, until 30-09-2026" or "From 01-10-2026". */
+/** Plain-words name for a version, based on where it sits in the list: "Original rates, until 30-Sep-2026" or "From 1-Oct-2026". */
 export function versionLabel(v: Dated<unknown>, all?: Array<Dated<unknown>>): string {
   const sorted = [...(all ?? [v])].sort((a, b) => a.effectiveFrom.localeCompare(b.effectiveFrom));
   const i = sorted.findIndex((x) => x.effectiveFrom === v.effectiveFrom);
