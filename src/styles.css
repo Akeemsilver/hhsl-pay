@@ -882,3 +882,10 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .payer-tax li.sheet-line > span { white-space: normal; }
 .payer-tax li.sheet-line .sheet-note { font-size: 0.75rem; font-style: italic; }
 .more-panel h3.sub { font-size: 0.8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 6px 0 0; }
+.site summary { list-style: none; margin: 0 -12px; padding: 0 12px; border-radius: 12px; }
+.site summary::-webkit-details-marker { display: none; }
+.site summary::after { content: "▾"; margin-left: auto; padding-left: 8px; color: var(--muted); }
+.site[open] > summary { background: var(--bg); border-bottom: 1px solid var(--edge); border-radius: 12px 12px 0 0; margin-bottom: 8px; }
+.site[open] > summary::after { content: "Close ▴"; font-size: 0.8rem; font-weight: 600; color: var(--accent); }
+button.close-site { justify-content: center; text-align: center; color: var(--accent); font-weight: 600; }
+.site summary::after { white-space: nowrap; flex-shrink: 0; }

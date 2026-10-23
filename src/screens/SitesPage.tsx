@@ -317,6 +317,7 @@ function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename,
           </div>
         </div>
       )}
+      <button className="more close-site" onClick={(e) => { const d = e.currentTarget.closest("details")!; d.open = false; d.scrollIntoView({ block: "nearest" }); }}>Close {name} ▴</button>
     </details>
   );
 }
