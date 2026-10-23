@@ -211,14 +211,14 @@ s.append(steps([
 
 s.append(Paragraph('<a name="p6"/>Part 6. Set it up your way', h1))
 s.append(steps([
- ("<b>Colour and lunch for each site:</b> Settings, <b>Site locations &amp; rates</b>, open a site. Pick its calendar colour. For an hourly site, set <b>Job requires lunch check</b> to <b>No</b> if it has no lunch deduction, and the day form hides the lunch options. A fixed day rate site never has a lunch check.", Bs("b-site"), 50),
+ ("<b>Colour and lunch for each site:</b> Settings, <b>Site locations &amp; rates</b>, open a site. Pick its calendar colour. An opened site keeps its name under the top bar as you scroll; tap the name to fold it. For an hourly site, set <b>Job requires lunch check</b> to <b>No</b> if it has no lunch deduction, and the day form hides the lunch options. A fixed day rate site never has a lunch check.", Bs("b-site"), 50),
  ("<b>Which jobs go on your time sheet:</b> Settings, <b>Timesheet</b>. The sentence at the top reads out what is included. Tick <b>Client medic at every site</b> and <b>Other jobs</b> if you want all of them on the form.", A("f-top"), 50),
  ("Below that there is one row for each site. <b>Tick the site</b> to put every day at that site on the time sheet. Leave it unticked and open <b>Roles</b> to tick only certain roles (for example Client medic at PLNL). A ticked site shows <b>Shows as … · change</b>: tap it to change the text in the Client assigned column. Press <b>Save</b>.", A("f-sites"), 50)]))
 
 s.append(Paragraph('<a name="p7"/>Part 7. Share the app with someone else', h1))
 s.append(Paragraph("To give a colleague the app you send them <b>three things</b> on WhatsApp: <b>1. the app link</b>, <b>2. the starter kit file</b> and <b>3. this guide</b>. All three buttons are in one place in the app, and you do it all from your phone.", ParagraphStyle("kw", parent=body, keepWithNext=1)))
 s.append(steps([
- ("Open <b>Settings</b> (the gear) and find <b>Share this app</b>. Tap it (or <b>More…</b>) to unfold it: the three buttons are inside. (The <b>Install on your phone</b> help at the top of Settings is hidden once the app is installed.)", A("a-share"), 50),
+ ("Open <b>Settings</b> (the gear) and find <b>Share this app</b>. Tap it (or <b>More…</b>) to unfold it: the three buttons are inside. While it is open and you scroll, its title stays under the top bar; tap the title to fold it again. (The <b>Install on your phone</b> help at the top of Settings is hidden once the app is installed.)", A("a-share"), 50),
  ("<b>Send the link.</b> Tap <b>Share link</b>, pick <b>WhatsApp</b> and the person.", None),
  ("<b>Send the starter kit.</b> Tap <b>Share starter kit</b>, then <b>Yes, download and share</b>. The time is added to the saved file's name so it never clashes with an earlier copy.", Bs("b-share-ask"), 50),
  ("The share menu opens. Pick <b>WhatsApp</b> (or Gmail) and the same person, and send the file.", Bs("b-share-after"), 50),

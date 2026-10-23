@@ -1020,3 +1020,7 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 .ytable[open] .yt-caret::after { content: "Close ▴"; color: var(--accent); font-size: 0.8rem; font-weight: 700; }
 /* The header sticks under the title bar once you scroll past it. */
 .ytable[open] > summary { position: sticky; top: var(--bar-h, 52px); z-index: 3; background: color-mix(in srgb, var(--accent) 12%, var(--card)); border-radius: 12px 12px 0 0; border-bottom: 1px solid var(--edge); box-shadow: 0 10px 14px -10px rgba(15, 23, 42, 0.45); }
+
+/* An opened site card, band table or the Share this app card keeps its header under the title bar once you scroll past it. */
+.site[open] > summary { position: sticky; top: var(--bar-h, 52px); z-index: 3; box-shadow: 0 10px 14px -10px rgba(15, 23, 42, 0.45); }
+.share-app[open] > summary { position: sticky; top: var(--bar-h, 52px); z-index: 3; background: var(--card); margin: -14px -14px 8px; padding: 0 14px; border-radius: 14px 14px 0 0; box-shadow: 0 10px 14px -10px rgba(15, 23, 42, 0.45); }

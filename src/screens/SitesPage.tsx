@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useBarHeight } from "../barHeight";
 import { valueOn, type RoleRates, type SiteRates, type SiteTable, type TierCaps } from "../engine";
 import { DEFAULT_ROLES, emptySite, isFixedDay, isOther, payerLabel, rolesFor } from "../model";
 import { useStore } from "../store";
@@ -209,7 +210,7 @@ function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename,
   const roleCount = Object.values(roles).filter((r) => r.rate || r.dailyPay || r.dailyHoliday || r.weekday || r.weekend || r.holiday).length;
   return (
     <details className="site">
-      <summary>
+      <summary onClick={(e) => { const d = e.currentTarget.parentElement as HTMLDetailsElement; if (d.open) requestAnimationFrame(() => d.scrollIntoView({ block: "nearest" })); }}>
         {name}
         <span className="muted"> · {payers[site.payer] ?? site.payer}{site.baseRate ? ` · $${site.baseRate}/h${site.leadRate && site.leadRate !== site.baseRate ? ` · lead $${site.leadRate}` : ""}` : ""}{isFixedDay(site) ? ` · $${site.dailyStd}/day` : ""}{roleCount ? ` · ${roleCount} role${roleCount > 1 ? "s" : ""}` : ""}</span>
       </summary>
@@ -501,6 +502,7 @@ function slug(name: string, taken: string[]): string {
 }
 
 export function SitesPage() {
+  useBarHeight();
   const { data, update } = useStore();
   const { open } = useNav();
   const versions = data.history.sites;
