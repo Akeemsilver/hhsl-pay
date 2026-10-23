@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import { MONTHS, hoursText, money } from "../format";
 import { averageThrough } from "../averages";
 import { useStore } from "../store";
@@ -61,24 +60,6 @@ export function YearSites({ sites, year }: { sites: YearSite[]; year: number }) 
 
 /** One payslip group as small, roomy tables with the months down the side: Income, Average a month, Taxes, Year to date, Hours and days. */
 export function YearTable({ section, open }: { section: YearSection; open?: boolean }) {
-  // Preview only: ?stick=b shows the floating pill instead of the stuck header (the choice is made, then the other goes).
-  const variant = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("stick") === "b" ? "b" : "a";
-  const box = useRef<HTMLDetailsElement>(null);
-  const [pill, setPill] = useState(false);
-  useEffect(() => {
-    if (variant !== "b") return;
-    const check = () => {
-      const d = box.current;
-      if (!d || !d.open) { setPill(false); return; }
-      const bar = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--bar-h")) || 52;
-      const head = d.querySelector("summary")!.getBoundingClientRect();
-      setPill(head.bottom < bar + 4 && d.getBoundingClientRect().bottom > bar + 90);
-    };
-    check();
-    window.addEventListener("scroll", check, { passive: true });
-    return () => window.removeEventListener("scroll", check);
-  }, [variant]);
-  const collapse = () => { const d = box.current; if (!d) return; d.open = false; setPill(false); d.scrollIntoView({ block: "nearest" }); };
   const ms = section.months;
   const has = (m: YearMonth) => m.gross > 0 || m.days > 0;
   const latest = ms.reduce((l, m, i) => (has(m) ? i : l), -1);
@@ -101,15 +82,10 @@ export function YearTable({ section, open }: { section: YearSection; open?: bool
       </tr>
     ));
   return (
-    <details className={`ytable stick-${variant}`} open={open} ref={box} onToggle={() => { if (variant === "b") window.dispatchEvent(new Event("scroll")); }}>
+    <details className="ytable" open={open}>
       <summary onClick={(e) => { const d = e.currentTarget.parentElement as HTMLDetailsElement; if (d.open) requestAnimationFrame(() => d.scrollIntoView({ block: "nearest" })); }}>
         <span>{section.title}</span><span className="yt-end"><span className="c-gross">{money(sum(gross))}</span><span className="yt-caret" aria-hidden="true" /></span>
       </summary>
-      {pill && (
-        <button type="button" className="yt-pill" onClick={collapse} aria-label={`Close ${section.title}`}>
-          <span className="yt-pill-name">{section.title}</span><span className="c-gross">{money(sum(gross))}</span><span className="yt-pill-close">Close ▴</span>
-        </button>
-      )}
 
       <h3>Income</h3>
       <table className="ym">
