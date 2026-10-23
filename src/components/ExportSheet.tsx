@@ -15,6 +15,7 @@ import { makeTimesheetXlsx, XLSX_MIME } from "../timesheetExport";
 import { TemplateError, extractLogo, timesheetFileName } from "../timesheetFile";
 import { BottomSheet } from "./BottomSheet";
 import { PayrollDialog } from "./PayrollDialog";
+import { isIos } from "../install";
 import { MailIcon } from "./Icons";
 import { download, withTime } from "../backup";
 import { mailtoLink, payrollEmail } from "../payroll";
@@ -143,6 +144,30 @@ export function ExportSheet({ month }: { month: string }) {
     }
     setPayrollError("this phone cannot share files");
   };
+  // iPhone: a downloaded file opens in a viewer that hides the mail app, so the file is handed straight to the share menu (Mail attaches it).
+  const [copied, setCopied] = useState(false);
+  const copyAddress = async () => {
+    try { await navigator.clipboard.writeText(email.to); setCopied(true); window.setTimeout(() => setCopied(false), 3000); }
+    catch { setPayrollError("could not copy. The address is shown above: press and hold it to copy"); }
+  };
+  const shareToMail = async () => {
+    if (!payrollFile) return;
+    const file = new File([payrollFile.bytes as BlobPart], payrollFile.fileName, { type: XLSX_MIME });
+    const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+    setPayrollError(null);
+    if (!nav.share || (nav.canShare && !nav.canShare({ files: [file] }))) { setPayrollError("this phone cannot share files"); return; }
+    try {
+      await nav.share({ files: [file], title: email.subject, text: email.body });
+      setPayrollOpen(false);
+      setMessage({ text: "Time sheet shared.", ok: true });
+    } catch (e) {
+      if ((e as DOMException)?.name !== "AbortError") setPayrollError((e as Error)?.message || (e as DOMException)?.name || "Error");
+    }
+  };
+  const saveOnly = () => {
+    if (!payrollFile) return;
+    download(withTime(payrollFile.fileName), payrollFile.bytes, XLSX_MIME);
+  };
   // Main way: save the file, then open the phone's mail app (Gmail, Outlook, ...) with the address, subject and message ready.
   const openMailApp = () => {
     if (!payrollFile) return;
@@ -244,7 +269,7 @@ export function ExportSheet({ month }: { month: string }) {
           </>
         )}
       </div>
-      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={openMailApp} onShare={shareToPayroll} ready={!!payrollFile} error={payrollError} />}
+      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={openMailApp} onShare={shareToPayroll} ios={isIos()} onShareMail={shareToMail} onCopyAddress={copyAddress} copied={copied} onSaveOnly={saveOnly} ready={!!payrollFile} error={payrollError} />}
     </BottomSheet>
   );
 }
