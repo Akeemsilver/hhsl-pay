@@ -65,13 +65,13 @@ save(im,"safari-add")
 im,d=canvas(300,(222,216,205))
 rr(d,(70,30,600,270),(220,248,198),22)
 rr(d,(94,54,576,160),(200,232,178),14)
-d.rounded_rectangle((110,70,170,142),8,fill=(255,255,255)); label(d,(140,106),"TXT",20,True,GREY,"mm")
-label(d,(190,78),"HHSL-starter-kit-rates.txt",24,True)
-label(d,(190,114),"3 kB · Document",22,fill=GREY)
+d.rounded_rectangle((110,70,170,142),8,fill=(255,255,255)); label(d,(140,106),"PDF",20,True,RED,"mm")
+label(d,(190,78),"HHSL-starter-kit-rates.pdf",24,True)
+label(d,(190,114),"1 page · 70 kB · PDF",22,fill=GREY)
 d.ellipse((508,76,564,132),outline=GREY,width=3); d.line((536,86,536,116),fill=GREY,width=4); d.polygon([(536,124),(524,110),(548,110)],fill=GREY)
 ring(d,(500,70,572,138),2)
 label(d,(94,190),"Tap the file to download it.",26,True,RED)
-label(d,(94,226),"Tap it again to open or save it.",22,fill=GREY)
+label(d,(94,226),"iPhone: tap it, then Share, then Save to Files.",22,fill=GREY)
 save(im,"whatsapp")
 
 # 7 Sheets phone: dots > Share & export > Save as > Excel
@@ -98,7 +98,7 @@ save(im,"sheets-phone")
 im,d=canvas(300)
 rr(d,(40,20,600,280),WHITE,22,outline=LINE)
 label(d,(70,44),"Recent files",26,True)
-for i,t in enumerate(["HHSL-starter-kit-rates.txt","photo_2026.jpg","statement.pdf"]):
+for i,t in enumerate(["HHSL-starter-kit-rates.pdf","photo_2026.jpg","statement.pdf"]):
     y=96+i*58
     if i==0: rr(d,(54,y-6,586,y+44),(222,243,240),10); ring(d,(54,y-6,586,y+44),2)
     d.rounded_rectangle((70,y+2,102,y+36),6,outline=GREY,width=3)
