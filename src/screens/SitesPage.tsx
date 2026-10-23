@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { valueOn, type RoleRates, type SiteRates, type SiteTable, type TierCaps } from "../engine";
-import { DEFAULT_ROLES, emptySite, isOther, payerLabel, rolesFor } from "../model";
+import { DEFAULT_ROLES, emptySite, isFixedDay, isOther, payerLabel, rolesFor } from "../model";
 import { useStore } from "../store";
 import { SITE_COLORS, siteColorIndex } from "../siteColor";
 import { PageHeader } from "../components/TopBar";
@@ -23,15 +23,21 @@ function CapsRow({ label, caps, onChange, withX3 }: { label: string; caps: TierC
   );
 }
 
-/** Yes or No: does a job at this site have a lunch check? No hides the lunch options on the day form. */
+/** A small two-way switch. */
+function Seg<T extends string>({ value, options, onChange, label }: { value: T; options: Array<[T, string]>; onChange: (v: T) => void; label: string }) {
+  return (
+    <div className="seg-sm" role="group" aria-label={label}>
+      {options.map(([v, t]) => <button key={v} type="button" aria-pressed={value === v} className={value === v ? "on" : ""} onClick={() => onChange(v)}>{t}</button>)}
+    </div>
+  );
+}
+
+/** Yes or No: does a job at this site have a lunch check? No hides the lunch options on the day form. Not shown for a fixed day rate. */
 function LunchChoice({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
     <div className="lunch-choice" role="group" aria-label="Job requires lunch check">
       <span className="lbl">Job requires lunch check</span>
-      <div className="segmented">
-        <button type="button" aria-pressed={value} className={value ? "on" : ""} onClick={() => onChange(true)}>Yes</button>
-        <button type="button" aria-pressed={!value} className={!value ? "on" : ""} onClick={() => onChange(false)}>No</button>
-      </div>
+      <Seg label="Lunch check" value={value ? "yes" : "no"} options={[["yes", "Yes"], ["no", "No"]]} onChange={(v) => onChange(v === "yes")} />
       <span className="muted small">{value ? "The day form asks if lunch was paid and takes unpaid lunch off." : "No lunch options on the day form; the whole time between start and end is paid."}</span>
     </div>
   );
@@ -42,19 +48,74 @@ function RoleFieldChoice({ value, onChange }: { value: SiteRates["roleField"]; o
   const typed = !!value;
   return (
     <div className="lunch-choice" role="group" aria-label="Role field">
-      <span className="lbl">Role field on the day form</span>
-      <div className="segmented">
-        <button type="button" aria-pressed={!typed} className={!typed ? "on" : ""} onClick={() => onChange(undefined)}>Fixed roles</button>
-        <button type="button" aria-pressed={typed} className={typed ? "on" : ""} onClick={() => onChange(value ?? { label: "Location", placeholder: "Dolphin platform" })}>Type your own</button>
-      </div>
+      <span className="lbl">Role box on the day form</span>
+      <Seg label="Role box" value={typed ? "typed" : "fixed"} options={[["fixed", "Standard roles"], ["typed", "Type in a location"]]} onChange={(v) => onChange(v === "fixed" ? undefined : (value ?? { label: "Location", placeholder: "Dolphin platform" }))} />
       {typed ? (
         <>
-          <label>Name of the box<input aria-label="Name of the role box" value={value!.label} placeholder="Location" onChange={(e) => onChange({ ...value!, label: e.target.value })} /></label>
-          <label>Faint example text<input aria-label="Example text for the role box" value={value!.placeholder ?? ""} placeholder="Dolphin platform" onChange={(e) => onChange({ ...value!, placeholder: e.target.value })} /></label>
-          <span className="muted small">On the day form there is a box named “{value!.label || "Location"}” instead of the Role list. What you type goes in the <b>Client assigned</b> column of the time sheet.</span>
+          <div className="grid2">
+            <label>Name of the box<input aria-label="Name of the role box" value={value!.label} placeholder="Location" onChange={(e) => onChange({ ...value!, label: e.target.value })} /></label>
+            <label>Faint example text<input aria-label="Example text for the role box" value={value!.placeholder ?? ""} placeholder="Dolphin platform" onChange={(e) => onChange({ ...value!, placeholder: e.target.value })} /></label>
+          </div>
+          <span className="muted small">The day form has a box named “{value!.label || "Location"}” instead of the Role list. What you type goes in the <b>Client assigned</b> column of the time sheet.</span>
         </>
       ) : (
         <span className="muted small">The day form shows the Role list (Client medic, Offshore, Paramedic and your own roles).</span>
+      )}
+    </div>
+  );
+}
+
+const sameCaps = (a: TierCaps = {}, b: TierCaps = {}) => (["x1", "x15", "x2"] as const).every((k) => (a[k] ?? 0) === (b[k] ?? 0));
+const CAPS_HEAD = <><span /><span className="cap-h">1x</span><span className="cap-h">1.5x</span><span className="cap-h">2x</span><span className="cap-h">3x</span></>;
+
+/** Keeps the "rate after the covered hours" switch-on point in step with the smallest covered-hours number. */
+function fixify(s: SiteRates): SiteRates {
+  const covered = [s.weekday.x1, s.weekend.x1, s.holiday.x1].filter((h): h is number => !!h && h > 0 && h < 1000);
+  return { ...s, showRateAboveHrs: covered.length && (s.rateAboveHrs ?? 0) > 0 ? Math.min(...covered) : undefined };
+}
+
+/**
+ * A fixed day rate: one amount pays the first N hours of the day (lunch makes no difference), then the hours after
+ * that are paid at the hourly rate times 1.5, 2 or 3, with limits you set. Weekend and holiday can be "same as weekday".
+ */
+function FixedDayEditor({ site, onChange }: { site: SiteRates; onChange: (s: SiteRates) => void }) {
+  const [weekendOwn, setWeekendOwn] = useState(!(sameCaps(site.weekend, site.weekday) && !site.dailyWeekend));
+  const [holidayOwn, setHolidayOwn] = useState(!(sameCaps(site.holiday, site.weekday) && !site.dailyHoliday));
+  const put = (next: SiteRates) => onChange(fixify(next));
+  const setWeekday = (c: TierCaps) => put({ ...site, weekday: c, ...(weekendOwn ? {} : { weekend: { ...c } }), ...(holidayOwn ? {} : { holiday: { ...c } }) });
+  return (
+    <div className="pay-block">
+      <h4>Weekday</h4>
+      <div className="grid2">
+        <label>Fixed day rate ($)<NumInput label="Fixed day rate" value={site.dailyStd} onChange={(v) => put({ ...site, dailyStd: v })} /></label>
+        <label>Team lead day rate ($, if different)<NumInput label="Team lead day rate" value={site.dailyLead !== site.dailyStd ? site.dailyLead : undefined} onChange={(v) => put({ ...site, dailyLead: v })} /></label>
+      </div>
+      <div className="caps">{CAPS_HEAD}<CapsRow label="Hours" caps={site.weekday} onChange={setWeekday} /></div>
+      <p className="muted small">Under 1x, the hours the fixed day rate covers (for example 12). Then the hours paid at 1.5x, 2x and 3x after that. Type 1000 for “no limit”.</p>
+      <label>Hourly rate for the hours after that ($/h)<NumInput label="Hourly rate after the fixed hours" value={site.rateAboveHrs} onChange={(v) => put({ ...site, rateAboveHrs: v })} /></label>
+
+      <h4>Weekend</h4>
+      <label className="check">
+        <input type="checkbox" aria-label="Weekend same as weekday" checked={!weekendOwn} onChange={(e) => { setWeekendOwn(!e.target.checked); if (e.target.checked) put({ ...site, weekend: { ...site.weekday }, dailyWeekend: undefined }); }} />
+        Same as weekday
+      </label>
+      {weekendOwn && (
+        <>
+          <label>Weekend fixed day rate ($)<NumInput label="Weekend fixed day rate" value={site.dailyWeekend} onChange={(v) => put({ ...site, dailyWeekend: v })} /></label>
+          <div className="caps">{CAPS_HEAD}<CapsRow label="Hours" caps={site.weekend} onChange={(c) => put({ ...site, weekend: c })} /></div>
+        </>
+      )}
+
+      <h4>Holiday / TAR</h4>
+      <label className="check">
+        <input type="checkbox" aria-label="Holiday same as weekday" checked={!holidayOwn} onChange={(e) => { setHolidayOwn(!e.target.checked); if (e.target.checked) put({ ...site, holiday: { ...site.weekday }, dailyHoliday: undefined }); }} />
+        Same as weekday
+      </label>
+      {holidayOwn && (
+        <>
+          <label>Holiday fixed day rate ($)<NumInput label="Holiday fixed day rate" value={site.dailyHoliday} onChange={(v) => put({ ...site, dailyHoliday: v })} /></label>
+          <div className="caps">{CAPS_HEAD}<CapsRow label="Hours" caps={site.holiday} onChange={(c) => put({ ...site, holiday: c })} withX3 /></div>
+        </>
       )}
     </div>
   );
@@ -136,6 +197,8 @@ function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename,
   const onChange = (s: SiteRates) => setSite(s);
   const [draft, setDraft] = useState(name);
   const [newRole, setNewRole] = useState("");
+  const [fixedMode, setFixedMode] = useState(isFixedDay(saved));
+  useEffect(() => setFixedMode(isFixedDay(JSON.parse(savedKey) as SiteRates)), [savedKey]);
   const set = <K extends keyof SiteRates>(k: K, v: SiteRates[K]) => onChange({ ...site, [k]: v });
   const roles = site.roles ?? {};
   const roleCount = Object.values(roles).filter((r) => r.rate || r.dailyPay || r.dailyHoliday || r.weekday || r.weekend || r.holiday).length;
@@ -143,7 +206,7 @@ function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename,
     <details className="site">
       <summary>
         {name}
-        <span className="muted"> · {payers[site.payer] ?? site.payer}{site.baseRate ? ` · $${site.baseRate}/h${site.leadRate && site.leadRate !== site.baseRate ? ` · lead $${site.leadRate}` : ""}` : ""}{roleCount ? ` · ${roleCount} role${roleCount > 1 ? "s" : ""}` : ""}</span>
+        <span className="muted"> · {payers[site.payer] ?? site.payer}{site.baseRate ? ` · $${site.baseRate}/h${site.leadRate && site.leadRate !== site.baseRate ? ` · lead $${site.leadRate}` : ""}` : ""}{isFixedDay(site) ? ` · $${site.dailyStd}/day` : ""}{roleCount ? ` · ${roleCount} role${roleCount > 1 ? "s" : ""}` : ""}</span>
       </summary>
       <label>Site name
         <input value={draft} onChange={(e) => setDraft(e.target.value)} onBlur={() => draft.trim() && draft !== name && onRename(draft.trim())} />
@@ -157,19 +220,35 @@ function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename,
           ))}
         </div>
       </div>
-      <LunchChoice value={site.lunch !== false} onChange={(v) => set("lunch", v ? undefined : false)} />
-      <RoleFieldChoice value={site.roleField} onChange={(v) => set("roleField", v)} />
       <label>Payslip
         <select value={site.payer} onChange={(e) => set("payer", e.target.value)}>
           {Object.entries(payers).map(([id, n]) => <option key={id} value={id}>{n}</option>)}
         </select>
       </label>
-      <div className="grid2">
-        <label>Standard rate ($/h)<NumInput label="Hourly rate" value={site.baseRate} onChange={(v) => set("baseRate", v)} /></label>
-        <label>Team lead rate ($/h)<NumInput label="Lead rate" value={site.leadRate} onChange={(v) => set("leadRate", v)} /></label>
+      <RoleFieldChoice value={site.roleField} onChange={(v) => set("roleField", v)} />
+      <div className="lunch-choice">
+        <span className="lbl">How the site is paid</span>
+        <Seg label="How the site is paid" value={fixedMode ? "fixed" : "hourly"} options={[["hourly", "Hourly"], ["fixed", "Fixed day rate"]]}
+          onChange={(m) => { setFixedMode(m === "fixed"); if (m === "hourly") onChange({ ...site, dailyStd: undefined, dailyLead: undefined, dailyWeekend: undefined, dailyHoliday: undefined, showRateAboveHrs: undefined, rateAboveHrs: undefined }); }} />
       </div>
+      {fixedMode ? (
+        <>
+          <FixedDayEditor key={savedKey} site={site} onChange={onChange} />
+          <p className="muted small">A fixed day rate pays the same for the day whatever the lunch, so there is no lunch check for {name}.</p>
+        </>
+      ) : (
+        <>
+          <LunchChoice value={site.lunch !== false} onChange={(v) => set("lunch", v ? undefined : false)} />
+          <div className="grid2">
+            <label>Standard rate ($/h)<NumInput label="Hourly rate" value={site.baseRate} onChange={(v) => set("baseRate", v)} /></label>
+            <label>Team lead rate ($/h)<NumInput label="Lead rate" value={site.leadRate} onChange={(v) => set("leadRate", v)} /></label>
+          </div>
+        </>
+      )}
       <p className="muted small">{name} is in {payers[site.payer] ?? site.payer}. Changing the rates here only changes {name}. When you later use “Change for all sites” on the group, you can choose to leave {name} out.</p>
 
+      {!site.roleField && (
+        <>
       <h3 className="section-title">Role rates</h3>
       <p className="muted small">You pick the role on the job, under the site. Give a role its own pay here, or leave it blank to use the site's standard rate.</p>
       {rolesFor(site).map((roleName) => {
@@ -191,7 +270,11 @@ function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename,
           onClick={() => { set("roles", { ...roles, [newRole.trim()]: {} }); setNewRole(""); }}
         >Add role</button>
       </div>
+        </>
+      )}
 
+      {!fixedMode && (
+        <>
       <h3 className="section-title">Overtime hours</h3>
       <label>Start from a template
         <select aria-label={`${name} hours template`} value={detectTemplate(site) ?? ""} onChange={(e) => e.target.value && onChange(applyTemplate(site, e.target.value))}>
@@ -207,19 +290,18 @@ function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename,
         <CapsRow label="Weekend" caps={site.weekend} onChange={(c) => set("weekend", c)} />
         <CapsRow label="Holiday" caps={site.holiday} onChange={(c) => set("holiday", c)} withX3 />
       </div>
-      <h3 className="section-title">Flat daily pay</h3>
-      <p className="muted small">Optional. If set, the day pays this amount plus any overtime.</p>
-      <div className="grid3">
-        <label>Standard<NumInput label="Standard daily pay" value={site.dailyStd} onChange={(v) => set("dailyStd", v)} /></label>
-        <label>Lead<NumInput label="Lead daily pay" value={site.dailyLead} onChange={(v) => set("dailyLead", v)} /></label>
-        <label>Holiday<NumInput label="Holiday daily pay" value={site.dailyHoliday} onChange={(v) => set("dailyHoliday", v)} /></label>
-      </div>
+        </>
+      )}
+      {!fixedMode && (site.showRateAboveHrs ?? 0) > 0 && (
+        <>
       <h3 className="section-title">Rate after a threshold</h3>
       <p className="muted small">For sites like offshore: the hourly rate applies only when hours exceed the threshold.</p>
       <div className="grid2">
         <label>Threshold (hours)<NumInput label="Show rate above hours" value={site.showRateAboveHrs} onChange={(v) => set("showRateAboveHrs", v)} /></label>
         <label>Rate above threshold<NumInput label="Rate above threshold" value={site.rateAboveHrs} onChange={(v) => set("rateAboveHrs", v)} /></label>
       </div>
+        </>
+      )}
       <button className="danger" onClick={() => confirm(`Remove ${name} and its rates?`) && onRemove()}>Remove site</button>
       {dirty && (
         <div className="save-bar" role="group" aria-label={`Save changes to ${name}`}>
@@ -320,10 +402,13 @@ function GroupRates({ payer, name, table, firstDate, impactFor, farBack, onApply
   );
 }
 
+const newFixedSite = (): SiteRates => ({ ...emptySite("main"), weekday: { x1: 12, x15: 1000 }, weekend: { x1: 12, x15: 1000 }, holiday: { x1: 12, x2: 1000 } });
+
 function AddSiteForm({ table, payers, onAdd }: {
   table: SiteTable; payers: Record<string, string>;
   onAdd: (name: string, payer: string, site: SiteRates, newGroupName?: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const groupIds = Object.keys(payers);
   const [group, setGroup] = useState(groupIds[0] ?? "main");
@@ -333,13 +418,8 @@ function AddSiteForm({ table, payers, onAdd }: {
   const [template, setTemplate] = useState<string | undefined>();
   const [lunch, setLunch] = useState(true);
   const [roleField, setRoleField] = useState<SiteRates["roleField"]>();
-  const [payMode, setPayMode] = useState<"hourly" | "fixed">("hourly");
-  const [dayRate, setDayRate] = useState<Num>();
-  const [dayHours, setDayHours] = useState<Num>(12);
-  const [afterRate, setAfterRate] = useState<Num>();
-  const [afterMult, setAfterMult] = useState<"x15" | "x2">("x15");
-  const [holidayDay, setHolidayDay] = useState<Num>();
-  const fixed = payMode === "fixed";
+  const [fixed, setFixed] = useState(false);
+  const [fx, setFx] = useState<SiteRates>(newFixedSite());
   const isNew = group === "__new";
   const mine = Object.values(table).filter((s) => s.payer === group && (s.baseRate ?? 0) > 0);
   const groupStd = commonValue(mine.map((m) => m.baseRate));
@@ -349,19 +429,24 @@ function AddSiteForm({ table, payers, onAdd }: {
   const finalStd = isNew ? std : groupStd;
   const finalLead = isNew ? (lead ?? std) : (groupLead ?? groupStd);
   const taken = Object.keys(table).some((k) => k.toLowerCase() === name.trim().toLowerCase());
-  const fixedOk = (dayRate ?? 0) > 0 && (dayHours ?? 0) > 0 && (afterRate ?? 0) > 0;
-  const ok = !!name.trim() && !taken && (fixed ? fixedOk && (!isNew || !!groupName.trim()) : (!isNew || (!!groupName.trim() && (std ?? 0) > 0)));
+  const ok = !!name.trim() && !taken && (!isNew || !!groupName.trim()) && (fixed ? (fx.dailyStd ?? 0) > 0 : !isNew || (std ?? 0) > 0);
+  const reset = () => { setOpen(false); setName(""); setGroupName(""); setStd(undefined); setLead(undefined); setTemplate(undefined); setLunch(true); setRoleField(undefined); setFixed(false); setFx(newFixedSite()); };
   const add = () => {
     const id = isNew ? slug(groupName, groupIds) : group;
-    const extra: Partial<SiteRates> = { ...(lunch ? {} : { lunch: false }), ...(roleField ? { roleField } : {}) };
-    // A fixed day rate pays the first N hours, then every extra hour is paid at the hourly rate times 1.5 or 2.
-    const n = dayHours ?? 12, after = { x1: n, [afterMult]: 1000 };
+    const extra: Partial<SiteRates> = { ...(roleField ? { roleField } : {}), ...(!fixed && !lunch ? { lunch: false } : {}) };
     const site: SiteRates = fixed
-      ? { ...emptySite(id), ...extra, dailyStd: dayRate, dailyLead: dayRate, ...(holidayDay ? { dailyHoliday: holidayDay } : {}), showRateAboveHrs: n, rateAboveHrs: afterRate, weekday: after, weekend: after, holiday: { x1: n, x2: 1000 } }
+      ? { ...fx, payer: id, ...extra }
       : applyTemplate({ ...emptySite(id), baseRate: finalStd, leadRate: finalLead, ...extra }, tpl);
     onAdd(name.trim(), id, site, isNew ? groupName.trim() : undefined);
-    setName(""); setGroupName(""); setStd(undefined); setLead(undefined); setTemplate(undefined); setLunch(true); setRoleField(undefined); setPayMode("hourly"); setDayRate(undefined); setAfterRate(undefined); setHolidayDay(undefined); setGroup(isNew ? id : group);
+    reset();
   };
+  if (!open) {
+    return (
+      <div className="add-site">
+        <button className="wide" onClick={() => setOpen(true)}>＋ Add new location</button>
+      </div>
+    );
+  }
   return (
     <div className="add-site">
       <h3 className="section-title">Add a site</h3>
@@ -372,52 +457,29 @@ function AddSiteForm({ table, payers, onAdd }: {
           <option value="__new">＋ New group…</option>
         </select>
       </label>
-      <div className="lunch-choice" role="group" aria-label="How the site is paid">
+      {isNew && <label>New group name<input aria-label="New group name" placeholder="e.g. Trinidad Offshore" value={groupName} onChange={(e) => setGroupName(e.target.value)} /></label>}
+      {isNew && <p className="muted small">A group is its own payslip: in Split mode it pays its own PAYE, NIS and health surcharge.</p>}
+      <RoleFieldChoice value={roleField} onChange={setRoleField} />
+      <div className="lunch-choice">
         <span className="lbl">How the site is paid</span>
-        <div className="segmented">
-          <button type="button" aria-pressed={!fixed} className={!fixed ? "on" : ""} onClick={() => setPayMode("hourly")}>Hourly</button>
-          <button type="button" aria-pressed={fixed} className={fixed ? "on" : ""} onClick={() => setPayMode("fixed")}>Fixed day rate</button>
-        </div>
+        <Seg label="How the site is paid" value={fixed ? "fixed" : "hourly"} options={[["hourly", "Hourly"], ["fixed", "Fixed day rate"]]} onChange={(m) => setFixed(m === "fixed")} />
       </div>
       {fixed ? (
         <>
-          {isNew && <label>New group name<input aria-label="New group name" placeholder="e.g. Trinidad Offshore" value={groupName} onChange={(e) => setGroupName(e.target.value)} /></label>}
-          <div className="grid2">
-            <label>Fixed day rate ($)<NumInput label="Fixed day rate" value={dayRate} onChange={setDayRate} /></label>
-            <label>Covers the first (hours)<NumInput label="Hours the fixed rate covers" value={dayHours} onChange={setDayHours} /></label>
-          </div>
-          <div className="grid2">
-            <label>Hourly rate after that ($/h)<NumInput label="Hourly rate after the fixed hours" value={afterRate} onChange={setAfterRate} /></label>
-            <label>Paid at
-              <select aria-label="Multiple after the fixed hours" value={afterMult} onChange={(e) => setAfterMult(e.target.value as "x15" | "x2")}>
-                <option value="x15">× 1.5 (time and a half)</option>
-                <option value="x2">× 2 (double time)</option>
-              </select>
-            </label>
-          </div>
-          <label>Holiday day rate ($, optional)<NumInput label="Holiday day rate" value={holidayDay} onChange={setHolidayDay} /></label>
-          <p className="muted small">Example: $1,000 covers the first 12 hours of the day. Every hour after the 12th is paid at the hourly rate × 1.5. On a holiday or TAR day the holiday day rate is used, and hours after the fixed hours are double time.</p>
+          <FixedDayEditor site={fx} onChange={setFx} />
+          <p className="muted small">A fixed day rate pays the same for the day whatever the lunch, so there is no lunch check.</p>
         </>
       ) : (
         <>
-      {isNew ? (
-          <>
-            <label>New group name<input aria-label="New group name" placeholder="e.g. Trinidad Offshore" value={groupName} onChange={(e) => setGroupName(e.target.value)} /></label>
-            <p className="muted small">A group is its own payslip: in Split mode it pays its own PAYE, NIS and health surcharge. Its sites share these rates.</p>
+          {isNew ? (
             <div className="grid2">
               <label>Standard rate ($/h)<NumInput label="New group standard rate" value={std} onChange={setStd} /></label>
               <label>Team lead rate ($/h)<NumInput label="New group team lead rate" value={lead ?? std} onChange={setLead} /></label>
             </div>
-          </>
-        ) : (
-          <p className="muted small">Uses the group's rates: {groupStd !== undefined ? `$${groupStd}/h standard, $${finalLead ?? groupStd}/h team lead` : "no hourly rates set yet; edit the site after adding it"}.</p>
-        )}
-        </>
-      )}
-      <RoleFieldChoice value={roleField} onChange={setRoleField} />
-      <LunchChoice value={lunch} onChange={setLunch} />
-      {!fixed && (
-        <>
+          ) : (
+            <p className="muted small">Uses the group's rates: {groupStd !== undefined ? `$${groupStd}/h standard, $${finalLead ?? groupStd}/h team lead` : "no hourly rates set yet; edit the site after adding it"}.</p>
+          )}
+          <LunchChoice value={lunch} onChange={setLunch} />
           <label>Overtime hours
             <select aria-label="Hours template for the new site" value={tpl} onChange={(e) => setTemplate(e.target.value)}>
               {HOURS_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -426,7 +488,10 @@ function AddSiteForm({ table, payers, onAdd }: {
           <p className="muted small">{templateById(tpl)?.description}</p>
         </>
       )}
-      <button className="primary wide" disabled={!ok} onClick={add}>Add site</button>
+      <div className="row">
+        <button onClick={reset}>Cancel</button>
+        <button className="primary" disabled={!ok} onClick={add}>Add site</button>
+      </div>
       {taken && <p className="bad" role="alert">There is already a site with that name.</p>}
     </div>
   );

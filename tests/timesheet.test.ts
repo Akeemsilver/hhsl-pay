@@ -251,3 +251,16 @@ describe("a fixed day rate site", () => {
     expect(day(14, true)).toBe(2000 + 2 * 60 * 2);
   });
 });
+
+import { siteHasLunch as _lunch, isFixedDay as _fixed } from "../src/model";
+describe("fixed day rate sites", () => {
+  it("never have a lunch check, and a weekend can have its own day rate", () => {
+    const site = { payer: "main", dailyStd: 500, dailyWeekend: 800, weekday: {}, weekend: {}, holiday: {} } as never;
+    expect(_fixed(site)).toBe(true);
+    expect(_lunch(site)).toBe(false);
+    expect(_lunch({ payer: "main", baseRate: 60, weekday: {}, weekend: {}, holiday: {} } as never)).toBe(true);
+    const pay = (date: string) => _cd({ id: "1", date, site: "X", hours: 12 } as never, { X: site } as never).total;
+    expect(pay("2026-10-14")).toBe(500); // Wednesday
+    expect(pay("2026-10-17")).toBe(800); // Saturday
+  });
+});

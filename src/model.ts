@@ -145,8 +145,11 @@ export function isDetailed(e: Entry): boolean {
   return e.detailed ?? !!(e.startTime || e.endTime);
 }
 
-/** Whether jobs at this site have a lunch check. Yes for every site unless it was set to No. */
-export const siteHasLunch = (site: SiteRates | undefined): boolean => site?.lunch !== false;
+/** A fixed day rate site pays the same for the day whatever the lunch, so it never has a lunch check. */
+export const isFixedDay = (site: SiteRates | undefined): boolean => (site?.dailyStd ?? 0) > 0;
+
+/** Whether jobs at this site have a lunch check. Yes unless it was set to No, and never for a fixed day rate site. */
+export const siteHasLunch = (site: SiteRates | undefined): boolean => site?.lunch !== false && !isFixedDay(site);
 
 /** Re-works the paid hours of a Detailed job from its times and lunch (0 until both times are set). Simple jobs are left alone. */
 export function withComputedHours(e: Entry, lunchApplies = true): Entry {

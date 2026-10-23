@@ -38,6 +38,8 @@ export interface SiteRates {
   dailyStd?: number;
   dailyLead?: number;
   dailyHoliday?: number;
+  /** A different fixed pay for a weekend day; blank means the weekday fixed pay. */
+  dailyWeekend?: number;
   /** Extra positions with their own pay. Overtime hours are the site's unless the role sets its own. */
   roles?: Record<string, RoleRates>;
 }
