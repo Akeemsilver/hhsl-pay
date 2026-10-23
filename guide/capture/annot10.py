@@ -18,7 +18,7 @@ def make(name, notes, out, up, down):
     im.crop((0,max(0,int(min(ys)-up)),im.width,min(im.height,int(max(ye)+down)))).save(f"shots10/{out}.png")
 make("day-panel",[("add","Tap Add job","above")],"e-daypanel",up=700,down=120)
 make("picker",[("search","Search for the site, or pick it","below")],"e-picker",up=100,down=800)
-make("loc",[("loc","Type the location","above"),("lead","Team lead","below")],"e-loc",up=200,down=240)
+make("loc",[("loc","Type the location","above"),("sw","Time sheet switch","above")],"e-loc",up=200,down=330)
 make("hours",[("tile","Hours paid come from the times","above"),("start","Start and end time","below")],"e-hours",up=220,down=250)
 make("pay",[("pay","The pay for the day","above"),("another","Add another job","below"),("save","Save","below")],"e-pay",up=250,down=170)
 make("saved",[("edit","Edit","above"),("del","Delete","above")],"e-saved",up=420,down=200)

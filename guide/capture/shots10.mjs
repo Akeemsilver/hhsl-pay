@@ -34,7 +34,7 @@ await page.locator(".entry button").first().click(); await page.waitForTimeout(5
 await snap("picker", { search: page.getByPlaceholder(/search/i) });
 await page.getByPlaceholder(/search/i).fill("Example"); await page.waitForTimeout(300);
 await page.getByRole("button", { name: /Example Platform/ }).last().click(); await page.waitForTimeout(500);
-await snap("loc", { loc: page.getByPlaceholder("e.g. Dolphin platform"), lead: page.getByLabel(/Team lead/), hol: page.getByLabel(/Holiday/) });
+await snap("loc", { loc: page.getByPlaceholder("e.g. Dolphin platform"), sw: page.locator(".ts-switch"), lead: page.getByLabel(/Team lead/), hol: page.getByLabel(/Holiday/) });
 await page.getByPlaceholder("e.g. Dolphin platform").fill("Dolphin platform");
 await page.getByRole("button", { name: /Detailed/ }).click(); await page.waitForTimeout(400);
 const setTime = async (label, t) => {

@@ -34,6 +34,6 @@ await page.goBack(); await page.goBack(); await page.goBack(); await page.waitFo
 await page.getByRole("button", { name: "Calendar", exact: true }).last().click(); await page.waitForTimeout(500);
 await page.getByRole("button", { name: /^Wed 21,/ }).click(); await page.waitForTimeout(400);
 await page.getByRole("button", { name: /Add job/ }).first().click(); await page.waitForTimeout(500);
-await snap("tick", { tick: page.getByLabel(/Put Atlantic on the time sheet/) });
+await snap("tick", { tick: page.locator(".ts-switch") });
 fs.writeFileSync(`${S}/boxes.json`, JSON.stringify(boxes));
 await b.close();
