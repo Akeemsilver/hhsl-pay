@@ -9,6 +9,7 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { newData, isCombined, userNameOf } from "../model";
 import { OtherJobsPayer, TaxSegment } from "../components/TaxMode";
 import { localDMY, todayISO } from "../format";
+import { isInstalledApp } from "../install";
 import { useStore } from "../store";
 import { useTheme, type ThemePref } from "../theme";
 import { PageHeader } from "../components/TopBar";
@@ -102,13 +103,21 @@ export function SettingsHub() {
     <>
       <PageHeader title="Settings" />
 
-      <h2 className="section-title">Install on your phone</h2>
-      <section className="card">
-        <InstallHelp />
-      </section>
+      {!isInstalledApp() && (
+        <>
+          <h2 className="section-title">Install on your phone</h2>
+          <section className="card">
+            <InstallHelp />
+          </section>
+        </>
+      )}
 
-      <h2 className="section-title">Share this app</h2>
-      <section className="card share-app">
+      {/* Folded up so it does not take the top of Settings; More... unfolds the link, starter kit and guide. */}
+      <details className="card share-app">
+        <summary>
+          <span className="sa-title"><strong>Share this app</strong><small>App link, starter kit and guide</small></span>
+          <span className="sa-more" aria-hidden="true" />
+        </summary>
         <p className="muted small">To give a colleague the app: send them the link, then send the starter kit file with your pay rates. On their first start the app asks for that file.</p>
         <label>App link
           <input readOnly aria-label="App link" value={link} onFocus={(e) => e.currentTarget.select()} />
@@ -130,7 +139,7 @@ export function SettingsHub() {
         {guideMessage && <p className="notice" role="status">{guideMessage}</p>}
         {sitesCount === 0 && <p className="muted small">Add your sites first, then the starter kit is ready to share.</p>}
         <ShareGuide link={link} />
-      </section>
+      </details>
 
       <h2 className="section-title">Your name</h2>
       <section className="card">

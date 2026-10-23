@@ -950,3 +950,12 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 .confirm .row.one { grid-template-columns: 1fr; }
 
 .site-btn { border: 1.5px solid var(--field-edge); }
+
+.share-app > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; cursor: pointer; }
+.share-app > summary::-webkit-details-marker { display: none; }
+.share-app .sa-title { display: grid; gap: 1px; }
+.share-app .sa-title small { color: var(--muted); font-size: 0.82rem; }
+.share-app .sa-more { color: var(--accent); font-weight: 600; font-size: 0.9rem; white-space: nowrap; }
+.share-app .sa-more::after { content: "More… ▾"; }
+.share-app[open] .sa-more::after { content: "Less ▴"; }
+.share-app[open] > summary { padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid var(--edge); }

@@ -19,6 +19,7 @@ await page.goto("http://localhost:4173/"); await page.getByLabel("Your full name
 await page.getByLabel("Your full name").fill("Your Name"); await page.getByRole("button", { name: "Continue" }).click(); await page.waitForTimeout(400);
 await page.locator("input[aria-label='Starter kit file']").setInputFiles("/tmp/kit-test.txt"); await page.waitForTimeout(900);
 await page.getByRole("button", { name: "Settings" }).click(); await page.waitForTimeout(600);
+await page.locator("details.share-app > summary").click(); await page.waitForTimeout(300);
 // share starter kit: ask + after
 const sh = page.getByRole("button", { name: "Share starter kit" }); await sh.scrollIntoViewIfNeeded(); await sh.tap(); await page.waitForTimeout(500);
 await snap("share-ask", { yes: page.getByRole("button", { name: "Yes, download and share" }) });
