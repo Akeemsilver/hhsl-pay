@@ -105,6 +105,7 @@ export function ExportSheet({ month }: { month: string }) {
     setPayrollFile(null);
     setPayrollSaved(false);
     setPayrollError(null);
+    setPayrollTry(0);
     setPayrollCopied(false);
     setPayrollOpen(true);
     try {
@@ -121,28 +122,39 @@ export function ExportSheet({ month }: { month: string }) {
   const copyPayrollMessage = () => { navigator.clipboard?.writeText(`${email.subject}\n\n${email.body}`).then(() => setPayrollCopied(true), () => {}); };
   const [payrollCopied, setPayrollCopied] = useState(false);
   const savePayrollCopy = () => { if (payrollFile) { download(payrollFile.fileName, payrollFile.bytes, XLSX_MIME); setPayrollSaved(true); } };
+  // Android Chrome sometimes refuses a file type ("Permission denied"). Each tap tries the next way of labelling the same file.
+  const SHARE_TYPES = [XLSX_MIME, "application/octet-stream", "application/zip"];
+  const [payrollTry, setPayrollTry] = useState(0);
   const sendToPayroll = async () => {
     if (!payrollFile) return;
     const { fileName, bytes } = payrollFile;
     setPayrollError(null);
-    const file = new File([bytes as BlobPart], fileName, { type: XLSX_MIME });
+    const type = SHARE_TYPES[payrollTry % SHARE_TYPES.length]!;
+    const file = new File([bytes as BlobPart], fileName, { type });
     const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
     if (nav.share && (!nav.canShare || nav.canShare({ files: [file] }))) {
       try {
-        // Exactly what the other downloads share (file and file name): adding the email text made Android refuse with "Permission denied".
+        // Only the file and its name: adding the email text made Android refuse the share.
         await nav.share({ files: [file], title: fileName });
-        setPayrollOpen(false); setPayrollSaved(false);
+        setPayrollOpen(false); setPayrollSaved(false); setPayrollTry(0);
         setMessage({ text: "Time sheet shared.", ok: true });
       } catch (e) {
-        // Closing the share menu is fine; any other refusal is shown so it can be fixed, and the copy button still works.
-        if ((e as DOMException)?.name !== "AbortError") setPayrollError(`${(e as DOMException)?.name ?? "Error"}${(e as Error)?.message ? `: ${(e as Error).message}` : ""}`);
+        // Closing the share menu is fine. Any other refusal is shown, and the next tap tries another file type.
+        if ((e as DOMException)?.name !== "AbortError") {
+          setPayrollError((e as Error)?.message || (e as DOMException)?.name || "Error");
+          setPayrollTry((t) => t + 1);
+        }
       }
       return;
     }
-    // No share menu on this phone: save the file, then open the mail app for the message.
-    download(fileName, bytes, XLSX_MIME);
-    setPayrollOpen(false); setPayrollSaved(false);
-    setMessage({ text: `${fileName} is in your Downloads. Attach it to the email that opens, then send.`, ok: true });
+    openMailApp();
+  };
+  // The way that always works: save the file, then open the mail app with the address, subject and message ready.
+  const openMailApp = () => {
+    if (!payrollFile) return;
+    download(payrollFile.fileName, payrollFile.bytes, XLSX_MIME);
+    setPayrollOpen(false); setPayrollSaved(false); setPayrollTry(0);
+    setMessage({ text: `${payrollFile.fileName} is in your Downloads. Attach it to the email that opens, then send.`, ok: true });
     setTimeout(() => { window.location.href = mailtoLink(email); }, 700);
   };
   const downloadSlip = () => run("slip", async () => {
@@ -236,7 +248,7 @@ export function ExportSheet({ month }: { month: string }) {
           </>
         )}
       </div>
-      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={sendToPayroll} ready={!!payrollFile} saved={payrollSaved} error={payrollError} onSave={savePayrollCopy} onCopy={copyPayrollMessage} copied={payrollCopied} />}
+      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={sendToPayroll} ready={!!payrollFile} saved={payrollSaved} error={payrollError} onSave={savePayrollCopy} onCopy={copyPayrollMessage} copied={payrollCopied} onMail={openMailApp} />}
     </BottomSheet>
   );
 }

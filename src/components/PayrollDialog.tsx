@@ -3,7 +3,7 @@ import { useLayer } from "./layers";
 import type { PayrollEmail } from "../payroll";
 
 /** Share your time sheet: shows the email that will open, then saves the time sheet and opens the mail app. */
-export function PayrollDialog({ email, fileName, onCancel, onContinue, ready = true, saved = false, error = null, onSave, onCopy, copied = false }: { email: PayrollEmail; fileName: string; onCancel: () => void; onContinue: () => void; ready?: boolean; saved?: boolean; error?: string | null; onSave?: () => void; onCopy?: () => void; copied?: boolean }) {
+export function PayrollDialog({ email, fileName, onCancel, onContinue, ready = true, saved = false, error = null, onSave, onCopy, copied = false, onMail }: { email: PayrollEmail; fileName: string; onCancel: () => void; onContinue: () => void; ready?: boolean; saved?: boolean; error?: string | null; onSave?: () => void; onCopy?: () => void; copied?: boolean; onMail?: () => void }) {
   useLayer(onCancel);
   return createPortal(
     <div className="confirm-backdrop" onClick={onCancel}>
@@ -17,7 +17,8 @@ export function PayrollDialog({ email, fileName, onCancel, onContinue, ready = t
           <pre>{email.body}</pre>
         </div>
         <p className="muted small">This is your official submission. Payroll checks the hours; the pay shown in the app is only an estimate.</p>
-        {error && <p className="notice" role="alert">The share menu did not open ({error}). Save a copy and send it from your Downloads.</p>}
+        {error && <p className="notice" role="alert">Share did not open ({error}). Tap Share again to try another way, or use the email app.</p>}
+        {onMail && <button className="link" onClick={onMail}>Open the email app instead</button>}
         {onCopy && <button className="link" onClick={onCopy}>{copied ? "Message copied" : "Copy the message"}</button>}
         {onSave && <button className="link" onClick={onSave}>{saved ? "Saved to your Downloads" : "Save a copy to Downloads"}</button>}
         <div className="row">
