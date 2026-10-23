@@ -8,6 +8,7 @@ import { holidayMap } from "../holidays";
 import { useStore } from "../store";
 import { BottomSheet } from "../components/BottomSheet";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { MessageDialog } from "../components/MessageDialog";
 import { HoursField } from "../components/HoursField";
 import { TimeField, quickTimes } from "../components/TimeField";
 import { ChevronDown, ChevronUp } from "../components/Icons";
@@ -31,6 +32,8 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
   // Tapping a day first shows what is on it (Edit or Delete each job, or add one). Edit and Add open the form.
   const [mode, setMode] = useState<"overview" | "edit">(add || focus ? "edit" : "overview");
   const [deleting, setDeleting] = useState<Entry | null>(null);
+  // Saving is stopped while a job on the time sheet has no start or end time.
+  const [needTimes, setNeedTimes] = useState<Entry[] | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   // The "Include on the time sheet" tick changes the site's time sheet rule, so it is held here until Save too.
   const originalRules = useRef<TimesheetRule[]>(data.timesheet?.rules ?? []);
@@ -67,6 +70,11 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
   const leave = () => { setGuard(null); onClose(); };
   const requestClose = () => (dirty ? setConfirming(true) : leave());
   const save = () => {
+    // A job on the time sheet must have its start and end time (the hours come from them). Other jobs are exempt, and so are
+    // jobs that were already saved and not touched now.
+    const needs = draft.filter((e) => !isOther(e) && onSheet(e) && (!e.startTime || !e.endTime)
+      && JSON.stringify(original.current.find((o) => o.id === e.id)) !== JSON.stringify(e));
+    if (needs.length > 0) { setNeedTimes(needs); return; }
     update((d) => ({
       ...d,
       entries: [...d.entries.filter((e) => e.date !== date), ...draft],
@@ -389,6 +397,15 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
           </>
         )}
       </BottomSheet>
+
+      {needTimes && (
+        <MessageDialog
+          title="Add the hours first"
+          message={`${needTimes.map((e) => e.site + (e.role ? ` (${e.role})` : "")).join(", ")} ${needTimes.length === 1 ? "goes" : "go"} on the time sheet, so ${needTimes.length === 1 ? "it needs" : "they need"} a start and end time. The hours come from them. Set both times, then save.`}
+          okLabel="Set the times"
+          onClose={() => { const id = needTimes[0]!.id; setNeedTimes(null); requestAnimationFrame(() => document.querySelector(`[data-entry-id="${id}"]`)?.scrollIntoView({ block: "start" })); }}
+        />
+      )}
 
       {deleting && (
         <ConfirmDialog
