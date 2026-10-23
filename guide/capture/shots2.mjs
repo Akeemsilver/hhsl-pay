@@ -28,7 +28,7 @@ await page.locator("input[aria-label='App link']").evaluate((el) => { el.value =
 await page.getByRole("button", { name: "Share guide (PDF)" }).scrollIntoViewIfNeeded(); await page.waitForTimeout(300);
 await snap("settings-share", { link: page.getByRole("button", { name: "Share link" }), kit: sh, guide: page.getByRole("button", { name: "Share guide (PDF)" }) });
 await bk.scrollIntoViewIfNeeded(); await bk.click(); await page.waitForTimeout(500);
-const ch = page.getByRole("button", { name: /Choose yearly spreadsheet/ }); await ch.scrollIntoViewIfNeeded(); await page.waitForTimeout(300);
+const ch = page.getByRole("button", { name: /Choose yearly \/ monthly spreadsheet/ }); await ch.scrollIntoViewIfNeeded(); await page.waitForTimeout(300);
 await snap("backup-import", { choose: ch });
 await page.goBack(); await page.goBack(); await page.waitForTimeout(400);
 await page.getByRole("button", { name: "Month", exact: true }).last().click(); await page.waitForTimeout(500);

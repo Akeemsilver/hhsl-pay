@@ -73,7 +73,7 @@ export function WelcomeScreen() {
         onChange={(e) => { const f = e.target.files?.[0]; if (f) void pick(f); e.target.value = ""; }} />
       <button className="primary wide" disabled={busy} onClick={() => input.current?.click()}>{busy ? "Reading…" : "Choose starter kit file…"}</button>
       {message && <p className="notice warn" role="alert">{message}</p>}
-      <button className="link" onClick={() => open({ page: "backup" })}>I have a yearly spreadsheet instead</button>
+      <button className="link" onClick={() => open({ page: "backup" })}>I have a yearly / monthly spreadsheet instead</button>
       <button className="link" onClick={() => update((d) => ({ ...d, setupSkipped: true }))}>Skip for now, I will add sites myself</button>
       {installGuide}
     </div>

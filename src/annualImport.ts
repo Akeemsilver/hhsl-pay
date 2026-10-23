@@ -1,6 +1,6 @@
 import type { SiteRates } from "./engine";
 import { newId, type AppData, type Entry } from "./model";
-import { guessAssignment, ImportError, type Assignment } from "./timesheetImport";
+import { guessAssignment, ImportError, type Assignment } from "./siteMatch";
 
 /** One day from the yearly salary spreadsheet's month calendar. */
 export interface AnnualDay {
@@ -63,9 +63,43 @@ function readGrid(sheetXml: string, shared: string[]): Map<string, string> {
 }
 
 const serialToISO = (serial: number): string => new Date(Date.UTC(1899, 11, 30) + Math.round(serial) * 86_400_000).toISOString().slice(0, 10);
-const num = (v: string | undefined) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+/** A number from a cell; money shown as text (" $ 1,035.00 ") is understood too. */
+const num = (v: string | undefined) => { const n = Number(v?.replace(/[$,\s]/g, "")); return Number.isFinite(n) ? n : 0; };
 
-/** Reads the month tabs of the yearly spreadsheet (January … December) and returns every day with a client. */
+
+/** The monthly spreadsheet has one calendar tab instead of twelve: its month name and year sit in the header, and its dates are written as text ("September, 3"). */
+function monthlyHeader(grid: Map<string, string>): { month: number; year: number } | null {
+  for (let r = 1; r <= 4; r++) {
+    for (let c = 1; c <= 40; c++) {
+      const idx = MONTHS.findIndex((m) => m.toLowerCase() === (grid.get(`${r},${c}`) ?? "").trim().toLowerCase());
+      if (idx < 0) continue;
+      for (let dr = 1; dr <= 2; dr++) {
+        const y = Math.round(num(grid.get(`${r + dr},${c}`)));
+        if (y > 2000 && y < 2200) return { month: idx + 1, year: y };
+      }
+    }
+  }
+  return null;
+}
+
+/** A calendar date cell as an ISO date: a spreadsheet date number, or text like "September, 3" (the year is the sheet's). */
+function dateOfCell(raw: string | undefined, year: number): string | null {
+  if (!raw) return null;
+  const serial = Number(raw);
+  if (Number.isFinite(serial)) return serial >= 30000 ? serialToISO(serial) : null;
+  const m = /^([A-Za-z]+)\.?,?\s+(\d{1,2})$/.exec(raw.trim());
+  const idx = m ? MONTHS.findIndex((x) => x.toLowerCase() === m[1]!.toLowerCase()) : -1;
+  if (!m || idx < 0 || !year) return null;
+  return `${year}-${String(idx + 1).padStart(2, "0")}-${String(Number(m[2])).padStart(2, "0")}`;
+}
+
+/** The row of the first week's dates: 7 in the yearly spreadsheet, 6 in the monthly one. */
+function firstWeekRow(grid: Map<string, string>, year: number): number {
+  for (let r = 4; r <= 9; r++) if (dateOfCell(grid.get(`${r},${FIRST_COL}`), year)) return r;
+  return FIRST_WEEK_ROW;
+}
+
+/** Reads the month tabs of the yearly spreadsheet (or the one calendar tab of a monthly spreadsheet) (January … December) and returns every day with a client. */
 export async function parseAnnual(bytes: ArrayBuffer | Uint8Array): Promise<AnnualSheet> {
   const { default: JSZip } = await import("jszip");
   let zip;
@@ -83,32 +117,49 @@ export async function parseAnnual(bytes: ArrayBuffer | Uint8Array): Promise<Annu
     rid: /\br:id="([^"]*)"/.exec(m[0])?.[1] ?? "",
   }));
   const monthSheets = MONTHS.map((m, i) => ({ month: i + 1, sheet: sheets.find((s) => s.name.trim().toLowerCase() === m.toLowerCase()) })).filter((x) => x.sheet);
-  if (monthSheets.length === 0) throw new ImportError("Could not find the January to December tabs. This importer reads the yearly salary spreadsheet.");
 
   const sharedXml = (await zip.file("xl/sharedStrings.xml")?.async("string")) ?? "";
   const shared = [...sharedXml.matchAll(/<si>([\s\S]*?)<\/si>/g)].map((m) => decode([...m[1]!.matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map((x) => x[1]).join("")));
+  const gridOf = async (sheet: { rid: string }) => {
+    const path = (target.get(sheet.rid) ?? "").replace(/^\/?(xl\/)?/, "xl/");
+    const xml = await zip.file(path)?.async("string");
+    return xml ? readGrid(xml, shared) : null;
+  };
+
+  // Each calendar to read: a tab per month (yearly spreadsheet), or the single calendar tab of a monthly spreadsheet.
+  const calendars: Array<{ month: number; grid: Map<string, string>; year?: number }> = [];
+  for (const { month, sheet } of monthSheets) {
+    const grid = await gridOf(sheet!);
+    // A monthly spreadsheet whose one tab happens to be named after the month still has its year in the header.
+    if (grid) calendars.push({ month, grid, year: monthlyHeader(grid)?.year });
+  }
+  if (calendars.length === 0) {
+    for (const sheet of sheets) {
+      if (["settings", "data"].includes(sheet.name.trim().toLowerCase())) continue;
+      const grid = await gridOf(sheet);
+      const head = grid && monthlyHeader(grid);
+      if (grid && head) { calendars.push({ month: head.month, grid, year: head.year }); break; }
+    }
+  }
+  if (calendars.length === 0) throw new ImportError("Could not find the January to December tabs, or a monthly calendar. This importer reads the yearly or the monthly salary spreadsheet.");
 
   const days: AnnualDay[] = [];
   let year = 0, name = "";
-  for (const { month, sheet } of monthSheets) {
-    const path = (target.get(sheet!.rid) ?? "").replace(/^\/?(xl\/)?/, "xl/");
-    const xml = await zip.file(path)?.async("string");
-    if (!xml) continue;
-    const grid = readGrid(xml, shared);
-    const sheetYear = Math.round(num(grid.get("4,9")));
+  for (const { month, grid, year: tabYear } of calendars) {
+    const sheetYear = Math.round(num(grid.get("4,9"))) > 2000 ? Math.round(num(grid.get("4,9"))) : tabYear ?? 0;
     if (sheetYear > 2000 && !year) year = sheetYear;
     if (!name) name = /Created by\s+(.+)$/i.exec(grid.get("1,2") ?? "")?.[1]?.trim() ?? "";
+    const firstRow = firstWeekRow(grid, sheetYear);
     for (let w = 0; w < WEEKS; w++) {
-      const dateRow = FIRST_WEEK_ROW + w * WEEK_ROWS;
+      const dateRow = firstRow + w * WEEK_ROWS;
       for (let d = 0; d < 7; d++) {
         const col = FIRST_COL + d * DAY_COLS;
-        const serial = Number(grid.get(`${dateRow},${col}`));
-        if (!Number.isFinite(serial) || serial < 30000) continue;
-        const date = serialToISO(serial);
+        const date = dateOfCell(grid.get(`${dateRow},${col}`), sheetYear);
+        if (!date) continue;
         // The calendar also shows a few days of the neighbouring months; only this tab's month counts.
         if (Number(date.slice(5, 7)) !== month || (sheetYear > 2000 && Number(date.slice(0, 4)) !== sheetYear)) continue;
         const client = (grid.get(`${dateRow + 2},${col}`) ?? "").trim();
-        if (!client || client.toLowerCase() === "all sites") continue;
+        if (!client || client.toLowerCase() === "all sites" || client === "----") continue;
         const hours = num(grid.get(`${dateRow + 2},${col + 2}`));
         const total = num(grid.get(`${dateRow + 2},${col + 3}`));
         if (!(hours > 0) && !(total > 0)) continue;
@@ -122,7 +173,7 @@ export async function parseAnnual(bytes: ArrayBuffer | Uint8Array): Promise<Annu
     }
   }
   const sites = await readSites(zip, sheets, target, shared);
-  if (days.length === 0 && !year) throw new ImportError("No days were found. This importer reads the yearly salary spreadsheet's month tabs.");
+  if (days.length === 0 && !year) throw new ImportError("No days were found. This importer reads the yearly salary spreadsheet's month tabs, or the monthly salary spreadsheet.");
   if (!year) year = Number(days[0]?.date.slice(0, 4)) || new Date().getFullYear();
   return { year, name, days, sites };
 }
@@ -195,14 +246,70 @@ export const annualToEntry = (d: AnnualDay, a: Assignment): Entry => {
   return e;
 };
 
-export interface AnnualResult { data: AppData; added: number; skipped: number; removed: number; months: string[] }
+export type ImportMode = "update" | "add" | "replace";
 
-/** "replace" clears the jobs of every month the file has days for, then adds them; "add" keeps what is there and skips same-site days already logged. */
-export function applyAnnual(data: AppData, sheet: AnnualSheet, assign: Record<string, Assignment | undefined>, mode: "add" | "replace"): AnnualResult {
+export interface DayChange {
+  date: string;
+  site: string;
+  kind: "new" | "same" | "changed";
+  /** What differs for a changed day, e.g. "10 h to 11.5 h, holiday on". */
+  detail: string;
+}
+
+export interface ImportPlan {
+  rows: DayChange[];
+  counts: { new: number; same: number; changed: number; onlyInApp: number };
+  /** Days in the app, in the file's months, that the file does not have (they stay, except when replacing). */
+  onlyInApp: Entry[];
+  /** How many logged jobs "Replace these months" would remove first. */
+  removeCount: number;
+  months: string[];
+}
+
+const hoursText = (h: number) => `${Math.round(h * 100) / 100} h`;
+
+function differences(e: Entry, d: AnnualDay): { patch: Partial<Entry>; detail: string[] } {
+  const patch: Partial<Entry> = {};
+  const detail: string[] = [];
+  // A day with start and end times gets its hours from them, so the file's hours do not override it. A flat-pay day has no hours in the file.
+  if (!(e.startTime && e.endTime) && d.hours > 0 && Math.abs((e.hours ?? 0) - d.hours) > 0.001) { patch.hours = d.hours; detail.push(`${hoursText(e.hours ?? 0)} to ${hoursText(d.hours)}`); }
+  if (!!e.lead !== d.lead) { patch.lead = d.lead || undefined; detail.push(d.lead ? "lead on" : "lead off"); }
+  if (!!e.holiday !== d.holiday) { patch.holiday = d.holiday || undefined; detail.push(d.holiday ? "holiday on" : "holiday off"); }
+  return { patch, detail };
+}
+
+/** What importing the file would do to each day, without changing anything: new, the same, or changed (and which of your days it does not mention). */
+export function planAnnual(data: AppData, sheet: AnnualSheet, assign: Record<string, Assignment | undefined>): ImportPlan {
+  const usable = sheet.days.filter((d) => assign[d.client]?.site);
+  const months = [...new Set(usable.map((d) => d.date.slice(0, 7)))].sort();
+  const mine = data.entries.filter((e) => e.kind !== "other");
+  const rows: DayChange[] = usable.map((d) => {
+    const site = assign[d.client]!.site;
+    const have = mine.find((e) => e.date === d.date && e.site === site);
+    if (!have) return { date: d.date, site, kind: "new", detail: "" };
+    const diff = differences(have, d).detail;
+    return diff.length ? { date: d.date, site, kind: "changed", detail: diff.join(", ") } : { date: d.date, site, kind: "same", detail: "" };
+  });
+  const inFile = new Set(usable.map((d) => `${d.date}|${assign[d.client]!.site}`));
+  const inMonths = mine.filter((e) => months.includes(e.date.slice(0, 7)));
+  const onlyInApp = inMonths.filter((e) => !inFile.has(`${e.date}|${e.site}`));
+  const count = (k: DayChange["kind"]) => rows.filter((r) => r.kind === k).length;
+  return { rows, counts: { new: count("new"), same: count("same"), changed: count("changed"), onlyInApp: onlyInApp.length }, onlyInApp, removeCount: inMonths.length, months };
+}
+
+export interface AnnualResult { data: AppData; added: number; updated: number; skipped: number; removed: number; months: string[] }
+
+/**
+ * "update" adds new days and brings changed days (same site and date) in line with the file; days only in the app stay.
+ * "add" adds new days and leaves every logged day as it is.
+ * "replace" clears the jobs of every month the file has days for, then adds them.
+ */
+export function applyAnnual(data: AppData, sheet: AnnualSheet, assign: Record<string, Assignment | undefined>, mode: ImportMode): AnnualResult {
   const usable = sheet.days.filter((d) => assign[d.client]?.site);
   const months = [...new Set(usable.map((d) => d.date.slice(0, 7)))].sort();
   let entries = data.entries;
   let removed = 0;
+  let updated = 0;
   if (mode === "replace") {
     const kept = entries.filter((e) => e.kind === "other" || !months.includes(e.date.slice(0, 7)));
     removed = entries.length - kept.length;
@@ -212,10 +319,18 @@ export function applyAnnual(data: AppData, sheet: AnnualSheet, assign: Record<st
   let skipped = sheet.days.length - usable.length;
   for (const d of usable) {
     const a = assign[d.client]!;
-    if (mode === "add" && entries.some((e) => e.kind !== "other" && e.date === d.date && e.site === a.site)) { skipped++; continue; }
+    const at = mode === "replace" ? -1 : entries.findIndex((e) => e.kind !== "other" && e.date === d.date && e.site === a.site);
+    if (at >= 0) {
+      if (mode === "update") {
+        const { patch } = differences(entries[at]!, d);
+        if (Object.keys(patch).length) { entries = entries.map((e, i) => (i === at ? { ...e, ...patch } : e)); updated++; continue; }
+      }
+      skipped++;
+      continue;
+    }
     fresh.push(annualToEntry(d, a));
   }
   const next: AppData = { ...data, entries: [...entries, ...fresh].sort((x, y) => x.date.localeCompare(y.date)) };
   if (!next.userName && !next.timesheet?.name && sheet.name) next.userName = sheet.name;
-  return { data: next, added: fresh.length, skipped, removed, months };
+  return { data: next, added: fresh.length, updated, skipped, removed, months };
 }

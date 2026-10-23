@@ -15,9 +15,10 @@ import { makeTimesheetXlsx, XLSX_MIME } from "../timesheetExport";
 import { TemplateError, extractLogo, timesheetFileName } from "../timesheetFile";
 import { BottomSheet } from "./BottomSheet";
 import { PayrollDialog } from "./PayrollDialog";
+import { isIos } from "../install";
 import { MailIcon } from "./Icons";
 import { download, withTime } from "../backup";
-import { mailtoLink, payrollEmail } from "../payroll";
+import { gmailLink, mailtoLink, outlookLink, payrollEmail } from "../payroll";
 
 
 function SlipPreview({ slip }: { slip: Payslip }) {
@@ -105,6 +106,8 @@ export function ExportSheet({ month }: { month: string }) {
     setPayrollFile(null);
     setPayrollError(null);
     setPayrollTry(0);
+    setSavedToFiles(false);
+    setSavedName(null);
     setPayrollOpen(true);
     try {
       const made = await makeTimesheetXlsx(template!.bytes, settings, month, data.entries, data.history);
@@ -143,15 +146,52 @@ export function ExportSheet({ month }: { month: string }) {
     }
     setPayrollError("this phone cannot share files");
   };
-  // Main way: save the file, then open the phone's mail app (Gmail, Outlook, ...) with the address, subject and message ready.
-  const openMailApp = () => {
+  // iPhone: a downloaded file opens in a viewer that hides the mail app, so there are two steps: the file goes to the share menu
+  // (Save to Files), then the chosen email app opens with the address, subject and message filled in, and the file is attached from Files.
+  const [savedToFiles, setSavedToFiles] = useState(false);
+  // Android: the name the file was saved under in Downloads (saved once per Send to payroll, so the name never clashes).
+  const [savedName, setSavedName] = useState<string | null>(null);
+  const shareFileNow = async (withText: boolean): Promise<boolean> => {
+    if (!payrollFile) return false;
+    const file = new File([payrollFile.bytes as BlobPart], payrollFile.fileName, { type: XLSX_MIME });
+    const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+    setPayrollError(null);
+    if (!nav.share || (nav.canShare && !nav.canShare({ files: [file] }))) { setPayrollError("this phone cannot share files"); return false; }
+    try {
+      await nav.share(withText ? { files: [file], title: email.subject, text: email.body } : { files: [file], title: payrollFile.fileName });
+      return true;
+    } catch (e) {
+      if ((e as DOMException)?.name !== "AbortError") setPayrollError((e as Error)?.message || (e as DOMException)?.name || "Error");
+      return false;
+    }
+  };
+  // Step 1. iPhone: the share menu (Save to Files). Android: saved straight to Downloads, with the time added to the name.
+  const saveTimesheet = async () => {
     if (!payrollFile) return;
-    // A new name each time (the time is added): when the same name is already in Downloads, Chrome asks "Download file again?" and that question ends up hidden behind the mail app.
-    const fileName = withTime(payrollFile.fileName);
-    download(fileName, payrollFile.bytes, XLSX_MIME);
+    if (isIos()) { if (await shareFileNow(false)) setSavedToFiles(true); return; }
+    if (savedName) return;
+    const name = withTime(payrollFile.fileName);
+    download(name, payrollFile.bytes, XLSX_MIME);
+    setSavedName(name);
+  };
+  // Step 2: open the email app with the address, subject and message filled in; the file is attached from Files / Downloads.
+  const openEmailApp = (app: "mail" | "gmail" | "outlook") => {
+    if (isIos()) { window.location.href = app === "gmail" ? gmailLink(email) : app === "outlook" ? outlookLink(email) : mailtoLink(email); return; }
+    if (!payrollFile) return;
+    let name = savedName;
+    if (!name) { name = withTime(payrollFile.fileName); download(name, payrollFile.bytes, XLSX_MIME); setSavedName(name); }
+    const wait = savedName ? 0 : 700;
     setPayrollOpen(false); setPayrollTry(0);
-    setMessage({ text: `${fileName} is in your Downloads. Attach it to the email that opens, then send.`, ok: true });
-    setTimeout(() => { window.location.href = mailtoLink(email); }, 700);
+    setMessage({ text: `${name} is in your Downloads. Attach it to the email that opens, then send.`, ok: true });
+    window.setTimeout(() => { window.location.href = mailtoLink(email); }, wait);
+  };
+  // Other way: the file goes straight into an email app through the share menu, attached; the address is copied for pasting.
+  const shareToMail = async () => {
+    try { await navigator.clipboard.writeText(email.to); } catch { /* the address is shown on screen */ }
+    if (await shareFileNow(true)) {
+      setPayrollOpen(false);
+      setMessage({ text: `Time sheet shared. The address ${email.to} is copied: paste it in the To box.`, ok: true });
+    }
   };
   const downloadSlip = () => run("slip", async () => {
     const bytes = await payslipPdf(slips);
@@ -244,7 +284,7 @@ export function ExportSheet({ month }: { month: string }) {
           </>
         )}
       </div>
-      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onContinue={openMailApp} onShare={shareToPayroll} ready={!!payrollFile} error={payrollError} />}
+      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onShare={shareToPayroll} ios={isIos()} onSave={saveTimesheet} saved={isIos() ? savedToFiles : savedName !== null} savedName={savedName} onOpenEmail={openEmailApp} onShareMail={shareToMail} ready={!!payrollFile} error={payrollError} />}
     </BottomSheet>
   );
 }
