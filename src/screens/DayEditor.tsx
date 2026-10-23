@@ -185,8 +185,8 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                   <label className="check ts-check">
                     <input type="checkbox" checked={own || viaRole} disabled={viaRole} onChange={(e) => toggleSheet(entry.site, e.target.checked)} />
                     <span>
-                      Include {entry.site} on the time sheet
-                      <small className="muted">{viaRole ? "Included by a role rule. Change it in Settings, Timesheet." : "Every day at this site, not just this day. Remembered from now on."}</small>
+                      Put {entry.site} on the time sheet
+                      <small className="muted">{viaRole ? "On it by a role rule (Settings, Timesheet)." : "All days at this site, not just this one."}</small>
                     </span>
                   </label>
                 );
