@@ -192,42 +192,47 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
           return (
             <div className="entry" key={entry.id} data-entry-id={entry.id}>
               <SitePicker value={entry.site} names={siteNames} onPick={(n) => changeSite(entry, n)} />
-              {findSite(sites, entry.site)?.roleField ? (
-                <label>
-                  {findSite(sites, entry.site)!.roleField!.label}
-                  <input aria-label={findSite(sites, entry.site)!.roleField!.label}
-                    value={entry.role ?? ""} placeholder={`e.g. ${findSite(sites, entry.site)!.roleField!.placeholder ?? ""}`.trim()}
-                    onChange={(e) => patch(entry.id, { role: e.target.value || undefined })}
-                  />
-                </label>
-              ) : (() => {
+              {(() => {
+                const typedField = findSite(sites, entry.site)?.roleField;
                 const roleNames = rolesFor(findSite(sites, entry.site));
                 const orphan = entry.role && !roleNames.some((r) => r.toLowerCase() === entry.role!.toLowerCase());
-                return (
-                  <label className="field-short">
-                    Role
-                    <select value={entry.role ?? ""} onChange={(e) => patch(entry.id, { role: e.target.value || undefined })}>
-                      <option value="">Not applicable</option>
-                      {roleNames.map((r) => <option key={r} value={r}>{r}</option>)}
-                      {orphan && <option value={entry.role}>{entry.role} (not in rates)</option>}
-                    </select>
-                  </label>
-                );
-              })()}
-              {entry.site && (() => {
-                const typedSite = !!findSite(sites, entry.site)?.roleField;
-                const role = !typedSite && entry.role?.trim() ? entry.role.trim() : undefined;
+                const role = !typedField && entry.role?.trim() ? entry.role.trim() : undefined;
                 const siteRule = siteRuleOf(entry.site);
                 const own = role ? !!roleRuleOf(entry.site, role) : !!siteRule;
                 const viaOther = !own && forced;
+                // The time sheet switch is a setting for every day at the site, so it sits beside the role box, away from this day's ticks.
                 return (
-                  <label className="check ts-check">
-                    <input type="checkbox" checked={own || viaOther} disabled={viaOther} onChange={(e) => toggleSheet(entry.site, role, e.target.checked)} />
-                    <span>
-                      {role ? `Put ${entry.site} ${role} on the time sheet` : `Put ${entry.site} on the time sheet`}
-                      <small className="muted">{viaOther ? (siteRule ? "The whole site is on it (Settings, Timesheet)." : "On it by a role rule (Settings, Timesheet).") : role ? `All ${role} days at this site, not just this one.` : "All days at this site, not just this one."}</small>
-                    </span>
-                  </label>
+                  <>
+                    <div className="role-row">
+                      {typedField ? (
+                        <label>
+                          {typedField.label}
+                          <input aria-label={typedField.label}
+                            value={entry.role ?? ""} placeholder={`e.g. ${typedField.placeholder ?? ""}`.trim()}
+                            onChange={(e) => patch(entry.id, { role: e.target.value || undefined })}
+                          />
+                        </label>
+                      ) : (
+                        <label>
+                          Role
+                          <select value={entry.role ?? ""} onChange={(e) => patch(entry.id, { role: e.target.value || undefined })}>
+                            <option value="">Not applicable</option>
+                            {roleNames.map((r) => <option key={r} value={r}>{r}</option>)}
+                            {orphan && <option value={entry.role}>{entry.role} (not in rates)</option>}
+                          </select>
+                        </label>
+                      )}
+                      {entry.site && (
+                        <label className="ts-switch">
+                          <input type="checkbox" role="switch" aria-label={role ? `Put ${entry.site} ${role} on the time sheet` : `Put ${entry.site} on the time sheet`}
+                            checked={own || viaOther} disabled={viaOther} onChange={(e) => toggleSheet(entry.site, role, e.target.checked)} />
+                          <i aria-hidden="true" />
+                          <span>On time sheet</span>
+                        </label>
+                      )}
+                    </div>
+                    {entry.site && <p className="muted small ts-hint">{viaOther ? (siteRule ? "The whole site is on the time sheet (Settings, Timesheet)." : "On it by a role rule (Settings, Timesheet).") : role ? `Time sheet: all ${entry.site} ${role} days, not just this one.` : `Time sheet: all days at ${entry.site}, not just this one.`}</p>}
+                  </>
                 );
               })()}
               <div className="checks">
