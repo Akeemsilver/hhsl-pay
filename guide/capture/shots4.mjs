@@ -20,15 +20,18 @@ await page.getByRole("button", { name: "Settings" }).click(); await page.waitFor
 const sl = page.getByRole("button", { name: /Site locations/ }); await sl.scrollIntoViewIfNeeded(); await page.waitForTimeout(300);
 await snap("hub", { sites: sl, tax: page.getByRole("button", { name: /NIS & tax/ }), hol: page.getByRole("button", { name: /Public holidays/ }) });
 await sl.click(); await page.waitForTimeout(500);
-// add a site (made-up example)
-const form = page.locator(".add-site"); await form.scrollIntoViewIfNeeded();
+// add a site (made-up example) on the Add new location page
+await page.getByRole("button", { name: /Add new location/ }).scrollIntoViewIfNeeded();
+await page.getByRole("button", { name: /Add new location/ }).click(); await page.waitForTimeout(500);
 await page.getByLabel("Group for the new site").selectOption("__new"); await page.waitForTimeout(200);
 await page.getByLabel("New site name").fill("Example Site");
 await page.getByLabel("New group name").fill("Example group");
 await page.getByLabel("New group standard rate").fill("50"); await page.waitForTimeout(200);
-await form.scrollIntoViewIfNeeded(); await page.evaluate(() => window.scrollBy(0, -60)); await page.waitForTimeout(200);
-await snap("add-site", { name: page.getByLabel("New site name"), group: page.getByLabel("Group for the new site"), rate: page.getByLabel("New group standard rate"), add: page.getByRole("button", { name: "Add site" }) });
-await page.getByRole("button", { name: "Add site" }).click(); await page.waitForTimeout(500);
+await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(300);
+await snap("add-site", { name: page.getByLabel("New site name"), group: page.getByLabel("Group for the new site"), rate: page.getByLabel("New group standard rate") });
+const addBtn = page.getByRole("button", { name: "Add site" }); await addBtn.scrollIntoViewIfNeeded(); await page.waitForTimeout(300);
+await snap("add-btn", { add: addBtn });
+await addBtn.click(); await page.waitForTimeout(600);
 // open it and change the rate
 await page.locator("summary", { hasText: /^Example Site/ }).first().click(); await page.waitForTimeout(300);
 const site = page.locator("details.site[open]");

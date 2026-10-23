@@ -151,6 +151,7 @@ s.append(Paragraph('<a name="p4"/>Part 4. Use it day to day', h1))
 s.append(steps([
  ("<b>Log a day:</b> tap <b>Calendar</b> at the bottom, then tap the date.", A("a-calendar"), 50),
  ("Tap <b>Add job</b>. Pick the site, then type the start and end time, or switch to <b>Simple</b> and type the hours.", A("a-day"), 50),
+ ("<b>Time sheet shortcut:</b> under the site there is a tick, <b>Put [site] on the time sheet</b>. It applies to every day at that site, not just that day, and it is remembered from now on. A job on the time sheet always uses start and end time, so the hours come from the times.", A("d-tick"), 50),
  ("Tap a time to set it. Turn the three wheels (AM/PM, hour, minute) or type the time, then tap <b>Set</b>.", Bs("b-time"), 50),
  ("<b>Home</b> shows the month so far: gross, net, PAYE, days and paid hours, with each site underneath. Swipe the calendar left or right to change month. <b>Year</b> and <b>Charts</b> show the whole year.", None),
  ("<b>Time sheet:</b> tap the download icon at the top of any screen, choose <b>Send to payroll</b>, then <b>Download and share</b>, and pick Gmail or WhatsApp.", Bs("b-download"), 50),
@@ -161,26 +162,32 @@ s.append(callout("Back up now and then", ["Your days live only on your phone. If
 s.append(Paragraph('<a name="p5"/>Part 5. How to: sites, rates and settings', h1))
 s.append(Paragraph("Everything below is in <b>Settings</b> (the gear at the top right of any screen). The list under <b>Your work</b> has: <b>Site locations &amp; rates</b>, <b>NIS &amp; tax</b>, <b>Payslips</b>, <b>Timesheet</b>, <b>Public holidays</b> and <b>Backup &amp; restore</b>.", ParagraphStyle("kw5", parent=body, keepWithNext=1)))
 s.append(steps([("Tap <b>Site locations &amp; rates</b> to add sites and change pay rates. The others are explained at the end of this part.", A("c-hub"), 50)]))
-s.append(Paragraph("A. Add a new site", h2))
+s.append(Paragraph("A. Add a new location", h2))
 s.append(steps([
- ("Open <b>Settings</b>, then <b>Site locations &amp; rates</b>, and scroll to <b>Add a site</b> at the bottom.", None),
- ("Type the <b>site name</b>. Under <b>Group</b>, pick the payslip the site belongs to. A group is its own payslip: in Split tax mode it pays its own PAYE, NIS and health surcharge.", A("c-add"), 50),
- ("To start a new payslip group, choose <b>New group</b>, type its name and the <b>standard rate</b> (the team lead rate follows it unless you change it). For an existing group the site uses that group's rates.", None),
- ("Pick the <b>overtime hours</b> pattern and set <b>Job requires lunch check</b> to Yes or No, then tap <b>Add site</b>. The site now shows up when you add a job on the calendar.", None)]))
-s.append(Paragraph("B. Change a rate", h2))
+ ("Open <b>Settings</b>, then <b>Site locations &amp; rates</b>. At the bottom of the list, tap the teal button <b>+ Add new location</b>. It opens its own page.", None),
+ ("Type the <b>site name</b>. Under <b>Group</b>, pick the payslip the site belongs to. A group is its own payslip: in Split tax mode it pays its own PAYE, NIS and health surcharge. To start a new payslip group, choose <b>New group</b>, type its name and the standard rate.", A("c-add"), 50),
+ ("<b>Role box on the day form:</b> choose <b>Standard roles</b> (the day form shows the Role list, for example Client medic) or <b>Type in a location</b>. With a typed location, you type the place on each day (for example Dolphin platform) and it goes in the <b>Client assigned</b> column of the time sheet.", A("d-typed"), 50),
+ ("<b>How the site is paid:</b> <b>Hourly</b> uses the group's hourly rates, the overtime pattern and the <b>lunch check</b> Yes or No. <b>Fixed day rate</b> is for a site that pays one amount for the day (see B). A fixed day rate site never has a lunch check.", None),
+ ("Tap <b>Add site</b> at the bottom of the page. Cancel closes the page without adding anything.", A("c-addbtn"), 50)]))
+s.append(Paragraph("B. A fixed day rate site", h2))
+s.append(steps([
+ ("Choose <b>Fixed day rate</b>. Type the <b>fixed day rate</b> and, if it is different, the <b>team lead day rate</b>. Under <b>1x</b>, type the hours the fixed rate covers (for example 12). Leave it blank for a flat rate that pays the whole day, like HHSL Compound.", A("d-fixed"), 50),
+ ("After the 1x hours you can set hours at <b>1.5x</b>, <b>2x</b> and <b>3x</b> (type 1000 for no limit) and the <b>hourly rate for the hours after 1x</b>.", None),
+ ("<b>Weekend</b> and <b>Holiday / TAR</b> each have a <b>Same as weekday</b> tick. Untick it to give that day type its own fixed rate and its own hours.", A("d-weekend"), 50)]))
+s.append(Paragraph("C. Change a rate", h2))
 s.append(steps([
  ("In <b>Site locations &amp; rates</b>, tap the site to open it. Change the <b>Standard rate</b> or the <b>Team lead rate</b>.", A("c-rate"), 50),
  ("A bar appears at the bottom. Pick the date the new rate starts under <b>Take effect from</b>: today (earlier days keep their old rate), a future date, or <b>Apply to all days</b> to recalculate every day. Then tap <b>Save</b>.", A("c-effect"), 50),
  ("To change a whole group at once, use the group card above the site list and tap <b>Change for all sites</b>. You can leave out sites that have their own rate.", None)]))
-s.append(Paragraph("C. Give a role its own pay", h2))
+s.append(Paragraph("D. Give a role its own pay", h2))
 s.append(steps([
  ("Open the site. Under <b>Role rates</b>, type a role (for example Offshore) in <b>Add another role</b> and tap <b>Add role</b>. Give the role its own rate and, if needed, its own hours. Leave it blank to use the site's standard rate.", A("c-roles"), 50),
  ("When you add a job on the calendar, you pick the role under the site.", None)]))
-s.append(Paragraph("D. Set the overtime hours", h2))
+s.append(Paragraph("E. Set the overtime hours", h2))
 s.append(steps([
  ("Open the site and scroll to <b>Overtime hours</b>. Pick a <b>template</b>, or type the hours yourself: how many hours of the day are paid at 1x, 1.5x, 2x and 3x, for weekdays, weekends and holidays. Type 1000 for no limit.", A("c-hours"), 50),
- ("Further down you can set a <b>flat daily pay</b>, or a <b>rate after a threshold</b> (offshore style: the hourly rate applies only above a number of hours). Tap <b>Remove site</b> at the very bottom to delete a site.", None)]))
-s.append(Paragraph("E. The other settings", h2))
+ ("For a site that pays one amount a day, use <b>Fixed day rate</b> (see B) instead. Tap <b>Remove site</b> at the very bottom of a site to delete it.", None)]))
+s.append(Paragraph("F. The other settings", h2))
 s.append(steps([
  ("<b>Public holidays:</b> Settings, <b>Public holidays</b>. Holidays show in red on the calendar and new jobs on them are marked. Divali and Eid change every year, so add them with <b>Add a holiday</b>.", None),
  ("<b>NIS &amp; tax:</b> Settings, <b>NIS &amp; tax</b>. The NIS table, PAYE and health surcharge. A saved change starts on its <b>Take effect from</b> date; older months keep the rules in force on their date.", None),
@@ -190,7 +197,7 @@ s.append(steps([
 
 s.append(Paragraph('<a name="p6"/>Part 6. Set it up your way', h1))
 s.append(steps([
- ("<b>Colour and lunch for each site:</b> Settings, <b>Site locations &amp; rates</b>, open a site. Pick its calendar colour. Set <b>Job requires lunch check</b> to <b>No</b> if the site has no lunch deduction, and the day form hides the lunch options.", Bs("b-site"), 50),
+ ("<b>Colour and lunch for each site:</b> Settings, <b>Site locations &amp; rates</b>, open a site. Pick its calendar colour. For an hourly site, set <b>Job requires lunch check</b> to <b>No</b> if it has no lunch deduction, and the day form hides the lunch options. A fixed day rate site never has a lunch check.", Bs("b-site"), 50),
  ("<b>Which jobs go on your time sheet:</b> Settings, <b>Timesheet</b>. Tick the sites and roles that go on the form. The sentence at the top reads out what is included. Press <b>Save</b>.", Bs("b-tsjobs"), 50)]))
 
 s.append(Paragraph('<a name="p7"/>Part 7. Share the app with someone else', h1))
