@@ -1,6 +1,7 @@
 import { saveTemplate } from "./storage";
 import { applyKit, BadBackup, fromB64, isEncrypted, parse, PasswordRequired, type RatesKit } from "./backup";
 import type { AppData } from "./model";
+import { kitTextOf } from "./kitPdf";
 
 /** The address of this app, for sharing: where it is hosted, including the folder (e.g. https://name.github.io/hhsl-pay/). */
 export function appLink(): string {
@@ -14,7 +15,7 @@ export interface KitResult { data: AppData; sites: number; groups: number; templ
 
 /** Read a starter kit (rates file) and return the data with its sites, rates and groups applied. Throws a readable Error. */
 export async function readKit(file: File, data: AppData): Promise<KitResult> {
-  const text = await file.text();
+  const text = kitTextOf(await file.text());
   let kit: RatesKit | undefined;
   try {
     if (isEncrypted(text)) throw new Error("This file is locked with a password. Ask the sender for an unlocked starter kit.");

@@ -217,6 +217,8 @@ export const SHARE_ATTEMPTS = [
   { type: "application/octet-stream", ext: ".json" },
 ] as const;
 export const SHARE_TYPES = SHARE_ATTEMPTS;
+/** The starter kit goes as a PDF (WhatsApp lets that be downloaded); a plain .txt is the fallback. */
+export const KIT_ATTEMPTS = [{ type: "application/pdf", ext: ".pdf" }, { type: "text/plain", ext: ".txt" }] as const;
 
 /**
  * Open the phone's share menu (WhatsApp, Gmail, ...) with the file attached. Never downloads.
@@ -224,12 +226,12 @@ export const SHARE_TYPES = SHARE_ATTEMPTS;
  * with the file type at `attempt` in SHARE_TYPES. The caller tries the next type on the next tap.
  * "unsupported": this browser cannot share files; "failed": the phone refused (`error` says why).
  */
-export async function shareFile(fileName: string, content: string | Uint8Array, attempt = 0): Promise<{ result: "shared" | "cancelled" | "unsupported" | "failed"; error?: string; type: string }> {
-  const pick = SHARE_ATTEMPTS[Math.min(attempt, SHARE_ATTEMPTS.length - 1)]!;
+export async function shareFile(fileName: string, content: string | Uint8Array, attempt = 0, attempts: ReadonlyArray<{ type: string; ext: string }> = SHARE_ATTEMPTS): Promise<{ result: "shared" | "cancelled" | "unsupported" | "failed"; error?: string; type: string }> {
+  const pick = attempts[Math.min(attempt, attempts.length - 1)]!;
   const type: string = pick.type;
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
   if (!nav.share) return { result: "unsupported", type };
-  const file = new File([content as BlobPart], fileName.replace(/\.json$/, pick.ext), { type });
+  const file = new File([content as BlobPart], fileName.replace(/\.[A-Za-z0-9]+$/, pick.ext), { type });
   if (nav.canShare && !nav.canShare({ files: [file] })) return { result: "failed", type, error: `this phone does not allow ${type} files` };
   try {
     await nav.share({ files: [file], title: fileName });

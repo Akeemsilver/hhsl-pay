@@ -117,14 +117,14 @@ s.append(Paragraph('<a name="p2"/>Part 2. Load your starter kit', h1))
 s.append(Paragraph("The starter kit is a small file with everything that is set up: the sites with their pay rates and calendar colours, the NIS, PAYE and health surcharge rules, the payslip groups, the public holidays, and the time sheet settings and form, so you do not have to type any of it in. It has <b>no days, no pay and no personal information</b>. It is sent to you as a file, and not built into the app, because the rates belong to the company and the app itself is public.", body))
 s.append(Paragraph("Get the file (in WhatsApp on your phone)", h2))
 s.append(steps([
- ("Ask the person who sent you this guide to send you the <b>starter kit file</b>, called <b>HHSL-starter-kit-rates.txt</b>, on WhatsApp.", None),
+ ("Ask the person who sent you this guide to send you the <b>starter kit file</b> (it arrives as a PDF), called <b>HHSL-starter-kit-rates.pdf</b>, on WhatsApp.", None),
  ("Open the message in WhatsApp and <b>tap the file</b> to download it. A small download arrow shows until it is saved.", I("whatsapp")),
- ("<b>iPhone:</b> WhatsApp only shows the file as text and has no download arrow. Tap the <b>Share icon</b> (the square with an arrow, bottom left), then <b>Save to Files</b>, then <b>Save</b>. The app can only pick files saved in Files.", None)]))
+ ("<b>iPhone:</b> Tap the file to open it, then tap the <b>Share icon</b> (the square with an arrow, bottom left), then <b>Save to Files</b>, then <b>Save</b>. The app can only pick files saved in Files.", None)]))
 s.append(Paragraph("Load it into the app", h2))
 s.append(steps([
  ("Open the app from its icon. Type your <b>full name</b> (it is printed on your payslips and time sheets) and tap <b>Continue</b>.", A("a-welcome"), 50),
  ("On the next screen, tap <b>Choose starter kit file</b>.", A("a-kit"), 50),
- ("Pick <b>HHSL-starter-kit-rates.txt</b> from your <b>Downloads</b> (or <b>WhatsApp, Documents</b>). On iPhone, pick it from Files.", I("picker")),
+ ("Pick <b>HHSL-starter-kit-rates.pdf</b> from your <b>Downloads</b> (or <b>WhatsApp, Documents</b>). On iPhone, pick it from Files.", I("picker")),
  ("That is it. Your sites and rates are in and the Home screen opens.", A("a-home"), 50)]))
 s.append(Spacer(1, 3))
 s.append(callout("File will not download or will not load?", [
