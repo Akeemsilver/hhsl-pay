@@ -436,7 +436,7 @@ button.pill { min-height: 32px; padding: 0 12px; border-radius: 999px; font-size
 
 /* Sheets: grabber, footer, confirm */
 .grabber { width: 100%; height: 28px; margin: 0; cursor: grab; touch-action: none; display: flex; align-items: center; justify-content: center; }
-.grabber::after { content: ""; width: 40px; height: 5px; border-radius: 999px; background: var(--line); }
+.grabber::after { content: ""; width: 52px; height: 6px; border-radius: 999px; background: var(--field-edge); }
 .sheet .bar { touch-action: none; }
 .sheet { transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); overscroll-behavior: contain; }
 .sheet-footer {
@@ -910,7 +910,7 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .sheet-backdrop { background: rgba(0, 0, 0, 0.68); }
   :root:not([data-theme="light"]) .sheet { --bg: #1c262e; --card: #26333d; --edge: #3c4b57; border-top: 1px solid #55646f; box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.7); }
-  :root:not([data-theme="light"]) .grabber::after { background: #6b7a87; }
+  :root:not([data-theme="light"]) .grabber::after { background: #9aabb8; }
   :root:not([data-theme="light"]) .confirm-backdrop { background: rgba(0, 0, 0, 0.68); }
   :root:not([data-theme="light"]) .confirm { background: #1e2a33; border-color: #50606d; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 14px 40px rgba(0, 0, 0, 0.7); }
 }
@@ -919,7 +919,7 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 .confirm.payroll .link { display: block; margin: 4px 0 0; padding: 6px 0; }
 :root[data-theme="dark"] .sheet-backdrop { background: rgba(0, 0, 0, 0.68); }
 :root[data-theme="dark"] .sheet { --bg: #1c262e; --card: #26333d; --edge: #3c4b57; border-top: 1px solid #55646f; box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.7); }
-:root[data-theme="dark"] .grabber::after { background: #6b7a87; }
+:root[data-theme="dark"] .grabber::after { background: #9aabb8; }
 
 .site-table h2 { margin-bottom: 6px; }
 .site-table [role="table"] { font-size: 0.8rem; }
@@ -950,3 +950,12 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 .confirm .row.one { grid-template-columns: 1fr; }
 
 .site-btn { border: 1.5px solid var(--field-edge); }
+
+.share-app > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; cursor: pointer; }
+.share-app > summary::-webkit-details-marker { display: none; }
+.share-app .sa-title { display: grid; gap: 1px; }
+.share-app .sa-title small { color: var(--muted); font-size: 0.82rem; }
+.share-app .sa-more { color: var(--accent); font-weight: 600; font-size: 0.9rem; white-space: nowrap; }
+.share-app .sa-more::after { content: "More… ▾"; }
+.share-app[open] .sa-more::after { content: "Less ▴"; }
+.share-app[open] > summary { padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid var(--edge); }

@@ -20,6 +20,7 @@ await snap("kit", { choose: page.getByRole("button", { name: /Choose starter kit
 await page.locator("input[aria-label='Starter kit file']").setInputFiles("/tmp/kit-test.txt"); await page.waitForTimeout(900);
 await snap("home", { gear: page.getByRole("button", { name: "Settings" }), dl: page.getByRole("button", { name: "Download timesheet or payslip" }) });
 await page.getByRole("button", { name: "Settings" }).click(); await page.waitForTimeout(600);
+await page.locator("details.share-app > summary").click(); await page.waitForTimeout(300);
 const bk = page.getByRole("button", { name: /Backup & restore/ }); await bk.scrollIntoViewIfNeeded(); await page.waitForTimeout(300);
 await snap("settings-backup", { row: bk });
 const sh = page.getByRole("button", { name: "Share starter kit" }); await sh.scrollIntoViewIfNeeded(); await page.waitForTimeout(300);

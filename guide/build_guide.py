@@ -218,7 +218,7 @@ s.append(steps([
 s.append(Paragraph('<a name="p7"/>Part 7. Share the app with someone else', h1))
 s.append(Paragraph("To give a colleague the app you send them <b>three things</b> on WhatsApp: <b>1. the app link</b>, <b>2. the starter kit file</b> and <b>3. this guide</b>. All three buttons are in one place in the app, and you do it all from your phone.", ParagraphStyle("kw", parent=body, keepWithNext=1)))
 s.append(steps([
- ("Open <b>Settings</b> (the gear) and scroll to <b>Share this app</b>. The three buttons are here.", A("a-share"), 50),
+ ("Open <b>Settings</b> (the gear) and find <b>Share this app</b>. Tap it (or <b>More…</b>) to unfold it: the three buttons are inside. (The <b>Install on your phone</b> help at the top of Settings is hidden once the app is installed.)", A("a-share"), 50),
  ("<b>Send the link.</b> Tap <b>Share link</b>, pick <b>WhatsApp</b> and the person.", None),
  ("<b>Send the starter kit.</b> Tap <b>Share starter kit</b>, then <b>Yes, download and share</b>. The time is added to the saved file's name so it never clashes with an earlier copy.", Bs("b-share-ask"), 50),
  ("The share menu opens. Pick <b>WhatsApp</b> (or Gmail) and the same person, and send the file.", Bs("b-share-after"), 50),
