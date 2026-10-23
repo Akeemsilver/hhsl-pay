@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { clearSessionState } from "./session";
+import { clearSessionState, setSelectedDate } from "./session";
 
 export type Tab = "home" | "calendar" | "year" | "charts";
 export type Page = "settings" | "sites" | "tax" | "payslips" | "timesheet" | "holidays" | "backup" | "addsite";
@@ -129,6 +129,8 @@ export function NavProvider({ children }: { children: ReactNode }) {
 
   const selectTab = useCallback(
     (tab: Tab) => {
+      // A date highlighted on Home or Month is forgotten when you move to another tab.
+      if (tab !== loc.tab) setSelectedDate(null);
       if (tab === "home") {
         if (loc.n > 0) window.history.go(-loc.n);
         return;

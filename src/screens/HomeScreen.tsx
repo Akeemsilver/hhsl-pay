@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { valueOn } from "../engine";
-import { useSessionState } from "../session";
+import { useSelectedDate } from "../session";
 import { MONTHS, dayDMY, daysOfMonth, hoursText, money, shiftMonth, todayISO } from "../format";
 import { useInstall } from "../install";
 import { useSiteFilter } from "../filter";
@@ -32,7 +32,7 @@ export function HomeScreen() {
   const { data } = useStore();
   const { open, showDay, selectTab, loc } = useNav();
   // The tapped date is shared with the Month tab and kept while the app is open, so the yellow highlight survives switching tabs.
-  const [pickedDay, setPicked] = useSessionState<string | null>("selected-date", null);
+  const [pickedDay, setPicked] = useSelectedDate();
   const picked = pickedDay ?? undefined;
   const today = todayISO();
   const [shown, setShown] = useState(today.slice(0, 7));

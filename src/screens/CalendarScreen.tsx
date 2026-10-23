@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useSessionState } from "../session";
+import { useSelectedDate, useSessionState } from "../session";
 import { useBarHeight } from "../barHeight";
 import { valueOn } from "../engine";
 import { daysOfMonth, shiftMonth, todayISO } from "../format";
@@ -18,9 +18,9 @@ export function CalendarScreen() {
   const { loc, open } = useNav();
   const [month, setMonth] = useSessionState("calendar-month", todayISO().slice(0, 7));
   const [view, setView] = useSessionState<"calendar" | "list">("calendar-view", "calendar");
-  // The tapped date, if it is in the month on screen; otherwise today when it is in that month, otherwise nothing.
-  const [picked, setPicked] = useSessionState<string | null>("selected-date", null);
-  const selected = picked && picked.startsWith(month) ? picked : todayISO().startsWith(month) ? todayISO() : null;
+  // The tapped date, if it is in the month on screen; otherwise nothing is highlighted yellow.
+  const [picked, setPicked] = useSelectedDate();
+  const selected = picked && picked.startsWith(month) ? picked : null;
   // Changing the month while scrolled keeps the page on the same spot: the page is held at its old height until the new month has drawn.
   const spot = useRef<number | null>(null);
   const keepSpot = () => {
