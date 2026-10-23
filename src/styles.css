@@ -881,3 +881,4 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .payer-tax li.sheet-line { margin-top: 2px; padding-top: 6px; border-top: 1px dashed var(--edge); }
 .payer-tax li.sheet-line > span { white-space: normal; }
 .payer-tax li.sheet-line .sheet-note { font-size: 0.75rem; font-style: italic; }
+.more-panel h3.sub { font-size: 0.8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 6px 0 0; }

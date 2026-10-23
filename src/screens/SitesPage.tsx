@@ -343,7 +343,6 @@ function GroupRates({ payer, name, table, firstDate, impactFor, farBack, onApply
   const ownRate = (n: string) => { const t = table[n]!; return (curStd !== undefined && t.baseRate !== curStd) || (curLead !== undefined && t.leadRate !== undefined && t.leadRate !== curLead); };
   const defaultExcept = change.filter(ownRate);
   const [except, setExcept] = useState<string[]>(defaultExcept);
-  const [showExcept, setShowExcept] = useState(false);
   useEffect(() => { setStd(curStd); setLead(curLead); setSameLead(curStd !== undefined && curStd === curLead); setCaps(curCaps); setExcept(defaultExcept); }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
   const newLead = sameLead ? std : lead;
   const capsChanged = JSON.stringify(caps) !== JSON.stringify(curCaps);
@@ -355,15 +354,16 @@ function GroupRates({ payer, name, table, firstDate, impactFor, farBack, onApply
   return (
     <section className="card group-rates" aria-label={`Rates for ${name}`}>
       <h2>{name}</h2>
-      <p className="muted small">{included.length === change.length ? `The same rates for all ${change.length} hourly site${change.length === 1 ? "" : "s"}` : `Applies to ${included.length} of ${change.length} hourly sites`}: {included.join(", ") || "none"}.{except.length > 0 && <> Left out: <strong>{except.join(", ")}</strong>.</>}</p>
+      <p className="muted small">{included.length === change.length ? `${change.length} hourly site${change.length === 1 ? "" : "s"}` : `${included.length} of ${change.length} hourly sites`}: {included.join(", ") || "none"}.{except.length > 0 && <> Left out: <strong>{except.join(", ")}</strong>.</>}</p>
       <div className="grid2">
         <label>Standard rate ($/h)<NumInput label={`${name} standard rate`} value={std} onChange={setStd} /></label>
         <label>Team lead rate ($/h)<NumInput label={`${name} team lead rate`} value={sameLead ? std : lead} onChange={(v) => { setSameLead(false); setLead(v); }} /></label>
       </div>
       <label className="check"><input type="checkbox" aria-label={`${name} team lead same as standard`} checked={sameLead} onChange={(e) => setSameLead(e.target.checked)} /> {" "}Team lead is paid the same as standard</label>
-      <button className="more" aria-expanded={more} onClick={() => setMore(!more)}>{more ? "Less ▴" : "More ▾"} <span className="muted small">· hours at 1x, 1.5x, 2x, 3x</span></button>
+      <button className="more" aria-expanded={more} onClick={() => setMore(!more)}>{more ? "Less ▴" : "More… ▾"} <span className="muted small">· hours, except, start date{except.length ? ` · ${except.length} left out` : ""}</span></button>
       {more && (
         <div className="more-panel">
+          <h3 className="sub">Hours at 1x, 1.5x, 2x, 3x</h3>
           <label>Start from a template
             <select aria-label={`${name} hours template`} value={detectTemplate(caps) ?? ""} onChange={(e) => e.target.value && setCaps(applyTemplate(caps, e.target.value))}>
               <option value="">{detectTemplate(caps) ? "" : "Custom hours"}</option>
@@ -377,21 +377,19 @@ function GroupRates({ payer, name, table, firstDate, impactFor, farBack, onApply
             <CapsRow label="Holiday / TAR" caps={caps.holiday} onChange={(c) => setCaps({ ...caps, holiday: c })} withX3 />
           </div>
           <p className="muted small">Example: 12 under 1x means the first 12 hours of each day are paid at 1x. Type 1000 for “no limit”. Holiday / TAR is used for a holiday or a turnaround / shutdown, even on a weekend.</p>
+          <h3 className="sub">Except</h3>
+          <div className="except-panel" role="group" aria-label={`Sites to leave out of ${name} changes`}>
+            <p className="muted small">Tick a site to <strong>leave it out</strong> of “Change for all sites”. Sites with their own rate start out ticked.</p>
+            {change.map((n) => (
+              <label key={n} className="check">
+                <input type="checkbox" aria-label={`Leave out ${n}`} checked={except.includes(n)} onChange={(e) => setExcept(e.target.checked ? [...except, n] : except.filter((x) => x !== n))} />
+                {" "}{n}{table[n]!.baseRate !== undefined && <span className="muted small"> · ${table[n]!.baseRate}/h{table[n]!.leadRate !== undefined && table[n]!.leadRate !== table[n]!.baseRate ? ` · lead $${table[n]!.leadRate}` : ""}{ownRate(n) ? " · own rate" : ""}</span>}
+              </label>
+            ))}
+          </div>
+          <TakeEffect from={from} setFrom={setFrom} firstDate={firstDate} label={`${name} take effect from`} impact={impact} />
         </div>
       )}
-      <button className="more" aria-expanded={showExcept} onClick={() => setShowExcept(!showExcept)}>{showExcept ? "Except ▴" : `Except… ${except.length ? `(${except.length} left out)` : ""} ▾`}</button>
-      {showExcept && (
-        <div className="more-panel except-panel" role="group" aria-label={`Sites to leave out of ${name} changes`}>
-          <p className="muted small">Tick a site to <strong>leave it out</strong> of “Change for all sites”. Sites with their own rate start out ticked.</p>
-          {change.map((n) => (
-            <label key={n} className="check">
-              <input type="checkbox" aria-label={`Leave out ${n}`} checked={except.includes(n)} onChange={(e) => setExcept(e.target.checked ? [...except, n] : except.filter((x) => x !== n))} />
-              {" "}{n}{table[n]!.baseRate !== undefined && <span className="muted small"> · ${table[n]!.baseRate}/h{table[n]!.leadRate !== undefined && table[n]!.leadRate !== table[n]!.baseRate ? ` · lead $${table[n]!.leadRate}` : ""}{ownRate(n) ? " · own rate" : ""}</span>}
-            </label>
-          ))}
-        </div>
-      )}
-      <TakeEffect from={from} setFrom={setFrom} firstDate={firstDate} label={`${name} take effect from`} impact={impact} />
       <button className="primary wide" disabled={!changed || included.length === 0} onClick={() => setAsk(true)}>Change for all sites</button>
       {skip.length > 0 && <p className="muted small">Not changed (flat pay or a threshold rate): {skip.join(", ")}. Edit those below.</p>}
       {ask && (
