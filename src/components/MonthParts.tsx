@@ -30,7 +30,7 @@ export function PayerTax({ payers, groups, sheet }: { payers: Array<{ payer: str
       ))}
       {sheet && (
         <li className="sheet-line">
-          <b>Time sheet<em className="pd">{sheet.days} d</em><em>{hoursText(sheet.weighted)} h</em></b>
+          <b>Time sheet<em className="pd">{sheet.days} d</em></b>
           <span>{sheet.sites.join(", ")}</span>
         </li>
       )}
@@ -41,7 +41,8 @@ export function PayerTax({ payers, groups, sheet }: { payers: Array<{ payer: str
 export function MonthSummary({ result, label }: { result: MonthResult<Entry>; label: string }) {
   const { data } = useStore();
   const yearMonths = useYear(Number(label.slice(0, 4)));
-  const split = sheetSplit(result, data);
+  const { site: filterSite } = useSiteFilter();
+  const split = sheetSplit(result, data, { others: !filterSite });
   return (
     <section className="card summary" aria-label={`${label} summary`}>
       <div className="big">

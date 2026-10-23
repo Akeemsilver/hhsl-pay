@@ -75,14 +75,10 @@ export function HomeScreen() {
   const lastBackup = data.lastBackupAt ? Date.parse(data.lastBackupAt) : 0;
   const backupDue = data.entries.length > 0 && Date.now() - lastBackup > 30 * DAY_MS;
 
-  const worked = new Set([
-    ...shownResult.entries.filter((e) => e.pay.total > 0).map((e) => e.entry.date),
-    ...(filterSite ? [] : [...othersByDate(data.entries, shown).keys()]),
-  ]);
-  const hours = shownResult.payers.reduce((s, p) => s + p.weighted, 0);
-  // Sites on the time sheet get their own line; their days and hours come out of their payslip group's line.
-  const shownSplit = sheetSplit(shownResult, data);
-  const ghostSplit = sheetSplit(splitResult, data);
+  // Jobs on the time sheet get their own line (days only); their days and hours come out of their group's line, so the lines add up to the totals.
+  const shownSplit = sheetSplit(shownResult, data, { others: !filterSite });
+  const ghostSplit = sheetSplit(splitResult, data, { others: !filterSite });
+  const hours = shownSplit.totalHours;
   const diff = shownResult.gross - lastMonth.gross;
 
   const rules = valueOn(data.history.tax, today);
@@ -160,7 +156,7 @@ export function HomeScreen() {
         <div className="hero-stats">
           <div><span><i className="dot dot-net" />Net</span><strong className="c-net">{money(shownResult.net)}</strong></div>
           <div><span><i className="dot dot-paye" />PAYE</span><strong className="c-paye">{money(shownResult.paye)}</strong></div>
-          <div><span>Days</span><strong>{worked.size}</strong></div>
+          <div><span>Days</span><strong>{shownSplit.totalDays}</strong></div>
           <div><span>Paid hours</span><strong>{hoursText(hours)} h</strong></div>
         </div>
         <AverageLine gross={shownYear.map((m) => m.gross)} net={shownYear.map((m) => m.net)} index={Number(shown.slice(5)) - 1} />
