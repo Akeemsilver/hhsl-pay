@@ -875,5 +875,7 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .tj-text .tj-label { margin: 6px 0 0; }
 .tj-roles > summary { cursor: pointer; font-size: 0.85rem; color: var(--muted); padding: 4px 0 4px 30px; }
 .tj-roles[open] > summary { color: var(--text); }
-.tj-roles > summary::after { content: " ▾"; }
-.tj-roles[open] > summary::after { content: " ▴"; }
+.tj-roles > summary::after { content: "▾"; margin-left: 8px; }
+.tj-roles[open] > summary::after { content: "▴"; }
+
+.payer-tax li.sheet-line { margin-top: 2px; padding-top: 6px; border-top: 1px dashed var(--edge); }

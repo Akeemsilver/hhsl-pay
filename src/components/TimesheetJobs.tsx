@@ -93,7 +93,7 @@ export function TimesheetJobs() {
             {row(site)}
             {!typed && !find(site) && (
               <details className="tj-roles" open={ticked > 0}>
-                <summary>Only certain roles{ticked > 0 ? ` · ${ticked} ticked` : ""}</summary>
+                <summary>Roles{ticked > 0 ? ` · ${ticked} ticked` : ""}</summary>
                 {roles.map((r) => row(site, r))}
               </details>
             )}

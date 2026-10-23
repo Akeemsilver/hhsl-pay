@@ -167,7 +167,7 @@ s.append(steps([
  ("Tap the date on the Calendar. Each job has <b>Edit</b> and <b>Delete</b>. Edit opens the same form: change it and tap <b>Save</b>. If you close the form with unsaved changes, the app asks first.", A("e-saved"), 50)]))
 s.append(Paragraph("D. See the month and send the time sheet", h2))
 s.append(steps([
- ("<b>Home</b> shows the month so far: gross, net, PAYE, days and paid hours, with each site underneath. Swipe the calendar left or right to change month. <b>Year</b> and <b>Charts</b> show the whole year.", None),
+ ("<b>Home</b> shows the month so far: gross, net, PAYE, days and paid hours, with each payslip group underneath (days, paid hours and its tax). Sites that go on the time sheet get their own <b>Time sheet</b> line with just days and hours, and those days and hours are taken out of their group's line. Swipe the calendar left or right to change month. <b>Year</b> and <b>Charts</b> show the whole year.", None),
  ("<b>Time sheet:</b> tap the download icon at the top of any screen, choose <b>Send to payroll</b>, then <b>Download and share</b>, and pick Gmail or WhatsApp.", Bs("b-download"), 50),
  ("<b>Payslips:</b> in the same screen, switch to <b>Payslip</b>. The eye icon lets you look at them first.", None)]))
 s.append(Spacer(1, 3))

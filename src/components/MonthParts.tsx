@@ -8,6 +8,7 @@ import type { MonthSlide } from "../slide";
 import { AverageLine } from "./AverageLine";
 import { useYear } from "../hooks";
 import type { MonthResult } from "../engine";
+import { sheetSplit, type SheetInfo } from "../sheetSplit";
 import type { Entry } from "../model";
 
 /** Small print under a total: each place's own PAYE, NIS and health surcharge. Only shown when payslips are taxed separately. */
@@ -15,10 +16,10 @@ import type { Entry } from "../model";
  * The tax of each payslip in small print. `groups` is how many payslip groups have income: when tax is combined there is
  * one "All sites" line, shown whenever split would have shown several, so flipping the tax method changes figures only.
  */
-export function PayerTax({ payers, groups }: { payers: Array<{ payer: string; paye: number; nis: number; surcharge: number; weighted?: number; days?: number }>; groups?: number }) {
+export function PayerTax({ payers, groups, sheet }: { payers: Array<{ payer: string; paye: number; nis: number; surcharge: number; weighted?: number; days?: number }>; groups?: number; sheet?: SheetInfo }) {
   const { data } = useStore();
   const combinedNote = payers.length === 1 && payers[0]!.payer === "all" && (groups ?? 0) >= 2;
-  if (payers.length < 2 && !combinedNote) return null;
+  if (payers.length < 2 && !combinedNote && !sheet) return null;
   return (
     <ul className="payer-tax" aria-label="Tax for each payslip">
       {payers.map((p) => (
@@ -27,6 +28,12 @@ export function PayerTax({ payers, groups }: { payers: Array<{ payer: string; pa
           <span>PAYE <i className="c-paye">{money(p.paye)}</i> · NIS {money(p.nis)} · Surcharge {money(p.surcharge)}</span>
         </li>
       ))}
+      {sheet && (
+        <li className="sheet-line">
+          <b>Time sheet<em className="pd">{sheet.days} d</em><em>{hoursText(sheet.weighted)} h</em></b>
+          <span>{sheet.sites.join(", ")}</span>
+        </li>
+      )}
     </ul>
   );
 }
@@ -34,6 +41,7 @@ export function PayerTax({ payers, groups }: { payers: Array<{ payer: string; pa
 export function MonthSummary({ result, label }: { result: MonthResult<Entry>; label: string }) {
   const { data } = useStore();
   const yearMonths = useYear(Number(label.slice(0, 4)));
+  const split = sheetSplit(result, data);
   return (
     <section className="card summary" aria-label={`${label} summary`}>
       <div className="big">
@@ -47,7 +55,7 @@ export function MonthSummary({ result, label }: { result: MonthResult<Entry>; la
         <div><dt><i className="dot dot-sur" />Surcharge</dt><dd className="c-sur">{money(result.surcharge)}</dd></div>
       </dl>
       <AverageLine gross={yearMonths.map((m) => m.gross)} net={yearMonths.map((m) => m.net)} index={Number(label.slice(5)) - 1} />
-      <PayerTax payers={result.payers} />
+      <PayerTax payers={split.payers} sheet={split.sheet} />
       {result.payers.length > 1 && (
         <ul className="payers">
           {result.payers.map((p) => (
