@@ -30,8 +30,9 @@ export function PayerTax({ payers, groups, sheet }: { payers: Array<{ payer: str
       ))}
       {sheet && (
         <li className="sheet-line">
-          <b>Time sheet<em className="pd">{sheet.days} d</em></b>
-          <span>{sheet.sites.join(", ")}</span>
+          <b>Time sheet<em className="pd">{sheet.days} d</em>{sheet.hours > 0 && <em>{hoursText(sheet.hours)} h</em>}</b>
+          <span>{sheet.sites.join(", ")}{sheet.pay > 0 && <> · {money(sheet.pay)} pay, counted above</>}</span>
+          {sheet.hoursLeftOut && <span className="sheet-note">Hours of fixed-rate jobs and other jobs are not added.</span>}
         </li>
       )}
     </ul>

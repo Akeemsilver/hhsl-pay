@@ -879,3 +879,5 @@ button.danger.outline { background: var(--card); color: var(--danger); border: 2
 .tj-roles[open] > summary::after { content: "▴"; }
 
 .payer-tax li.sheet-line { margin-top: 2px; padding-top: 6px; border-top: 1px dashed var(--edge); }
+.payer-tax li.sheet-line > span { white-space: normal; }
+.payer-tax li.sheet-line .sheet-note { font-size: 0.75rem; font-style: italic; }

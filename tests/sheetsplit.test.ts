@@ -26,7 +26,9 @@ describe("sites on the time sheet get their own line", () => {
     const split = sheetSplit(month() as never, data);
     const main = split.payers.find((p) => p.payer === "main")!;
     // The 14th has an Offshore job (time sheet) and an Other job: it is one day, on the time sheet.
-    expect(split.sheet).toEqual({ days: 2, sites: ["Offshore"] });
+    // Offshore is a fixed day rate: its hours are not added, but its pay is shown as counted in the group.
+    expect(split.sheet).toMatchObject({ days: 2, sites: ["Offshore"], hours: 0, hoursLeftOut: true });
+    expect(split.sheet!.pay).toBeGreaterThan(1000);
     expect(main.days).toBe(0);
     expect(main.weighted).toBe(4); // only the Other site's own hours stay
     expect(split.payers.find((p) => p.payer === "atl")!.days).toBe(1);
@@ -66,7 +68,7 @@ describe("other jobs on the time sheet", () => {
   const month = () => computeMonth("2026-10", sites as never, data.history, {}, false, [{ date: "2026-10-16", payer: "main", amount: 100, hours: 3 }]);
   it("go on the Time sheet line, days only, and leave their group", () => {
     const split = sheetSplit(month() as never, { ...data, entries: all as never });
-    expect(split.sheet).toEqual({ days: 2, sites: ["Other jobs"] });
+    expect(split.sheet).toEqual({ days: 2, sites: ["Other jobs"], hours: 0, pay: 100, hoursLeftOut: true });
     expect(split.payers.find((p) => p.payer === "main")!.days).toBe(0);
     expect(split.payers.find((p) => p.payer === "main")!.weighted).toBe(0);
     expect(split.totalDays).toBe(3);
@@ -96,8 +98,10 @@ describe("a role on the time sheet (PLNL Client medic)", () => {
     const main = split.payers.find((p) => p.payer === "main")!;
     expect(main.days).toBe(1); // the plain PLNL day stays
     expect(main.weighted).toBe(10); // the medic day's 12 hours are gone
-    expect(split.sheet).toEqual({ days: 1, sites: ["PLNL"] });
+    // The medic job is hourly, so its 12 hours show on the Time sheet line and still add up to the total.
+    expect(split.sheet).toMatchObject({ days: 1, sites: ["PLNL"], hours: 12, hoursLeftOut: false });
+    expect(split.sheet!.pay).toBe(720);
     expect(split.totalDays).toBe(3);
-    expect(split.totalHours).toBe(22);
+    expect(split.totalHours).toBe(34);
   });
 });

@@ -1,9 +1,13 @@
 import { COMBINED_PAYER, findSite, valueOn, weightedHours, type MonthResult, type PayerMonth } from "./engine";
-import { isOther, otherHours, otherPayerId, type AppData, type Entry } from "./model";
+import { isFixedDay, isOther, otherHours, otherPayerId, type AppData, type Entry } from "./model";
 import { matchRule } from "./timesheet";
 
-/** The jobs that go on the time sheet: only their days are shown (their hours are paid by the fixed rate or by payroll). */
-export interface SheetInfo { days: number; sites: string[] }
+/**
+ * The jobs that go on the time sheet. Hours are only those of hourly jobs: a fixed-rate job or an other job is paid
+ * the same whatever hours were put in, so its hours are not added (`hoursLeftOut`). `pay` is all of their pay, which
+ * is still in the groups above and taxed there.
+ */
+export interface SheetInfo { days: number; sites: string[]; hours: number; pay: number; hoursLeftOut: boolean }
 
 export interface SplitResult {
   /** Each payslip group with its days and paid hours, without the jobs that are on the time sheet. */
@@ -11,7 +15,7 @@ export interface SplitResult {
   sheet?: SheetInfo;
   /** Every day counted once: the group days plus the time sheet days. */
   totalDays: number;
-  /** The paid hours of all groups (the time sheet jobs have none here). */
+  /** The paid hours of all groups plus the hourly jobs on the time sheet. */
   totalHours: number;
 }
 
@@ -64,10 +68,15 @@ export function sheetSplit(result: MonthResult<Entry>, data: AppData, opts: { ot
   });
   const names = [...new Set(onSheet.map((e) => e.entry.site))].sort((a, b) => a.localeCompare(b));
   const hasSheet = sheetDays > 0;
+  const siteOf = (e: Entry) => findSite(valueOn(data.history.sites, e.date), e.site);
+  const hourly = onSheet.filter((e) => !isFixedDay(siteOf(e.entry)));
+  const sheetHours = r2(hourly.reduce((t, e) => t + weightedHours(e.pay, e.entry.hours), 0));
+  const sheetPay = r2(onSheet.reduce((t, e) => t + e.pay.total, 0) + othersOnSheet.reduce((t, e) => t + (e.amount ?? 0), 0));
+  const hoursLeftOut = hourly.length < onSheet.length || othersOnSheet.length > 0;
   return {
     payers,
-    sheet: hasSheet ? { days: sheetDays, sites: othersOnSheet.length ? [...names, "Other jobs"] : names } : undefined,
+    sheet: hasSheet ? { days: sheetDays, sites: othersOnSheet.length ? [...names, "Other jobs"] : names, hours: sheetHours, pay: sheetPay, hoursLeftOut } : undefined,
     totalDays: claims.size,
-    totalHours: r2(payers.reduce((t, p) => t + p.weighted, 0)),
+    totalHours: r2(payers.reduce((t, p) => t + p.weighted, 0) + sheetHours),
   };
 }
