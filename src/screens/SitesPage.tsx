@@ -421,6 +421,8 @@ function AddSiteForm({ table, payers, onAdd, onDone }: {
   const [std, setStd] = useState<Num>();
   const [lead, setLead] = useState<Num>();
   const [template, setTemplate] = useState<string | undefined>();
+  // "Custom" in the Overtime hours list: the hours at 1x / 1.5x / 2x / 3x are typed in by hand.
+  const [custom, setCustom] = useState<{ weekday: TierCaps; weekend: TierCaps; holiday: TierCaps }>({ weekday: {}, weekend: {}, holiday: {} });
   const [lunch, setLunch] = useState(true);
   const [roleField, setRoleField] = useState<SiteRates["roleField"]>();
   const [fixed, setFixed] = useState(false);
@@ -433,15 +435,19 @@ function AddSiteForm({ table, payers, onAdd, onDone }: {
   const tpl = template ?? (isNew ? "overtime" : groupTemplate ?? "overtime");
   const finalStd = isNew ? std : groupStd;
   const finalLead = isNew ? (lead ?? std) : (groupLead ?? groupStd);
+  const hasHours = (c: TierCaps) => [c.x1, c.x15, c.x2, c.x3].some((v) => (v ?? 0) > 0);
+  const customReady = tpl !== "custom" || (hasHours(custom.weekday) && hasHours(custom.weekend) && hasHours(custom.holiday));
   const taken = Object.keys(table).some((k) => k.toLowerCase() === name.trim().toLowerCase());
-  const ok = !!name.trim() && !taken && (!isNew || !!groupName.trim()) && (fixed ? (fx.dailyStd ?? 0) > 0 : !isNew || (std ?? 0) > 0);
-  const reset = () => { onDone(); setName(""); setGroupName(""); setStd(undefined); setLead(undefined); setTemplate(undefined); setLunch(true); setRoleField(undefined); setFixed(false); setFx(newFixedSite()); };
+  const ok = !!name.trim() && !taken && (!isNew || !!groupName.trim()) && (fixed ? (fx.dailyStd ?? 0) > 0 : (!isNew || (std ?? 0) > 0) && customReady);
+  const reset = () => { onDone(); setName(""); setGroupName(""); setStd(undefined); setLead(undefined); setTemplate(undefined); setCustom({ weekday: {}, weekend: {}, holiday: {} }); setLunch(true); setRoleField(undefined); setFixed(false); setFx(newFixedSite()); };
   const add = () => {
     const id = isNew ? slug(groupName, groupIds) : group;
     const extra: Partial<SiteRates> = { ...(roleField ? { roleField } : {}), ...(!fixed && !lunch ? { lunch: false } : {}) };
     const site: SiteRates = fixed
       ? { ...fx, payer: id, ...extra }
-      : applyTemplate({ ...emptySite(id), baseRate: finalStd, leadRate: finalLead, ...extra }, tpl);
+      : tpl === "custom"
+        ? { ...emptySite(id), baseRate: finalStd, leadRate: finalLead, ...extra, weekday: { ...custom.weekday }, weekend: { ...custom.weekend }, holiday: { ...custom.holiday } }
+        : applyTemplate({ ...emptySite(id), baseRate: finalStd, leadRate: finalLead, ...extra }, tpl);
     onAdd(name.trim(), id, site, isNew ? groupName.trim() : undefined);
     reset();
   };
@@ -480,9 +486,21 @@ function AddSiteForm({ table, payers, onAdd, onDone }: {
           <label>Overtime hours
             <select aria-label="Hours template for the new site" value={tpl} onChange={(e) => setTemplate(e.target.value)}>
               {HOURS_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              <option value="custom">Custom (type the hours in)</option>
             </select>
           </label>
-          <p className="muted small">{templateById(tpl)?.description}</p>
+          {tpl === "custom" ? (
+            <>
+              <p className="muted small">How many hours of each day are paid at 1x, 1.5x, 2x and 3x. Example: 8 under 1x and 4 under 1.5x means the first 8 hours at 1x, then 4 hours at 1.5x. Type 1000 for “no limit”. Fill in all three rows.</p>
+              <div className="caps">
+                <span /><span className="cap-h">1x</span><span className="cap-h">1.5x</span><span className="cap-h">2x</span><span className="cap-h">3x</span>
+                <CapsRow label="Weekday" caps={custom.weekday} onChange={(c) => setCustom((x) => ({ ...x, weekday: c }))} />
+                <CapsRow label="Weekend" caps={custom.weekend} onChange={(c) => setCustom((x) => ({ ...x, weekend: c }))} />
+                <CapsRow label="Holiday" caps={custom.holiday} onChange={(c) => setCustom((x) => ({ ...x, holiday: c }))} withX3 />
+              </div>
+              {!customReady && <p className="muted small">Add site turns on once Weekday, Weekend and Holiday each have some hours.</p>}
+            </>
+          ) : <p className="muted small">{templateById(tpl)?.description}</p>}
         </>
       )}
       <div className="row">
