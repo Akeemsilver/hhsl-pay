@@ -1,3 +1,4 @@
+import { TaxSwitch } from "./TaxMode";
 import { WEEKDAYS, hoursText, money, timeRange } from "../format";
 import { correctionKey, othersByDate, payerLabel } from "../model";
 import { useSiteFilter } from "../filter";
@@ -50,7 +51,8 @@ export function MonthSummary({ result, label }: { result: MonthResult<Entry>; la
   const { site: filterSite } = useSiteFilter();
   const split = sheetSplit(result, data, { others: !filterSite });
   return (
-    <section className="card summary" aria-label={`${label} summary`}>
+    <section className="card summary year-summary" aria-label={`${label} summary`}>
+      <div className="summary-switch"><TaxSwitch /></div>
       <div className="big">
         <span className="label"><i className="dot dot-gross" />Gross</span>
         <span className="value">{money(result.gross)}</span>
@@ -139,6 +141,7 @@ export function DayList({ days, result, today, onPick, slide }: { days: string[]
             >
               <span className="dow">{WEEKDAYS[wd]}</span>
               <span className="dom">{Number(date.slice(8))}</span>
+              <span className="hol-slot">{hol.has(date) && <span className="hol-h" aria-hidden="true">H</span>}</span>
               <span className="entries">
                 {priced.length === 0 && extra.length === 0 && <span className="muted">—</span>}
                 {priced.map(({ entry, pay }) => (

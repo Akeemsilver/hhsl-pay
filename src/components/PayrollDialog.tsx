@@ -33,7 +33,7 @@ export function PayrollDialog({ email, fileName, onCancel, onShare, ready = true
             <button className={saved ? "" : "primary"} disabled={!ready || (!ios && saved)} onClick={onSave}>
               {!ready ? "Preparing…" : saved ? (ios ? "Saved ✓ Save again" : "Saved ✓") : "Save time sheet"}
             </button>
-            <span className="muted small">{ios ? <>In the menu that opens, tap <strong>Save to Files</strong>.</> : saved && savedName ? <>Saved in your Downloads as <strong>{savedName}</strong>.</> : "It is saved to your Downloads."}</span>
+            <span className="muted small">{ios ? <>In the menu that opens, tap <strong>Save to Files</strong>. If you pick an email app there instead, the file, subject and message go with it, and the address is copied for you to paste.</> : saved && savedName ? <>Saved in your Downloads as <strong>{savedName}</strong>.</> : "It is saved to your Downloads."}</span>
           </div>
           <div>
             <strong>2. Open your email app</strong>
