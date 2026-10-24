@@ -138,6 +138,10 @@ s.append(Paragraph("Step A. Save your Google Sheet as Excel (in the Google Sheet
 s.append(steps([
  ("Open the sheet in the <b>Google Sheets app</b>. Tap the <b>three dots</b> at the top right, then <b>Share &amp; export</b>, then <b>Save as</b>, then <b>Microsoft Excel (.xlsx)</b>.", I("sheets-phone")),
  ("Choose to save it on your phone (Downloads). The file must end in <b>.xlsx</b>. A spreadsheet that is already an Excel file can skip Step A.", None)]))
+s.append(Paragraph("Shortcuts (you can skip Step A with these)", h2))
+s.append(steps([
+ ("<b>Pick it from Google Drive.</b> In Step B, when the phone's file picker opens (<b>Choose yearly / monthly spreadsheet</b>), open <b>Google Drive</b> (Android: the menu at the top left of the picker; iPhone: Browse, then Drive) and choose your sheet. A Google Sheet is turned into an Excel file for you. If your sheet is not listed or will not open, use Step A instead.", None),
+ ("<b>Share it to the app (Android).</b> In the <b>Google Sheets</b> or <b>Drive</b> app, open your sheet, tap <b>Share &amp; export</b>, <b>Send a copy</b>, choose <b>Excel</b>, then pick <b>HHSL pay</b> in the list of apps. The app opens on <b>Backup &amp; restore</b> with the preview ready; carry on from the preview step below. This needs the app to be installed on the Home screen.", None)]))
 s.append(Paragraph("Step B. Import it into the app", h2))
 s.append(steps([
  ("In the app, tap the <b>gear</b> at the top right (Settings).", A("a-home"), 50),

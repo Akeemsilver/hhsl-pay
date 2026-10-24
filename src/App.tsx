@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { loadSharedFile } from "./sharedFile";
 import { FilterProvider } from "./filter";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { NavProvider, useNav, type Tab } from "./nav";
@@ -27,8 +29,10 @@ const TABS: Array<{ id: Tab; label: string; Icon: () => JSX.Element }> = [
 ];
 
 function Shell() {
-  const { loc, selectTab, back, exitHint } = useNav();
+  const { loc, selectTab, back, exitHint, open } = useNav();
   const { data } = useStore();
+  // A spreadsheet shared into the app (Android Share menu) opens Backup & restore, where its import preview waits.
+  useEffect(() => { void loadSharedFile().then((found) => { if (found) open({ page: "backup" }); }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const needsSetup = !userNameOf(data) || (siteCount(data) === 0 && !data.setupSkipped);
   if (needsSetup && !loc.page) return <div className="app"><main><WelcomeScreen /></main></div>;
   return (

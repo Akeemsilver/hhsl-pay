@@ -1,8 +1,9 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { applyAnnual, guessAnnualAssignment, parseAnnual, planAnnual, withSheetSites, type AnnualSheet, type ImportMode } from "../annualImport";
 import { dayDMY, MONTHS } from "../format";
 import type { AppData } from "../model";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { onSharedFile, takeSharedFile } from "../sharedFile";
 import { useStore } from "../store";
 import { ImportError, type Assignment } from "../siteMatch";
 
@@ -52,6 +53,15 @@ export function AnnualImport() {
     }
   }
 
+  // A spreadsheet shared into the app from Sheets, Drive or Files arrives here as if it had been chosen.
+  const readRef = useRef(read);
+  readRef.current = read;
+  useEffect(() => {
+    const go = () => { const f = takeSharedFile(); if (f) void readRef.current(f); };
+    go();
+    return onSharedFile(go);
+  }, []);
+
   const usable = sheet ? sheet.days.filter((d) => assign[d.client]?.site).length : 0;
 
   const changes = useMemo(() => (sheet ? planAnnual(base, sheet, assign) : null), [sheet, base, assign]);
@@ -77,8 +87,8 @@ export function AnnualImport() {
   return (
     <section className="card">
       <h2>Import from your yearly / monthly spreadsheet</h2>
-      <p className="muted small">Bring in the days worked from the yearly salary spreadsheet (a tab for each month) or a monthly one (a single calendar), saved as .xlsx. Months you already have are kept unless you choose Replace. Only days, hours, team lead and holiday flags are read. You see a preview first and nothing changes until you confirm.</p>
-      <input ref={input} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden
+      <p className="muted small">Bring in the days worked from the yearly salary spreadsheet (a tab for each month) or a monthly one (a single calendar), saved as .xlsx, or a Google Sheet picked straight from Google Drive in the file picker. On Android you can also use Share in the Sheets or Drive app and pick this app. Months you already have are kept unless you choose Replace. Only days, hours, team lead and holiday flags are read. You see a preview first and nothing changes until you confirm.</p>
+      <input ref={input} type="file" accept=".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.google-apps.spreadsheet,application/vnd.ms-excel,application/octet-stream" hidden
         onChange={(e) => { const f = e.target.files?.[0]; if (f) void read(f); e.target.value = ""; }} />
       <button className="wide" disabled={busy} onClick={() => input.current?.click()}>{busy ? "Reading…" : "Choose yearly / monthly spreadsheet…"}</button>
       {message && <p className={`notice ${message.ok ? "" : "warn"}`} role="status">{message.text}</p>}
