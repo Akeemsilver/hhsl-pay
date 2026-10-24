@@ -3,7 +3,7 @@ import { useBarHeight } from "../barHeight";
 import { ShareGuide } from "../components/ShareGuide";
 import { InstallHelp } from "../components/InstallHelp";
 import { appLink, siteCount } from "../kit";
-import { GUIDE_FILE } from "../guideFile";
+import { GUIDE_FILE, loadGuide } from "../guideFile";
 import { kitToPdf } from "../kitPdf";
 import { backupFileName, deliver, download, ratesKitOf, serialize, KIT_ATTEMPTS, shareFile, withTime } from "../backup";
 import { useNav } from "../nav";
@@ -37,20 +37,21 @@ export function SettingsHub() {
   const [copied, setCopied] = useState(false);
   const [askDownload, setAskDownload] = useState(false);
   const [askShare, setAskShare] = useState(false);
-  // The guide is fetched ahead of time too, so one tap opens the share menu.
-  const [guide, setGuide] = useState<Uint8Array | null>(null);
+  const [askGuide, setAskGuide] = useState(false);
+  // The guide is only downloaded when someone says yes to sharing it (never ahead of time).
   const [guideMessage, setGuideMessage] = useState<string | null>(null);
-  useEffect(() => {
-    let live = true;
-    fetch(`${import.meta.env.BASE_URL}${GUIDE_FILE}`).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject())).then((b) => live && setGuide(new Uint8Array(b))).catch(() => {});
-    return () => { live = false; };
-  }, []);
   const shareGuidePdf = async () => {
-    if (!guide) { setGuideMessage("The guide is not ready yet. It needs a signal; try again in a moment."); return; }
     try {
+      setGuideMessage("Getting the guide…");
+      const guide = await loadGuide();
       const how = await deliver(GUIDE_FILE, guide, "application/pdf");
       setGuideMessage(how === "shared" ? "Guide shared." : "Guide saved to your Downloads. Send that file on WhatsApp.");
-    } catch { setGuideMessage(null); }
+    } catch (e) {
+      const name = (e as DOMException)?.name;
+      if (name === "AbortError") setGuideMessage(null);
+      else if (name === "NotAllowedError") setGuideMessage("The guide is ready. Tap Share guide (PDF) again to send it.");
+      else setGuideMessage("The guide could not be loaded. It needs a signal; try again in a moment.");
+    }
   };
   const [kitMessage, setKitMessage] = useState<string | null>(null);
   const copyLink = async () => {
@@ -137,7 +138,7 @@ export function SettingsHub() {
         {kitMessage && <p className="notice" role="status">{kitMessage}</p>}
         <p className="muted small">Mobile guide: a step-by-step PDF with pictures that shows your colleague how to install the app and load the starter kit. Send it too.</p>
         <div className="row">
-          <button onClick={() => void shareGuidePdf()}>Share guide (PDF)</button>
+          <button onClick={() => setAskGuide(true)}>Share guide (PDF)</button>
         </div>
         {guideMessage && <p className="notice" role="status">{guideMessage}</p>}
         {sitesCount === 0 && <p className="muted small">Add your sites first, then the starter kit is ready to share.</p>}
@@ -272,6 +273,15 @@ export function SettingsHub() {
           confirmLabel="Yes, download and share" cancelLabel="Cancel" safe
           onCancel={() => setAskShare(false)}
           onConfirm={() => { setAskShare(false); void shareKit(true); }}
+        />
+      )}
+      {askGuide && (
+        <ConfirmDialog
+          title="Share the guide?"
+          message="Your phone's share menu opens with the guide (PDF), so you can send it to a colleague. If your phone cannot share files, it is saved to your Downloads instead."
+          confirmLabel="Yes, share" cancelLabel="Cancel" safe
+          onCancel={() => setAskGuide(false)}
+          onConfirm={() => { setAskGuide(false); void shareGuidePdf(); }}
         />
       )}
       {askDownload && (

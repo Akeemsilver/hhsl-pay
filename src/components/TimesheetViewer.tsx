@@ -9,6 +9,7 @@ import { makeTimesheetXlsx, XLSX_MIME } from "../timesheetExport";
 import { TemplateError } from "../timesheetFile";
 import { parseSheet, type SheetView } from "../xlsxView";
 import { useLayer } from "./layers";
+import { useAskFirst } from "./AskFirst";
 
 const HEAD_W = 30;
 const HEAD_H = 20;
@@ -27,6 +28,7 @@ export function TimesheetViewer({ month }: { month: string }) {
   const [error, setError] = useState<string | null>(null);
   const [zoom, setZoom] = useState(0.5);
   const [note, setNote] = useState<string | null>(null);
+  const { askFirst, askDialog } = useAskFirst();
   const scroller = useRef<HTMLDivElement>(null);
   const fitted = useRef(false);
   useLayer(back);
@@ -131,8 +133,9 @@ export function TimesheetViewer({ month }: { month: string }) {
 
       <footer className="viewer-foot">
         {note && <span className="muted small">{note}</span>}
-        <button className="primary" disabled={!file} onClick={download}>Download timesheet</button>
+        <button className="primary" disabled={!file} onClick={() => askFirst({ title: "Download the timesheet?", message: `The ${monthName} timesheet (Excel) is saved to your Downloads, or your phone's share menu opens.`, confirmLabel: "Yes, download" }, () => void download())}>Download timesheet</button>
       </footer>
+      {askDialog}
     </div>
   );
 }

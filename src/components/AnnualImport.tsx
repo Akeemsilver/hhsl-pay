@@ -99,10 +99,10 @@ export function AnnualImport() {
   return (
     <section className="card">
       <h2>Import from your yearly / monthly spreadsheet</h2>
-      <p className="muted small">Bring in the days worked from the yearly salary spreadsheet (a tab for each month) or a monthly one (a single calendar), saved as .xlsx, or a Google Sheet picked from Google Drive. Tap the button to choose where it comes from. Months you already have are kept unless you choose Replace. Only days, hours, team lead and holiday flags are read. You see a preview first and nothing changes until you confirm.</p>
+      <p className="muted small">Bring in the days worked from the yearly salary spreadsheet (a tab for each month) or a monthly one (a single calendar), saved as .xlsx (on the phone or in Google Drive). A Google Sheet must be saved as Excel first. Tap the button to choose where it comes from. Months you already have are kept unless you choose Replace. Only days, hours, team lead and holiday flags are read. You see a preview first and nothing changes until you confirm.</p>
       <input ref={input} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden
         onChange={(e) => { const f = e.target.files?.[0]; if (f) void read(f); e.target.value = ""; }} />
-      <input ref={driveInput} type="file" accept=".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.google-apps.spreadsheet,application/vnd.ms-excel,application/octet-stream" hidden aria-label="Google Drive spreadsheet"
+      <input ref={driveInput} type="file" accept=".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/octet-stream" hidden aria-label="Google Drive spreadsheet"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) void read(f); e.target.value = ""; }} />
       <button className="wide" disabled={busy} onClick={() => { setChooser(true); open({ sub: "source" }); }}>{busy ? "Reading…" : "Choose yearly / monthly spreadsheet…"}</button>
       {chooser && (

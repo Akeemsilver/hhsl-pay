@@ -15,6 +15,7 @@ import { makeTimesheetXlsx, XLSX_MIME } from "../timesheetExport";
 import { TemplateError, extractLogo, timesheetFileName } from "../timesheetFile";
 import { BottomSheet } from "./BottomSheet";
 import { PayrollDialog } from "./PayrollDialog";
+import { useAskFirst } from "./AskFirst";
 import { isIos } from "../install";
 import { MailIcon } from "./Icons";
 import { download, withTime } from "../backup";
@@ -60,6 +61,7 @@ export function ExportSheet({ month }: { month: string }) {
   const { template } = useTemplate();
   const [tab, setTab] = useState<"timesheet" | "payslip">("timesheet");
   const [payrollOpen, setPayrollOpen] = useState(false);
+  const { askFirst, askDialog } = useAskFirst();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
   const settings = timesheetSettingsOf(data);
@@ -180,7 +182,7 @@ export function ExportSheet({ month }: { month: string }) {
     setSavedName(name);
   };
   // Step 2: open the email app with the address, subject and message filled in; the file is attached from Files / Downloads.
-  const openEmailApp = (app: "mail" | "gmail" | "outlook") => {
+  const doOpenEmail = (app: "mail" | "gmail" | "outlook") => {
     if (isIos()) { window.location.href = app === "gmail" ? gmailLink(email) : app === "outlook" ? outlookLink(email) : mailtoLink(email); return; }
     if (!payrollFile) return;
     let name = savedName;
@@ -189,6 +191,13 @@ export function ExportSheet({ month }: { month: string }) {
     setPayrollOpen(false); setPayrollTry(0);
     setMessage({ text: `${name} is in your Downloads. Attach it to the email that opens, then send.`, ok: true });
     window.setTimeout(() => { window.location.href = mailtoLink(email); }, wait);
+  };
+  const openEmailApp = (app: "mail" | "gmail" | "outlook") => {
+    if (!isIos() && !savedName) {
+      askFirst({ title: "Save the time sheet and open email?", message: "The time sheet is saved to your Downloads, then your email app opens with the address, subject and message filled in. You attach the file.", confirmLabel: "Yes, save and open" }, () => doOpenEmail(app));
+      return;
+    }
+    doOpenEmail(app);
   };
   // Other way: the file goes straight into an email app through the share menu, attached; the address is copied for pasting.
   const shareToMail = async () => {
@@ -238,7 +247,7 @@ export function ExportSheet({ month }: { month: string }) {
             </button>
           )}
           {rows.length > 0 && (
-            <button className="link small" disabled={!!busy} onClick={downloadSheetPdf}>{busy === "sheet-pdf" ? "Preparing…" : "Also download as PDF"}</button>
+            <button className="link small" disabled={!!busy} onClick={() => askFirst({ title: "Download the timesheet as a PDF?", message: `A PDF copy of the ${monthName} timesheet is saved to your Downloads, or your phone's share menu opens.`, confirmLabel: "Yes, download" }, downloadSheetPdf)}>{busy === "sheet-pdf" ? "Preparing…" : "Also download as PDF"}</button>
           )}
           {(!name || rules.length === 0 || template === null) && (
             <div className="notice warn">
@@ -280,16 +289,17 @@ export function ExportSheet({ month }: { month: string }) {
         {tab === "timesheet" ? (
           <>
             <button disabled={!!busy || !template || rows.length === 0} onClick={() => open({ sub: "view" })}>View</button>
-            <button className="primary" disabled={!!busy || !template || rows.length === 0} onClick={downloadExcel}>{busy === "xlsx" ? "Preparing…" : "Download timesheet"}</button>
+            <button className="primary" disabled={!!busy || !template || rows.length === 0} onClick={() => askFirst({ title: "Download the timesheet?", message: `The ${monthName} timesheet (Excel) is saved to your Downloads, or your phone's share menu opens.`, confirmLabel: "Yes, download" }, downloadExcel)}>{busy === "xlsx" ? "Preparing…" : "Download timesheet"}</button>
           </>
         ) : (
           <>
             <button disabled={!!busy || slips.length === 0} onClick={() => open({ sub: "viewslip" })}>View</button>
-            <button className="primary" disabled={!!busy || slips.length === 0} onClick={downloadSlip}>{busy === "slip" ? "Preparing…" : "Download payslip (PDF)"}</button>
+            <button className="primary" disabled={!!busy || slips.length === 0} onClick={() => askFirst({ title: "Download the payslip?", message: `The ${monthName} payslip (PDF) is saved to your Downloads, or your phone's share menu opens.`, confirmLabel: "Yes, download" }, downloadSlip)}>{busy === "slip" ? "Preparing…" : "Download payslip (PDF)"}</button>
           </>
         )}
       </div>
-      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onShare={shareToPayroll} ios={isIos()} onSave={saveTimesheet} saved={isIos() ? savedToFiles : savedName !== null} savedName={savedName} onOpenEmail={openEmailApp} onShareMail={shareToMail} ready={!!payrollFile} error={payrollError} />}
+      {askDialog}
+      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onShare={() => askFirst({ title: "Share the time sheet?", message: "Your phone's share menu opens with the time sheet, so you can pick an app to send it with.", confirmLabel: "Yes, share" }, () => void shareToPayroll())} ios={isIos()} onSave={() => askFirst({ title: "Save the time sheet?", message: isIos() ? "The share menu opens: tap Save to Files to keep the time sheet." : "The time sheet is saved to your Downloads.", confirmLabel: "Yes, save" }, () => void saveTimesheet())} saved={isIos() ? savedToFiles : savedName !== null} savedName={savedName} onOpenEmail={openEmailApp} onShareMail={() => askFirst({ title: "Share the time sheet to an email app?", message: "The share menu opens with the time sheet attached. The payroll address is copied for you to paste.", confirmLabel: "Yes, share" }, () => void shareToMail())} ready={!!payrollFile} error={payrollError} />}
     </BottomSheet>
   );
 }

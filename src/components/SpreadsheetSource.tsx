@@ -16,8 +16,8 @@ export function SpreadsheetSource({ onClose, onPhone, onDrive }: { onClose: () =
           <span>From Downloads, Files or WhatsApp. The usual way.</span>
         </button>
         <button className="primary" onClick={onDrive}>
-          <strong>Google Sheet from Google Drive</strong>
-          <span>Browse Google Drive and pick your sheet. No saving as Excel first.</span>
+          <strong>Excel file in Google Drive</strong>
+          <span>Opens your phone's files: tap the menu at the top left, then Drive, and pick an Excel (.xlsx) file.</span>
         </button>
         <button aria-expanded={steps} onClick={() => setSteps((v) => !v)}>
           <strong>Share from Sheets or Drive (Android)</strong>
@@ -29,7 +29,7 @@ export function SpreadsheetSource({ onClose, onPhone, onDrive }: { onClose: () =
             <li>Tap the three dots, then <strong>Share &amp; export</strong>, then <strong>Send a copy</strong>.</li>
             <li>Choose <strong>Excel (.xlsx)</strong>.</li>
             <li>In the list of apps, tap <strong>HHSL pay</strong>. The import preview opens.</li>
-            <li>HHSL pay is not in the list? Use one of the two buttons above instead.</li>
+            <li>HHSL pay is not in the list? Save the sheet as Excel and use one of the two buttons above.</li>
           </ol>
         )}
       </div>

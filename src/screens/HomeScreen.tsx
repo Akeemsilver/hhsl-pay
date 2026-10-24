@@ -9,6 +9,7 @@ import { useMonthSlide } from "../slide";
 import { useNav } from "../nav";
 import { isOther, othersByDate } from "../model";
 import { useStore } from "../store";
+import { backupReminderDue } from "../backupReminder";
 import { TopBar } from "../components/TopBar";
 import { BackIcon, ForwardIcon } from "../components/Icons";
 import { TaxSwitch } from "../components/TaxMode";
@@ -17,7 +18,6 @@ import { AverageLine } from "../components/AverageLine";
 import { CalendarGrid, PayerTax } from "../components/MonthParts";
 import { sheetSplit } from "../sheetSplit";
 
-const DAY_MS = 86_400_000;
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -29,7 +29,7 @@ const longDate = (iso: string) => dayDMY(iso);
 const shortDate = (iso: string) => dayDMY(iso, true);
 
 export function HomeScreen() {
-  const { data } = useStore();
+  const { data, update } = useStore();
   const { open, showDay, selectTab, loc } = useNav();
   // The tapped date is shared with the Month tab and kept while the app is open, so the yellow highlight survives switching tabs.
   const [pickedDay, setPicked] = useSelectedDate();
@@ -68,9 +68,8 @@ export function HomeScreen() {
   const months = useYear(year);
   const prevYearMonths = useYear(year - 1);
 
+  const backupDue = backupReminderDue(data, today);
   const noSites = Object.keys(valueOn(data.history.sites, today)).length === 0;
-  const lastBackup = data.lastBackupAt ? Date.parse(data.lastBackupAt) : 0;
-  const backupDue = data.entries.length > 0 && Date.now() - lastBackup > 30 * DAY_MS;
 
   // Jobs on the time sheet get their own line (days only); their days and hours come out of their group's line, so the lines add up to the totals.
   const shownSplit = sheetSplit(shownResult, data, { others: !filterSite });
@@ -135,10 +134,14 @@ export function HomeScreen() {
       )}
 
       {backupDue && (
-        <div className="notice warn">
-          <strong>Back up your data</strong>
-          <p>{data.lastBackupAt ? "It has been over 30 days since your last backup." : "You have not backed up yet."} If this phone is lost or its browser data cleared, your entries are gone.</p>
-          <button onClick={() => open({ page: "backup" })}>Back up now</button>
+        <div className="notice warn" role="status">
+          <strong>Time to back up</strong>
+          <p>It is the last day of the month. If this phone is lost or its browser data is cleared, your entries are gone. A backup file keeps them safe.</p>
+          <div className="row">
+            <button className="primary" onClick={() => open({ page: "backup" })}>Back up now</button>
+            <button onClick={() => update((d) => ({ ...d, backupSnoozedMonth: today.slice(0, 7) }))}>Remind me later</button>
+          </div>
+          <p className="muted small">“Remind me later” asks again on the last day of next month.</p>
         </div>
       )}
 

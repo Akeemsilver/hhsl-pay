@@ -21,8 +21,8 @@ export default defineConfig(({ command }) => ({
         clientsClaim: true,
         // Takes a spreadsheet shared to the app (Android Share menu), see public/share-target-sw.js.
         importScripts: ["share-target-sw.js"],
-        // The guide is read inside the app: the newest copy when there is a signal, the last one seen when there is not.
-        runtimeCaching: [{ urlPattern: /\.pdf$/, handler: "NetworkFirst", options: { cacheName: "guide", networkTimeoutSeconds: 4 } }],
+        // The guide is kept on the phone the first time it is opened and used from there until the app updates; it is never fetched on its own.
+        runtimeCaching: [{ urlPattern: /\.pdf(\?.*)?$/, handler: "CacheFirst", options: { cacheName: "guide", expiration: { maxEntries: 1 }, cacheableResponse: { statuses: [200] } } }],
       },
       manifest: {
         name: "HHSL Salary Tracker",

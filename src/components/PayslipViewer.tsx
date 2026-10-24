@@ -7,6 +7,7 @@ import { payslipFileName, payslipPdf } from "../pdf/payslipPdf";
 import { timesheetSettingsOf } from "../model";
 import { useStore } from "../store";
 import { PdfViewer } from "./PdfViewer";
+import { useAskFirst } from "./AskFirst";
 
 /** The payslip PDF drawn page by page, with zoom. Nothing is downloaded until you press Download. */
 export function PayslipViewer({ month }: { month: string }) {
@@ -15,6 +16,7 @@ export function PayslipViewer({ month }: { month: string }) {
   const [pdf, setPdf] = useState<Uint8Array | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const { askFirst, askDialog } = useAskFirst();
 
   const name = timesheetSettingsOf(data).name;
   const monthName = `${MONTHS[Number(month.slice(5)) - 1]} ${month.slice(0, 4)}`;
@@ -42,13 +44,16 @@ export function PayslipViewer({ month }: { month: string }) {
   };
 
   return (
+    <>
+    {askDialog}
     <PdfViewer
       pdf={pdf} error={error} busy="Preparing the payslip…" label="Payslip" onClose={back}
       title={`Payslip – ${monthName.slice(0, 3)} ${month.slice(0, 4)}`}
       foot={<>
         {note ? <span className="muted small">{note}</span> : <span className="muted small">Preview only. Nothing is downloaded.</span>}
-        <button className="primary" disabled={!pdf} onClick={download}>Download payslip (PDF)</button>
+        <button className="primary" disabled={!pdf} onClick={() => askFirst({ title: "Download the payslip?", message: `The ${monthName} payslip (PDF) is saved to your Downloads, or your phone's share menu opens.`, confirmLabel: "Yes, download" }, () => void download())}>Download payslip (PDF)</button>
       </>}
     />
+    </>
   );
 }
