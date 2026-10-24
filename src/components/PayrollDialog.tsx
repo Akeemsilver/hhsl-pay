@@ -8,8 +8,8 @@ import { AppleMailIcon, GmailIcon, OutlookIcon } from "./MailIcons";
  * and message filled in, then attach the file. iPhone saves through the share menu (Save to Files) and has Mail, Gmail and Outlook
  * buttons; Android saves to Downloads and opens its own chooser (Gmail, Outlook, ...).
  */
-export function PayrollDialog({ email, fileName, onCancel, onShare, ready = true, error = null, ios = false, onSave, saved = false, savedName = null, onOpenEmail, onShareMail }: {
-  email: PayrollEmail; fileName: string; onCancel: () => void; onShare?: () => void; ready?: boolean; error?: string | null;
+export function PayrollDialog({ email, fileName, onCancel, ready = true, error = null, ios = false, onSave, saved = false, savedName = null, onOpenEmail, onShareMail }: {
+  email: PayrollEmail; fileName: string; onCancel: () => void; ready?: boolean; error?: string | null;
   ios?: boolean; onSave?: () => void; saved?: boolean; /** Android: the name saved in Downloads. */ savedName?: string | null;
   onOpenEmail?: (app: "mail" | "gmail" | "outlook") => void; onShareMail?: () => void;
 }) {
@@ -33,7 +33,7 @@ export function PayrollDialog({ email, fileName, onCancel, onShare, ready = true
             <button className={saved ? "" : "primary"} disabled={!ready || (!ios && saved)} onClick={onSave}>
               {!ready ? "Preparing…" : saved ? (ios ? "Saved ✓ Save again" : "Saved ✓") : "Save time sheet"}
             </button>
-            <span className="muted small">{ios ? <>In the menu that opens, tap <strong>Save to Files</strong>. If you pick an email app there instead, the file, subject and message go with it, and the address is copied for you to paste.</> : saved && savedName ? <>Saved in your Downloads as <strong>{savedName}</strong>.</> : "It is saved to your Downloads."}</span>
+            <span className="muted small">{ios ? <>In the menu that opens, tap <strong>Save to Files</strong>. If you pick an email app there instead, the file, subject and message go with it, and the address is copied for you to paste.</> : saved && savedName ? <>Saved in your Downloads as <strong>{savedName}</strong>. To send it with another app, such as WhatsApp, attach it from Downloads.</> : "It is saved to your Downloads. To send it with another app, such as WhatsApp, save it here, then attach it from Downloads."}</span>
           </div>
           <div>
             <strong>2. Open your email app</strong>
@@ -49,9 +49,7 @@ export function PayrollDialog({ email, fileName, onCancel, onShare, ready = true
             <span className="muted small">{ios ? "It opens with the address, subject and message filled in. Tap the paperclip and pick the time sheet from Files, then send." : "Pick Gmail or Outlook. It opens with the address, subject and message filled in. Tap the paperclip and attach the time sheet from Downloads, then send."}</span>
           </div>
         </div>
-        {ios
-          ? <button className="link" onClick={onShareMail} disabled={!ready}>Or share the file straight to an email app (you paste the address)</button>
-          : onShare && <button className="link" onClick={onShare} disabled={!ready}>Or share the file with another app instead</button>}
+        {ios && <button className="link" onClick={onShareMail} disabled={!ready}>Or share the file straight to an email app (you paste the address)</button>}
         <div className="row one">
           <button onClick={onCancel}>Close</button>
         </div>
