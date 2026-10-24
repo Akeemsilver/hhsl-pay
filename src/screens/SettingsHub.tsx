@@ -37,6 +37,7 @@ export function SettingsHub() {
   const [copied, setCopied] = useState(false);
   const [askDownload, setAskDownload] = useState(false);
   const [askShare, setAskShare] = useState(false);
+  const [askGuide, setAskGuide] = useState(false);
   // The guide is fetched ahead of time too, so one tap opens the share menu.
   const [guide, setGuide] = useState<Uint8Array | null>(null);
   const [guideMessage, setGuideMessage] = useState<string | null>(null);
@@ -137,7 +138,7 @@ export function SettingsHub() {
         {kitMessage && <p className="notice" role="status">{kitMessage}</p>}
         <p className="muted small">Mobile guide: a step-by-step PDF with pictures that shows your colleague how to install the app and load the starter kit. Send it too.</p>
         <div className="row">
-          <button onClick={() => void shareGuidePdf()}>Share guide (PDF)</button>
+          <button onClick={() => setAskGuide(true)}>Share guide (PDF)</button>
         </div>
         {guideMessage && <p className="notice" role="status">{guideMessage}</p>}
         {sitesCount === 0 && <p className="muted small">Add your sites first, then the starter kit is ready to share.</p>}
@@ -272,6 +273,15 @@ export function SettingsHub() {
           confirmLabel="Yes, download and share" cancelLabel="Cancel" safe
           onCancel={() => setAskShare(false)}
           onConfirm={() => { setAskShare(false); void shareKit(true); }}
+        />
+      )}
+      {askGuide && (
+        <ConfirmDialog
+          title="Share the guide?"
+          message="Your phone's share menu opens with the guide (PDF), so you can send it to a colleague. If your phone cannot share files, it is saved to your Downloads instead."
+          confirmLabel="Yes, share" cancelLabel="Cancel" safe
+          onCancel={() => setAskGuide(false)}
+          onConfirm={() => { setAskGuide(false); void shareGuidePdf(); }}
         />
       )}
       {askDownload && (

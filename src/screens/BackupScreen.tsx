@@ -7,9 +7,11 @@ import { newData } from "../model";
 import { useStore } from "../store";
 import { AnnualImport } from "../components/AnnualImport";
 import { PageHeader } from "../components/TopBar";
+import { useAskFirst } from "../components/AskFirst";
 
 export function BackupScreen() {
   const { data, update, replace, persistent } = useStore();
+  const { askFirst, askDialog } = useAskFirst();
   const [lock, setLock] = useState(false);
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
@@ -81,7 +83,7 @@ export function BackupScreen() {
             <span className="muted small">There is no way to recover a forgotten password.</span>
           </label>
         )}
-        <button className="primary wide" onClick={() => backUp("full")}>Back up / share file</button>
+        <button className="primary wide" onClick={() => askFirst({ title: "Back up everything?", message: "A backup file with all your days, sites and settings is saved to your Downloads, or your phone's share menu opens. Keep it somewhere safe.", confirmLabel: "Yes, back up" }, () => void backUp("full"))}>Back up / share file</button>
       </section>
 
       <section className="card">
@@ -98,7 +100,7 @@ export function BackupScreen() {
         <h2>Share rates only</h2>
         <p className="muted small">A file with your sites, rates and tax rules (no entries), so others can start from the same setup or receive a raise. Imports replace their rates and keep their entries.</p>
         <div className="row">
-          <button onClick={() => backUp("rates")}>Share rates file</button>
+          <button onClick={() => askFirst({ title: "Share the rates file?", message: "A file with your sites, rates and tax rules (no days, no pay) is saved to your Downloads, or your phone's share menu opens.", confirmLabel: "Yes, share" }, () => void backUp("rates"))}>Share rates file</button>
           <button onClick={() => ratesInput.current?.click()}>Import rates file…</button>
         </div>
         <input ref={ratesInput} type="file" accept=".json,.txt,.pdf,application/json,text/plain,application/pdf" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void readFile(f, "rates"); e.target.value = ""; }} />
@@ -113,6 +115,7 @@ export function BackupScreen() {
         </p>
         <button className="danger" onClick={() => confirm("Erase ALL entries and settings from this phone? This cannot be undone.") && replace(newData())}>Erase everything on this phone</button>
       </section>
+      {askDialog}
     </>
   );
 }
