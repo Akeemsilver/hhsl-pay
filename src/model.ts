@@ -69,6 +69,8 @@ export interface AppData {
   /** Chosen calendar colour (0–11) per site, keyed by lower-case site name. Sites without one get an automatic colour. */
   siteColors?: Record<string, number>;
   lastBackupAt?: string;
+  /** The month ("YYYY-MM") whose backup reminder was put off with "Remind me later": the next one is the last day of the next month. */
+  backupSnoozedMonth?: string;
 }
 
 export function correctionKey(month: string, payer: string): string {
