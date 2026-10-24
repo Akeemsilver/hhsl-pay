@@ -231,7 +231,7 @@ s.append(steps([
  ("<b>Send the link.</b> Tap <b>Share link</b>, pick <b>WhatsApp</b> and the person.", None),
  ("<b>Send the starter kit.</b> Tap <b>Share starter kit</b>, then <b>Yes, download and share</b>. The kit is sent as a <b>PDF</b> (HHSL-starter-kit-rates.pdf), because WhatsApp lets your colleague download a PDF but only shows a text file as text. The time is added to the saved file's name so it never clashes with an earlier copy.", Bs("b-share-ask"), 50),
  ("The share menu opens. Pick <b>WhatsApp</b> (or Gmail) and the same person, and send the file.", Bs("b-share-after"), 50),
- ("<b>Send this guide.</b> Tap <b>Share guide (PDF)</b> and pick the same person. The guide is built into the app, so it is always the latest one. It needs a signal to load.", None)]))
+ ("<b>Send this guide.</b> Tap <b>Share guide</b>, then <b>Yes, share</b>, and pick the same person. (<b>Download guide</b>, next to it, saves the guide to your Downloads instead.) The guide is built into the app, so it is always the latest one. It needs a signal the first time, because the app only downloads the guide after you say yes.", None)]))
 s.append(Paragraph(f"This guide is also here, if you ever need to download it again: {lk(LINK + GUIDE_FILE, GUIDE_FILE)}", small))
 s.append(Paragraph(f"Back to the top: {go('p1', 'Part 1')} · {go('p2', 'Part 2')} · {go('p3', 'Part 3')} · {go('p4', 'Part 4')} · {go('p5', 'Part 5')} · {go('p6', 'Part 6')} · {go('p7', 'Part 7')}", small))
 doc.build(s)

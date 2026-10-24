@@ -38,6 +38,7 @@ export function SettingsHub() {
   const [askDownload, setAskDownload] = useState(false);
   const [askShare, setAskShare] = useState(false);
   const [askGuide, setAskGuide] = useState(false);
+  const [askGuideDownload, setAskGuideDownload] = useState(false);
   // The guide is only downloaded when someone says yes to sharing it (never ahead of time).
   const [guideMessage, setGuideMessage] = useState<string | null>(null);
   const shareGuidePdf = async () => {
@@ -49,8 +50,18 @@ export function SettingsHub() {
     } catch (e) {
       const name = (e as DOMException)?.name;
       if (name === "AbortError") setGuideMessage(null);
-      else if (name === "NotAllowedError") setGuideMessage("The guide is ready. Tap Share guide (PDF) again to send it.");
+      else if (name === "NotAllowedError") setGuideMessage("The guide is ready. Tap Share guide again to send it.");
       else setGuideMessage("The guide could not be loaded. It needs a signal; try again in a moment.");
+    }
+  };
+  // Saved straight to Downloads, after a yes. The guide is fetched only now, never ahead of time.
+  const downloadGuidePdf = async () => {
+    try {
+      setGuideMessage("Getting the guide…");
+      download(withTime(GUIDE_FILE), await loadGuide(), "application/pdf");
+      setGuideMessage("Guide saved to your Downloads.");
+    } catch {
+      setGuideMessage("The guide could not be loaded. It needs a signal; try again in a moment.");
     }
   };
   const [kitMessage, setKitMessage] = useState<string | null>(null);
@@ -126,19 +137,20 @@ export function SettingsHub() {
         <label>App link
           <input readOnly aria-label="App link" value={link} onFocus={(e) => e.currentTarget.select()} />
         </label>
-        <div className="row">
+        <div className="row pair">
           <button onClick={copyLink}>{copied ? "Copied ✓" : "Copy link"}</button>
           <button onClick={() => void shareLink()}>Share link</button>
         </div>
         <p className="muted small">Starter kit: everything you have set up, such as sites, rates, colours, NIS, PAYE, health surcharge, payslip groups, holidays and the timesheet settings and form (no days, no pay, no name). It has to be sent as a file because this app's code is public, and company rates must never be put in public code. Only send it to colleagues.</p>
-        <div className="row">
+        <div className="row pair">
           <button className="primary" disabled={sitesCount === 0} onClick={() => setAskShare(true)}>Share starter kit</button>
           <button disabled={sitesCount === 0} onClick={() => setAskDownload(true)}>Download starter kit</button>
         </div>
         {kitMessage && <p className="notice" role="status">{kitMessage}</p>}
         <p className="muted small">Mobile guide: a step-by-step PDF with pictures that shows your colleague how to install the app and load the starter kit. Send it too.</p>
-        <div className="row">
-          <button onClick={() => setAskGuide(true)}>Share guide (PDF)</button>
+        <div className="row pair">
+          <button className="primary" onClick={() => setAskGuide(true)}>Share guide</button>
+          <button onClick={() => setAskGuideDownload(true)}>Download guide</button>
         </div>
         {guideMessage && <p className="notice" role="status">{guideMessage}</p>}
         {sitesCount === 0 && <p className="muted small">Add your sites first, then the starter kit is ready to share.</p>}
@@ -282,6 +294,15 @@ export function SettingsHub() {
           confirmLabel="Yes, share" cancelLabel="Cancel" safe
           onCancel={() => setAskGuide(false)}
           onConfirm={() => { setAskGuide(false); void shareGuidePdf(); }}
+        />
+      )}
+      {askGuideDownload && (
+        <ConfirmDialog
+          title="Download the guide?"
+          message="The guide (PDF, about 2.7 MB) is saved to your Downloads."
+          confirmLabel="Yes, download" cancelLabel="Cancel" safe
+          onCancel={() => setAskGuideDownload(false)}
+          onConfirm={() => { setAskGuideDownload(false); void downloadGuidePdf(); }}
         />
       )}
       {askDownload && (
