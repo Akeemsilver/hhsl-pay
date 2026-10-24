@@ -1068,3 +1068,8 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 .source-choices button strong { font-size: 1.02rem; }
 .source-choices button span { font-size: 0.84rem; font-weight: 400; opacity: 0.9; }
 .source-choices ol { margin: 0; padding-left: 1.2rem; display: grid; gap: 4px; }
+
+/* Share this app: each pair of buttons splits the width equally, so Copy / Share link, Share / Download starter kit and Share / Download guide line up. */
+.share-app .row.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.share-app .row.pair button { width: 100%; }
+.share-app .row.pair button { font-size: 0.92rem; padding-inline: 8px; }

@@ -25,8 +25,8 @@ const bk = page.getByRole("button", { name: /Backup & restore/ }); await bk.scro
 await snap("settings-backup", { row: bk });
 const sh = page.getByRole("button", { name: "Share starter kit" }); await sh.scrollIntoViewIfNeeded(); await page.waitForTimeout(300);
 await page.locator("input[aria-label='App link']").evaluate((el) => { el.value = "https://akeemsilver.github.io/hhsl-pay/"; });
-await page.getByRole("button", { name: "Share guide (PDF)" }).scrollIntoViewIfNeeded(); await page.waitForTimeout(300);
-await snap("settings-share", { link: page.getByRole("button", { name: "Share link" }), kit: sh, guide: page.getByRole("button", { name: "Share guide (PDF)" }) });
+await page.getByRole("button", { name: "Share guide", exact: true }).scrollIntoViewIfNeeded(); await page.waitForTimeout(300);
+await snap("settings-share", { link: page.getByRole("button", { name: "Share link" }), kit: sh, guide: page.getByRole("button", { name: "Share guide", exact: true }) });
 await bk.scrollIntoViewIfNeeded(); await bk.click(); await page.waitForTimeout(500);
 const ch = page.getByRole("button", { name: /Choose yearly \/ monthly spreadsheet/ }); await ch.scrollIntoViewIfNeeded(); await page.waitForTimeout(300);
 await snap("backup-import", { choose: ch });

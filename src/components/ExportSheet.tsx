@@ -107,7 +107,6 @@ export function ExportSheet({ month }: { month: string }) {
     setMessage(null);
     setPayrollFile(null);
     setPayrollError(null);
-    setPayrollTry(0);
     setSavedToFiles(false);
     setSavedName(null);
     setPayrollOpen(true);
@@ -120,34 +119,6 @@ export function ExportSheet({ month }: { month: string }) {
     }
   };
   const [payrollError, setPayrollError] = useState<string | null>(null);
-  // Android Chrome sometimes refuses a file type ("Permission denied"). Each tap tries the next way of labelling the same file.
-  const SHARE_TYPES = [XLSX_MIME, "application/octet-stream", "application/zip"];
-  const [payrollTry, setPayrollTry] = useState(0);
-  // Secondary: share the file with any app (WhatsApp, ...).
-  const shareToPayroll = async () => {
-    if (!payrollFile) return;
-    const { fileName, bytes } = payrollFile;
-    setPayrollError(null);
-    const type = SHARE_TYPES[payrollTry % SHARE_TYPES.length]!;
-    const file = new File([bytes as BlobPart], fileName, { type });
-    const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-    if (nav.share && (!nav.canShare || nav.canShare({ files: [file] }))) {
-      try {
-        // Only the file and its name: adding the email text made Android refuse the share.
-        await nav.share({ files: [file], title: fileName });
-        setPayrollOpen(false); setPayrollTry(0);
-        setMessage({ text: "Time sheet shared.", ok: true });
-      } catch (e) {
-        // Closing the share menu is fine. Any other refusal is shown, and the next tap tries another file type.
-        if ((e as DOMException)?.name !== "AbortError") {
-          setPayrollError((e as Error)?.message || (e as DOMException)?.name || "Error");
-          setPayrollTry((t) => t + 1);
-        }
-      }
-      return;
-    }
-    setPayrollError("this phone cannot share files");
-  };
   // iPhone: a downloaded file opens in a viewer that hides the mail app, so there are two steps: the file goes to the share menu
   // (Save to Files), then the chosen email app opens with the address, subject and message filled in, and the file is attached from Files.
   const [savedToFiles, setSavedToFiles] = useState(false);
@@ -181,23 +152,12 @@ export function ExportSheet({ month }: { month: string }) {
     download(name, payrollFile.bytes, XLSX_MIME);
     setSavedName(name);
   };
-  // Step 2: open the email app with the address, subject and message filled in; the file is attached from Files / Downloads.
-  const doOpenEmail = (app: "mail" | "gmail" | "outlook") => {
-    if (isIos()) { window.location.href = app === "gmail" ? gmailLink(email) : app === "outlook" ? outlookLink(email) : mailtoLink(email); return; }
-    if (!payrollFile) return;
-    let name = savedName;
-    if (!name) { name = withTime(payrollFile.fileName); download(name, payrollFile.bytes, XLSX_MIME); setSavedName(name); }
-    const wait = savedName ? 0 : 700;
-    setPayrollOpen(false); setPayrollTry(0);
-    setMessage({ text: `${name} is in your Downloads. Attach it to the email that opens, then send.`, ok: true });
-    window.setTimeout(() => { window.location.href = mailtoLink(email); }, wait);
-  };
+  // Step 2 only opens the email app with the address, subject and message filled in. It never saves the file: that is step 1, and
+  // a copy may already be on the phone. (A link cannot attach a file, so the file is attached from Downloads / Files.) The box stays
+  // open, so coming back from the email app the file can still be saved.
   const openEmailApp = (app: "mail" | "gmail" | "outlook") => {
-    if (!isIos() && !savedName) {
-      askFirst({ title: "Save the time sheet and open email?", message: "The time sheet is saved to your Downloads, then your email app opens with the address, subject and message filled in. You attach the file.", confirmLabel: "Yes, save and open" }, () => doOpenEmail(app));
-      return;
-    }
-    doOpenEmail(app);
+    if (isIos()) { window.location.href = app === "gmail" ? gmailLink(email) : app === "outlook" ? outlookLink(email) : mailtoLink(email); return; }
+    window.location.href = mailtoLink(email);
   };
   // Other way: the file goes straight into an email app through the share menu, attached; the address is copied for pasting.
   const shareToMail = async () => {
@@ -299,7 +259,7 @@ export function ExportSheet({ month }: { month: string }) {
         )}
       </div>
       {askDialog}
-      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} onShare={() => askFirst({ title: "Share the time sheet?", message: "Your phone's share menu opens with the time sheet, so you can pick an app to send it with.", confirmLabel: "Yes, share" }, () => void shareToPayroll())} ios={isIos()} onSave={() => askFirst({ title: "Save the time sheet?", message: isIos() ? "The share menu opens: tap Save to Files to keep the time sheet." : "The time sheet is saved to your Downloads.", confirmLabel: "Yes, save" }, () => void saveTimesheet())} saved={isIos() ? savedToFiles : savedName !== null} savedName={savedName} onOpenEmail={openEmailApp} onShareMail={() => askFirst({ title: "Share the time sheet to an email app?", message: "The share menu opens with the time sheet attached. The payroll address is copied for you to paste.", confirmLabel: "Yes, share" }, () => void shareToMail())} ready={!!payrollFile} error={payrollError} />}
+      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} ios={isIos()} onSave={() => askFirst({ title: "Save the time sheet?", message: isIos() ? "The share menu opens: tap Save to Files to keep the time sheet." : "The time sheet is saved to your Downloads.", confirmLabel: "Yes, save" }, () => void saveTimesheet())} saved={isIos() ? savedToFiles : savedName !== null} savedName={savedName} onOpenEmail={openEmailApp} onShareMail={() => void shareToMail()} ready={!!payrollFile} error={payrollError} />}
     </BottomSheet>
   );
 }
