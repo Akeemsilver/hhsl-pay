@@ -3,7 +3,7 @@ import { useBarHeight } from "../barHeight";
 import { ShareGuide } from "../components/ShareGuide";
 import { InstallHelp } from "../components/InstallHelp";
 import { appLink, siteCount } from "../kit";
-import { GUIDE_FILE } from "../guideFile";
+import { GUIDE_FILE, loadGuide } from "../guideFile";
 import { kitToPdf } from "../kitPdf";
 import { backupFileName, deliver, download, ratesKitOf, serialize, KIT_ATTEMPTS, shareFile, withTime } from "../backup";
 import { useNav } from "../nav";
@@ -38,20 +38,20 @@ export function SettingsHub() {
   const [askDownload, setAskDownload] = useState(false);
   const [askShare, setAskShare] = useState(false);
   const [askGuide, setAskGuide] = useState(false);
-  // The guide is fetched ahead of time too, so one tap opens the share menu.
-  const [guide, setGuide] = useState<Uint8Array | null>(null);
+  // The guide is only downloaded when someone says yes to sharing it (never ahead of time).
   const [guideMessage, setGuideMessage] = useState<string | null>(null);
-  useEffect(() => {
-    let live = true;
-    fetch(`${import.meta.env.BASE_URL}${GUIDE_FILE}`).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject())).then((b) => live && setGuide(new Uint8Array(b))).catch(() => {});
-    return () => { live = false; };
-  }, []);
   const shareGuidePdf = async () => {
-    if (!guide) { setGuideMessage("The guide is not ready yet. It needs a signal; try again in a moment."); return; }
     try {
+      setGuideMessage("Getting the guide…");
+      const guide = await loadGuide();
       const how = await deliver(GUIDE_FILE, guide, "application/pdf");
       setGuideMessage(how === "shared" ? "Guide shared." : "Guide saved to your Downloads. Send that file on WhatsApp.");
-    } catch { setGuideMessage(null); }
+    } catch (e) {
+      const name = (e as DOMException)?.name;
+      if (name === "AbortError") setGuideMessage(null);
+      else if (name === "NotAllowedError") setGuideMessage("The guide is ready. Tap Share guide (PDF) again to send it.");
+      else setGuideMessage("The guide could not be loaded. It needs a signal; try again in a moment.");
+    }
   };
   const [kitMessage, setKitMessage] = useState<string | null>(null);
   const copyLink = async () => {
