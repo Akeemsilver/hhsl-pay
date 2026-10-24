@@ -17,7 +17,6 @@ import { AverageLine } from "../components/AverageLine";
 import { CalendarGrid, PayerTax } from "../components/MonthParts";
 import { sheetSplit } from "../sheetSplit";
 
-const DAY_MS = 86_400_000;
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -69,8 +68,6 @@ export function HomeScreen() {
   const prevYearMonths = useYear(year - 1);
 
   const noSites = Object.keys(valueOn(data.history.sites, today)).length === 0;
-  const lastBackup = data.lastBackupAt ? Date.parse(data.lastBackupAt) : 0;
-  const backupDue = data.entries.length > 0 && Date.now() - lastBackup > 30 * DAY_MS;
 
   // Jobs on the time sheet get their own line (days only); their days and hours come out of their group's line, so the lines add up to the totals.
   const shownSplit = sheetSplit(shownResult, data, { others: !filterSite });
@@ -131,14 +128,6 @@ export function HomeScreen() {
             <button className="primary" onClick={() => open({ page: "sites" })}>Set up rates</button>
             <button onClick={() => open({ page: "backup" })}>Restore a backup</button>
           </div>
-        </div>
-      )}
-
-      {backupDue && (
-        <div className="notice warn">
-          <strong>Back up your data</strong>
-          <p>{data.lastBackupAt ? "It has been over 30 days since your last backup." : "You have not backed up yet."} If this phone is lost or its browser data cleared, your entries are gone.</p>
-          <button onClick={() => open({ page: "backup" })}>Back up now</button>
         </div>
       )}
 

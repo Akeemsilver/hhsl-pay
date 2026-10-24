@@ -180,7 +180,7 @@ s.append(steps([
  ("<b>This guide, inside the app:</b> tap the eye icon at the top of any screen, then <b>Guide (PDF)</b>.", A("g-eye"), 50),
  ("The guide opens like your phone's own PDF reader. Pinch with two fingers (or tap + and −) to zoom, and scroll to read. <b>Download guide (PDF)</b> at the bottom saves it to your Downloads, and <b>Share</b> sends it to a colleague.", A("g-viewer"), 50)]))
 s.append(Spacer(1, 3))
-s.append(callout("Back up now and then", ["Your days live only on your phone. If it is lost or its browser data is cleared, they are gone. Go to <b>Settings, Backup &amp; restore</b> and save a backup file every month or so, somewhere safe such as " + lk("https://drive.google.com/", "Google Drive") + "."]))
+s.append(callout("Back up now and then", ["Your days live only on your phone. If it is lost or its browser data is cleared, they are gone. Go to <b>Settings, Backup &amp; restore</b> and save a backup file whenever you choose (the app never asks you to, and it works without one), somewhere safe such as " + lk("https://drive.google.com/", "Google Drive") + "."]))
 
 s.append(Paragraph('<a name="p5"/>Part 5. How to: sites, rates and settings', h1))
 s.append(Paragraph("Everything below is in <b>Settings</b> (the gear at the top right of any screen). The list under <b>Your work</b> has: <b>Site locations &amp; rates</b>, <b>NIS &amp; tax</b>, <b>Payslips</b>, <b>Timesheet</b>, <b>Public holidays</b> and <b>Backup &amp; restore</b>.", ParagraphStyle("kw5", parent=body, keepWithNext=1)))
