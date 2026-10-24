@@ -1062,3 +1062,9 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 /* A public holiday in the Month list: the same circled H as on the calendar tile, beside the date number. */
 .day .hol-slot { display: flex; justify-content: center; }
 .day .hol-h { width: 17px; height: 17px; box-sizing: border-box; border-radius: 50%; border: 1.5px solid var(--hol); color: var(--hol); font-size: 0.62rem; font-weight: 800; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 2px 0 0; }
+
+.source-choices { display: grid; gap: 10px; margin: 8px 0 16px; }
+.source-choices button { display: grid; gap: 2px; text-align: left; padding: 12px 14px; min-height: 0; }
+.source-choices button strong { font-size: 1.02rem; }
+.source-choices button span { font-size: 0.84rem; font-weight: 400; opacity: 0.9; }
+.source-choices ol { margin: 0; padding-left: 1.2rem; display: grid; gap: 4px; }

@@ -3,7 +3,9 @@ import { applyAnnual, guessAnnualAssignment, parseAnnual, planAnnual, withSheetS
 import { dayDMY, MONTHS } from "../format";
 import type { AppData } from "../model";
 import { ConfirmDialog } from "./ConfirmDialog";
-import { onSharedFile, takeSharedFile } from "../sharedFile";
+import { onSharedFile, takeSharedFile, takeSharedNotice } from "../sharedFile";
+import { useNav } from "../nav";
+import { SpreadsheetSource } from "./SpreadsheetSource";
 import { useStore } from "../store";
 import { ImportError, type Assignment } from "../siteMatch";
 
@@ -18,6 +20,11 @@ const MODES: Array<{ id: ImportMode; title: string; text: string }> = [
 export function AnnualImport() {
   const { data, replace } = useStore();
   const input = useRef<HTMLInputElement>(null);
+  // The second picker: the same file picker, but also offering Google Sheets (Google Drive converts them to Excel).
+  const driveInput = useRef<HTMLInputElement>(null);
+  const { loc, open, back } = useNav();
+  const [chooser, setChooser] = useState(false);
+  useEffect(() => { if (loc.sub !== "source") setChooser(false); }, [loc.sub]);
   const [sheet, setSheet] = useState<AnnualSheet | null>(null);
   const [assign, setAssign] = useState<Record<string, Assignment | undefined>>({});
   const [mode, setMode] = useState<ImportMode>("update");
@@ -57,7 +64,12 @@ export function AnnualImport() {
   const readRef = useRef(read);
   readRef.current = read;
   useEffect(() => {
-    const go = () => { const f = takeSharedFile(); if (f) void readRef.current(f); };
+    const go = () => {
+      const n = takeSharedNotice();
+      if (n) setMessage(n);
+      const f = takeSharedFile();
+      if (f) void readRef.current(f);
+    };
     go();
     return onSharedFile(go);
   }, []);
@@ -87,10 +99,19 @@ export function AnnualImport() {
   return (
     <section className="card">
       <h2>Import from your yearly / monthly spreadsheet</h2>
-      <p className="muted small">Bring in the days worked from the yearly salary spreadsheet (a tab for each month) or a monthly one (a single calendar), saved as .xlsx, or a Google Sheet picked straight from Google Drive in the file picker. On Android you can also use Share in the Sheets or Drive app and pick this app. Months you already have are kept unless you choose Replace. Only days, hours, team lead and holiday flags are read. You see a preview first and nothing changes until you confirm.</p>
-      <input ref={input} type="file" accept=".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.google-apps.spreadsheet,application/vnd.ms-excel,application/octet-stream" hidden
+      <p className="muted small">Bring in the days worked from the yearly salary spreadsheet (a tab for each month) or a monthly one (a single calendar), saved as .xlsx, or a Google Sheet picked from Google Drive. Tap the button to choose where it comes from. Months you already have are kept unless you choose Replace. Only days, hours, team lead and holiday flags are read. You see a preview first and nothing changes until you confirm.</p>
+      <input ref={input} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden
         onChange={(e) => { const f = e.target.files?.[0]; if (f) void read(f); e.target.value = ""; }} />
-      <button className="wide" disabled={busy} onClick={() => input.current?.click()}>{busy ? "Reading…" : "Choose yearly / monthly spreadsheet…"}</button>
+      <input ref={driveInput} type="file" accept=".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.google-apps.spreadsheet,application/vnd.ms-excel,application/octet-stream" hidden aria-label="Google Drive spreadsheet"
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) void read(f); e.target.value = ""; }} />
+      <button className="wide" disabled={busy} onClick={() => { setChooser(true); open({ sub: "source" }); }}>{busy ? "Reading…" : "Choose yearly / monthly spreadsheet…"}</button>
+      {chooser && (
+        <SpreadsheetSource
+          onClose={back}
+          onPhone={() => { input.current?.click(); back(); }}
+          onDrive={() => { driveInput.current?.click(); back(); }}
+        />
+      )}
       {message && <p className={`notice ${message.ok ? "" : "warn"}`} role="status">{message.text}</p>}
       {undo && !sheet && <button className="wide" onClick={() => { replace(undo); setUndo(null); setMessage({ text: "The last import was undone. Your days are back as they were.", ok: true }); }}>Undo the last import</button>}
 

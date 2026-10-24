@@ -32,7 +32,7 @@ function Shell() {
   const { loc, selectTab, back, exitHint, open } = useNav();
   const { data } = useStore();
   // A spreadsheet shared into the app (Android Share menu) opens Backup & restore, where its import preview waits.
-  useEffect(() => { void loadSharedFile().then((found) => { if (found) open({ page: "backup" }); }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void loadSharedFile().then((found) => { if (found !== "none") open({ page: "backup" }); }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const needsSetup = !userNameOf(data) || (siteCount(data) === 0 && !data.setupSkipped);
   if (needsSetup && !loc.page) return <div className="app"><main><WelcomeScreen /></main></div>;
   return (
