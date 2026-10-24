@@ -286,7 +286,7 @@ input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent);
 
 .days { list-style: none; margin: 0; padding: 0; }
 .day {
-  width: 100%; display: grid; grid-template-columns: 34px 26px 1fr auto; align-items: center; gap: 8px;
+  width: 100%; display: grid; grid-template-columns: 34px 26px 20px 1fr auto; align-items: center; gap: 8px;
   text-align: left; border-radius: 0; border: 0; border-bottom: 1px solid var(--edge);
   background: var(--card); min-height: 52px; padding: 6px 12px;
 }
@@ -1058,3 +1058,7 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 .mail-apps button { display: grid; justify-items: center; align-content: start; gap: 6px; padding: 10px 4px 8px; min-height: 0; }
 .mail-apps button > svg { width: 48px; height: 48px; border-radius: 11px; }
 .mail-apps button span { font-size: 0.72rem; font-weight: 600; line-height: 1.15; text-align: center; }
+
+/* A public holiday in the Month list: the same circled H as on the calendar tile, beside the date number. */
+.day .hol-slot { display: flex; justify-content: center; }
+.day .hol-h { width: 17px; height: 17px; box-sizing: border-box; border-radius: 50%; border: 1.5px solid var(--hol); color: var(--hol); font-size: 0.62rem; font-weight: 800; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 2px 0 0; }
