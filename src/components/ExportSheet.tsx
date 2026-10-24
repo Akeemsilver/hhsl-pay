@@ -181,23 +181,12 @@ export function ExportSheet({ month }: { month: string }) {
     download(name, payrollFile.bytes, XLSX_MIME);
     setSavedName(name);
   };
-  // Step 2: open the email app with the address, subject and message filled in; the file is attached from Files / Downloads.
-  const doOpenEmail = (app: "mail" | "gmail" | "outlook") => {
-    if (isIos()) { window.location.href = app === "gmail" ? gmailLink(email) : app === "outlook" ? outlookLink(email) : mailtoLink(email); return; }
-    if (!payrollFile) return;
-    let name = savedName;
-    if (!name) { name = withTime(payrollFile.fileName); download(name, payrollFile.bytes, XLSX_MIME); setSavedName(name); }
-    const wait = savedName ? 0 : 700;
-    setPayrollOpen(false); setPayrollTry(0);
-    setMessage({ text: `${name} is in your Downloads. Attach it to the email that opens, then send.`, ok: true });
-    window.setTimeout(() => { window.location.href = mailtoLink(email); }, wait);
-  };
+  // Step 2 only opens the email app with the address, subject and message filled in. It never saves the file: that is step 1, and
+  // a copy may already be on the phone. (A link cannot attach a file, so the file is attached from Downloads / Files.) The box stays
+  // open, so coming back from the email app the file can still be saved.
   const openEmailApp = (app: "mail" | "gmail" | "outlook") => {
-    if (!isIos() && !savedName) {
-      askFirst({ title: "Save the time sheet and open email?", message: "The time sheet is saved to your Downloads, then your email app opens with the address, subject and message filled in. You attach the file.", confirmLabel: "Yes, save and open" }, () => doOpenEmail(app));
-      return;
-    }
-    doOpenEmail(app);
+    if (isIos()) { window.location.href = app === "gmail" ? gmailLink(email) : app === "outlook" ? outlookLink(email) : mailtoLink(email); return; }
+    window.location.href = mailtoLink(email);
   };
   // Other way: the file goes straight into an email app through the share menu, attached; the address is copied for pasting.
   const shareToMail = async () => {
