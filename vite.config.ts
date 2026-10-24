@@ -19,6 +19,8 @@ export default defineConfig(({ command }) => ({
       includeAssets: ["icon.svg"],
       workbox: {
         clientsClaim: true,
+        // Takes a spreadsheet shared to the app (Android Share menu), see public/share-target-sw.js.
+        importScripts: ["share-target-sw.js"],
         // The guide is read inside the app: the newest copy when there is a signal, the last one seen when there is not.
         runtimeCaching: [{ urlPattern: /\.pdf$/, handler: "NetworkFirst", options: { cacheName: "guide", networkTimeoutSeconds: 4 } }],
       },
@@ -32,6 +34,13 @@ export default defineConfig(({ command }) => ({
         orientation: "portrait",
         start_url: base,
         scope: base,
+        // Lets Google Sheets, Drive or Files "Share" a spreadsheet straight to this app (Android).
+        share_target: {
+          action: `${base}share-target`,
+          method: "POST",
+          enctype: "multipart/form-data",
+          params: { files: [{ name: "file", accept: [".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"] }] },
+        },
         icons: [
           { src: "icon-192.png", sizes: "192x192", type: "image/png" },
           { src: "icon-512.png", sizes: "512x512", type: "image/png" },
