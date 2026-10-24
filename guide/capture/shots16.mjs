@@ -17,6 +17,6 @@ await page.getByLabel("Your full name").fill("Your Name"); await page.getByRole(
 await page.locator("input[aria-label='Starter kit file']").setInputFiles("/tmp/kit-test.txt"); await page.waitForTimeout(900);
 await page.getByRole("button", { name: "Settings" }).click(); await page.getByRole("button", { name: /Backup/ }).first().click(); await page.waitForTimeout(500);
 await page.getByRole("button", { name: /Choose yearly/ }).tap(); await page.waitForTimeout(500);
-await snap("source", { drive: page.getByRole("button", { name: /Google Sheet from Google Drive/ }), phone: page.getByRole("button", { name: /Excel file on this phone/ }), share: page.getByRole("button", { name: /Share from Sheets or Drive/ }), head: page.locator(".source-choices") });
+await snap("source", { drive: page.getByRole("button", { name: /Excel file in Google Drive/ }), phone: page.getByRole("button", { name: /Excel file on this phone/ }), share: page.getByRole("button", { name: /Share from Sheets or Drive/ }), head: page.locator(".source-choices") });
 fs.writeFileSync(`${S}/boxes.json`, JSON.stringify(boxes));
 await b.close();
