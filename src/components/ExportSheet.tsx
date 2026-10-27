@@ -200,10 +200,7 @@ export function ExportSheet({ month }: { month: string }) {
           {rules.length === 0 ? (
             <p className="muted">Choose which jobs go on the timesheet first.</p>
           ) : rows.length === 0 ? (
-            <>
-              <p className="muted">No timesheet jobs logged in {monthName}.</p>
-              {!sentToPayroll && data.payrollStatus?.[month] !== "none" && <button onClick={() => markPayroll(month, "none")}>Nothing to send for {monthName}</button>}
-            </>
+            <p className="muted">No timesheet jobs logged in {monthName}.</p>
           ) : (
             <>
               <div className="ts-summary">
@@ -215,7 +212,6 @@ export function ExportSheet({ month }: { month: string }) {
               {warnings.length > 0 && <ul className="ts-warn">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>}
             </>
           )}
-          {rows.length > 0 && sentToPayroll && <p className="notice" role="status">✓ {monthName} is marked as sent to payroll.</p>}
           {rows.length > 0 && (
             <button className="payroll-btn" disabled={!!busy || !template} onClick={openPayroll}>
               <MailIcon /> Send to payroll
@@ -277,7 +273,7 @@ export function ExportSheet({ month }: { month: string }) {
       {askSent && (
         <ConfirmDialog safe title="Did you send the email to payroll?" message={`Tap Yes if the email with your ${monthName} time sheet was sent. The app then stops reminding you about ${monthName}.`}
           confirmLabel="Yes, sent" cancelLabel="No, not yet"
-          onConfirm={() => { markPayroll(month, "sent"); setAskSent(false); setMessage({ text: `${monthName} is marked as sent to payroll.`, ok: true }); }}
+          onConfirm={() => { markPayroll(month, "sent"); setAskSent(false); }}
           onCancel={() => setAskSent(false)} />
       )}
       {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => { setPayrollOpen(false); if (tried && !sentToPayroll) setAskSent(true); }} ios={isIos()} onSave={() => askFirst({ title: "Save the time sheet?", message: isIos() ? "The share menu opens: tap Save to Files to keep the time sheet." : "The time sheet is saved to your Downloads.", confirmLabel: "Yes, save" }, () => void saveTimesheet())} saved={isIos() ? savedToFiles : savedName !== null} savedName={savedName} onOpenEmail={openEmailApp} onShareMail={() => void shareToMail()} ready={!!payrollFile} error={payrollError} />}
