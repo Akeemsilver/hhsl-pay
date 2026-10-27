@@ -12,6 +12,9 @@ export function Wheel({ items, index, onIndex, label }: { items: string[]; index
   const emitted = useRef(index);
   const first = useRef(true);
   const pending = useRef(0);
+  // Where the wheel is gliding to when the value was changed from outside. While it glides, the scroll positions it passes
+  // through are not picked values: they must not be reported, or the time would flicker through every value in between.
+  const gliding = useRef<number | null>(null);
 
   // Move the wheel when the value changes from outside (a quick time, typing, a tap), but not while the finger is doing it.
   useLayoutEffect(() => {
@@ -19,7 +22,16 @@ export function Wheel({ items, index, onIndex, label }: { items: string[]; index
     if (!el) return;
     if (index === emitted.current && !first.current) return;
     const top = index * ITEM;
-    if (Math.abs(el.scrollTop - top) > 1) el.scrollTo({ top, behavior: first.current ? "auto" : "smooth" });
+    if (Math.abs(el.scrollTop - top) > 1) {
+      if (first.current) el.scrollTo({ top, behavior: "auto" });
+      else {
+        gliding.current = top;
+        window.clearTimeout(pending.current);
+        // A safety net in case the glide is cut short: control goes back to the finger after a moment.
+        pending.current = window.setTimeout(() => { gliding.current = null; }, 900);
+        el.scrollTo({ top, behavior: "smooth" });
+      }
+    }
     emitted.current = index;
     first.current = false;
   }, [index]);
@@ -29,6 +41,10 @@ export function Wheel({ items, index, onIndex, label }: { items: string[]; index
   const onScroll = () => {
     const el = box.current;
     if (!el) return;
+    if (gliding.current !== null) {
+      if (Math.abs(el.scrollTop - gliding.current) <= 1) { gliding.current = null; window.clearTimeout(pending.current); }
+      return;
+    }
     const i = Math.min(items.length - 1, Math.max(0, Math.round(el.scrollTop / ITEM)));
     if (i !== emitted.current) { emitted.current = i; onIndex(i); }
   };
@@ -41,7 +57,7 @@ export function Wheel({ items, index, onIndex, label }: { items: string[]; index
     <div className="wheel" role="listbox" aria-label={label} aria-activedescendant={`${label}-${index}`} tabIndex={0}
       onKeyDown={(e) => { if (e.key === "ArrowDown") { e.preventDefault(); step(1); } else if (e.key === "ArrowUp") { e.preventDefault(); step(-1); } }}>
       <div className="wheel-band" aria-hidden="true" />
-      <div className="wheel-scroll" ref={box} onScroll={onScroll} style={{ height: ITEM * ROWS }}>
+      <div className="wheel-scroll" ref={box} onScroll={onScroll} onPointerDown={() => { gliding.current = null; }} onWheel={() => { gliding.current = null; }} style={{ height: ITEM * ROWS }}>
         <div style={{ height: ITEM * 2 }} aria-hidden="true" />
         {items.map((t, i) => {
           const d = Math.abs(i - index);
