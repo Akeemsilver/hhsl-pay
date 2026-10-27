@@ -10,6 +10,8 @@ import { useNav } from "../nav";
 import { isOther, othersByDate } from "../model";
 import { useStore } from "../store";
 import { backupReminderDue } from "../backupReminder";
+import { monthTitle, payrollReminderFor } from "../payrollReminder";
+import { useMarkPayroll } from "../components/PayrollReminder";
 import { TopBar } from "../components/TopBar";
 import { BackIcon, ForwardIcon } from "../components/Icons";
 import { TaxSwitch } from "../components/TaxMode";
@@ -68,7 +70,10 @@ export function HomeScreen() {
   const months = useYear(year);
   const prevYearMonths = useYear(year - 1);
 
-  const backupDue = backupReminderDue(data, today);
+  const payroll = payrollReminderFor(data, today);
+  const markPayroll = useMarkPayroll();
+  // The payroll reminder comes first; the backup reminder waits until it is answered.
+  const backupDue = backupReminderDue(data, today) && !payroll;
   const noSites = Object.keys(valueOn(data.history.sites, today)).length === 0;
 
   // Jobs on the time sheet get their own line (days only); their days and hours come out of their group's line, so the lines add up to the totals.
@@ -129,6 +134,27 @@ export function HomeScreen() {
           <div className="row">
             <button className="primary" onClick={() => open({ page: "sites" })}>Set up rates</button>
             <button onClick={() => open({ page: "backup" })}>Restore a backup</button>
+          </div>
+        </div>
+      )}
+
+      {payroll?.stage === "due" && (
+        <div className="notice warn" role="status">
+          <strong>Send {monthTitle(payroll.month)} to payroll</strong>
+          <p>Payroll closes on {payroll.closes}. A time sheet that is not sent in time is not paid. If none of your jobs need to be submitted, you can ignore this.</p>
+          <div className="row">
+            <button className="primary" onClick={() => open({ sub: `export:${payroll.month}` })}>Send to payroll</button>
+            <button onClick={() => markPayroll(payroll.month, "none")}>Nothing to send</button>
+          </div>
+        </div>
+      )}
+
+      {payroll?.stage === "missed" && (
+        <div className="notice warn" role="status">
+          <strong>{monthTitle(payroll.month)} was not marked as sent</strong>
+          <p>Payroll closed on {payroll.closes}. If you did send it, you can ignore this.</p>
+          <div className="row one">
+            <button onClick={() => markPayroll(payroll.month, "seen")}>OK</button>
           </div>
         </div>
       )}

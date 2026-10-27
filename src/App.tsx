@@ -19,6 +19,8 @@ import { siteCount } from "./kit";
 import { useStore } from "./store";
 import { BackupScreen } from "./screens/BackupScreen";
 import { DayEditor } from "./screens/DayEditor";
+import { PayrollReminderPopup } from "./components/PayrollReminder";
+import { ExportSheet } from "./components/ExportSheet";
 import { CalendarIcon, HomeIcon, PieIcon, TableIcon } from "./components/Icons";
 
 const TABS: Array<{ id: Tab; label: string; Icon: () => JSX.Element }> = [
@@ -62,6 +64,8 @@ function Shell() {
           ))}
         </nav>
       )}
+      {loc.sub?.startsWith("export:") && !loc.day && !loc.page && <ExportSheet month={loc.sub.slice(7)} />}
+      <PayrollReminderPopup />
       {loc.day && <DayEditor key={loc.day} date={loc.day} add={loc.add} focus={loc.focus} onClose={back} />}
     </div>
   );
