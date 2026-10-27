@@ -71,6 +71,8 @@ export interface AppData {
   lastBackupAt?: string;
   /** The month ("YYYY-MM") whose backup reminder was put off with "Remind me later": the next one is the last day of the next month. */
   backupSnoozedMonth?: string;
+  /** Per month ("YYYY-MM"): the payroll email was sent, there was nothing to send, or the missed-deadline note was read. Stops that month's payroll reminder. */
+  payrollStatus?: Record<string, "sent" | "none" | "seen">;
 }
 
 export function correctionKey(month: string, payer: string): string {

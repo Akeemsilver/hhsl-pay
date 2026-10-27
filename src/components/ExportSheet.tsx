@@ -19,6 +19,8 @@ import { useAskFirst } from "./AskFirst";
 import { isIos } from "../install";
 import { MailIcon } from "./Icons";
 import { download, withTime } from "../backup";
+import { ConfirmDialog } from "./ConfirmDialog";
+import { useMarkPayroll } from "./PayrollReminder";
 import { gmailLink, mailtoLink, outlookLink, payrollEmail } from "../payroll";
 
 
@@ -61,6 +63,11 @@ export function ExportSheet({ month }: { month: string }) {
   const { template } = useTemplate();
   const [tab, setTab] = useState<"timesheet" | "payslip">("timesheet");
   const [payrollOpen, setPayrollOpen] = useState(false);
+  // Set once the person saved the file or opened an email app, so closing the box then asks whether the email really went.
+  const [tried, setTried] = useState(false);
+  const [askSent, setAskSent] = useState(false);
+  const markPayroll = useMarkPayroll();
+  const sentToPayroll = data.payrollStatus?.[month] === "sent";
   const { askFirst, askDialog } = useAskFirst();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
@@ -109,6 +116,7 @@ export function ExportSheet({ month }: { month: string }) {
     setPayrollError(null);
     setSavedToFiles(false);
     setSavedName(null);
+    setTried(false);
     setPayrollOpen(true);
     try {
       const made = await makeTimesheetXlsx(template!.bytes, settings, month, data.entries, data.history);
@@ -144,18 +152,20 @@ export function ExportSheet({ month }: { month: string }) {
     if (isIos()) {
       // The menu is for Save to Files, but if an email app is picked there instead, the file goes with the subject and message, and the address is on the clipboard.
       try { await navigator.clipboard.writeText(email.to); } catch { /* the address is shown on screen */ }
-      if (await shareFileNow(true)) setSavedToFiles(true);
+      if (await shareFileNow(true)) { setSavedToFiles(true); setTried(true); }
       return;
     }
     if (savedName) return;
     const name = withTime(payrollFile.fileName);
     download(name, payrollFile.bytes, XLSX_MIME);
     setSavedName(name);
+    setTried(true);
   };
   // Step 2 only opens the email app with the address, subject and message filled in. It never saves the file: that is step 1, and
   // a copy may already be on the phone. (A link cannot attach a file, so the file is attached from Downloads / Files.) The box stays
   // open, so coming back from the email app the file can still be saved.
   const openEmailApp = (app: "mail" | "gmail" | "outlook") => {
+    setTried(true);
     if (isIos()) { window.location.href = app === "gmail" ? gmailLink(email) : app === "outlook" ? outlookLink(email) : mailtoLink(email); return; }
     window.location.href = mailtoLink(email);
   };
@@ -164,6 +174,7 @@ export function ExportSheet({ month }: { month: string }) {
     try { await navigator.clipboard.writeText(email.to); } catch { /* the address is shown on screen */ }
     if (await shareFileNow(true)) {
       setPayrollOpen(false);
+      if (!sentToPayroll) setAskSent(true);
       setMessage({ text: `Time sheet shared. The address ${email.to} is copied: paste it in the To box.`, ok: true });
     }
   };
@@ -259,7 +270,13 @@ export function ExportSheet({ month }: { month: string }) {
         )}
       </div>
       {askDialog}
-      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => setPayrollOpen(false)} ios={isIos()} onSave={() => askFirst({ title: "Save the time sheet?", message: isIos() ? "The share menu opens: tap Save to Files to keep the time sheet." : "The time sheet is saved to your Downloads.", confirmLabel: "Yes, save" }, () => void saveTimesheet())} saved={isIos() ? savedToFiles : savedName !== null} savedName={savedName} onOpenEmail={openEmailApp} onShareMail={() => void shareToMail()} ready={!!payrollFile} error={payrollError} />}
+      {askSent && (
+        <ConfirmDialog safe title="Did you send the email to payroll?" message={`Tap Yes if the email with your ${monthName} time sheet was sent. The app then stops reminding you about ${monthName}.`}
+          confirmLabel="Yes, sent" cancelLabel="No, not yet"
+          onConfirm={() => { markPayroll(month, "sent"); setAskSent(false); }}
+          onCancel={() => setAskSent(false)} />
+      )}
+      {payrollOpen && <PayrollDialog email={email} fileName={timesheetFileName(name, month)} onCancel={() => { setPayrollOpen(false); if (tried && !sentToPayroll) setAskSent(true); }} ios={isIos()} onSave={() => askFirst({ title: "Save the time sheet?", message: isIos() ? "The share menu opens: tap Save to Files to keep the time sheet." : "The time sheet is saved to your Downloads.", confirmLabel: "Yes, save" }, () => void saveTimesheet())} saved={isIos() ? savedToFiles : savedName !== null} savedName={savedName} onOpenEmail={openEmailApp} onShareMail={() => void shareToMail()} ready={!!payrollFile} error={payrollError} />}
     </BottomSheet>
   );
 }
