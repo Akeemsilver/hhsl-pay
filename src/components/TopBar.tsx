@@ -67,13 +67,13 @@ export function TopBar({ title, subtitle, month = todayISO().slice(0, 7) }: { ti
 }
 
 /** Header for pushed pages: back arrow plus title. */
-export function PageHeader({ title }: { title: string }) {
+export function PageHeader({ title, action }: { title: string; action?: { label: string; onClick: () => void } }) {
   const { back } = useNav();
   return (
-    <header className="bar page">
+    <header className={`bar page${action ? " has-action" : ""}`}>
       <button className="icon" aria-label="Back" onClick={back}><BackIcon /></button>
       <h1>{title}</h1>
-      <span className="spacer" />
+      {action ? <button className="head-add" onClick={action.onClick}>{action.label}</button> : <span className="spacer" />}
     </header>
   );
 }

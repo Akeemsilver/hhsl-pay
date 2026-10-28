@@ -583,7 +583,7 @@ export function SitesPage() {
 
   return (
     <>
-      <PageHeader title="Site locations & rates" />
+      <PageHeader title="Site locations & rates" action={{ label: "＋ Add", onClick: () => open({ page: "addsite" }) }} />
       <p className="muted pad">Change the rates for a whole payslip group in one go, or edit one site. Every change has a “Take effect from” date, which is today unless you pick another day. Earlier days keep their old rates, so a raise never changes past pay.</p>
 
       {asOf !== todayISO() && (

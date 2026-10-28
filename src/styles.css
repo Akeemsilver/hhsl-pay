@@ -1073,3 +1073,7 @@ button.close-site { justify-content: center; text-align: center; color: var(--ac
 .share-app .row.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .share-app .row.pair button { width: 100%; }
 .share-app .row.pair button { font-size: 0.92rem; padding-inline: 8px; }
+
+/* "+ Add" at the top right of a page header; the title stays on one line */
+.bar.page.has-action h1 { white-space: nowrap; font-size: 1.1rem; }
+.bar.page .head-add { min-width: 0; height: 36px; padding: 0 14px; border-radius: 18px; font-weight: 600; background: var(--accent); color: var(--accent-text); border: 0; box-shadow: 0 1px 2px rgba(16,24,40,.14), 0 4px 10px rgba(16,24,40,.16); }
