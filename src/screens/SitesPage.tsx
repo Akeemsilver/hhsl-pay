@@ -4,7 +4,7 @@ import { valueOn, type RoleRates, type SiteRates, type SiteTable, type TierCaps 
 import { DEFAULT_ROLES, emptySite, isFixedDay, isOther, payerLabel, rolesFor } from "../model";
 import { useStore } from "../store";
 import { useNav } from "../nav";
-import { SITE_COLORS, siteColorIndex } from "../siteColor";
+import { SITE_COLORS, freeColor, siteColorIndex, usedColors } from "../siteColor";
 import { PageHeader } from "../components/TopBar";
 import { NumInput, TakeEffect, versionLabel, type Num } from "../components/settingsParts";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -189,6 +189,24 @@ function RoleCard({ name, role, site, builtIn, onChange, onRename, onRemove }: {
   );
 }
 
+/** The calendar colours. A colour that another site already uses has a cross through it, but can still be picked. */
+function ColorSwatches({ value, used, onPick }: { value: number; used: Map<number, string[]>; onPick: (i: number) => void }) {
+  return (
+    <>
+      <div className="swatches">
+        {SITE_COLORS.map((c, i) => {
+          const by = used.get(i);
+          return (
+            <button key={c.name} type="button" className={`color-swatch ${i === value ? "on" : ""} ${by ? "used" : ""}`} style={{ background: c.hex }}
+              aria-label={by ? `${c.name}, already used by ${by.join(", ")}` : c.name} aria-pressed={i === value} onClick={() => onPick(i)} />
+          );
+        })}
+      </div>
+      {used.size > 0 && <p className="muted small">A cross means another site already uses that colour. You can still pick it.</p>}
+    </>
+  );
+}
+
 function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename, onRemove, onRenameRole }: {
   name: string; saved: SiteRates; payers: Record<string, string>; firstDate: string; impactFor: (draft: SiteRates, from: string) => Impact;
   onSave: (draft: SiteRates, from: string) => void; onRename: (n: string) => void; onRemove: () => void; onRenameRole: (from: string, to: string) => void;
@@ -219,12 +237,7 @@ function SiteCard({ name, saved, payers, firstDate, impactFor, onSave, onRename,
       </label>
       <div>
         <span className="muted small">Calendar colour</span>
-        <div className="swatches">
-          {SITE_COLORS.map((c, i) => (
-            <button key={c.name} type="button" className={`color-swatch ${i === colorNow ? "on" : ""}`} style={{ background: c.hex }} aria-label={c.name} aria-pressed={i === colorNow}
-              onClick={() => update((d) => ({ ...d, siteColors: { ...d.siteColors, [name.toLowerCase()]: i } }))} />
-          ))}
-        </div>
+        <ColorSwatches value={colorNow} used={usedColors(data, name)} onPick={(i) => update((d) => ({ ...d, siteColors: { ...d.siteColors, [name.toLowerCase()]: i } }))} />
       </div>
       <label>Payslip
         <select value={site.payer} onChange={(e) => set("payer", e.target.value)}>
@@ -411,10 +424,12 @@ const newFixedSite = (): SiteRates => ({ ...emptySite("main"), weekday: { x1: 12
 
 function AddSiteForm({ table, payers, onAdd, onDone }: {
   table: SiteTable; payers: Record<string, string>;
-  onAdd: (name: string, payer: string, site: SiteRates, newGroupName?: string) => void;
+  onAdd: (name: string, payer: string, site: SiteRates, newGroupName?: string, color?: number) => void;
   onDone: () => void;
 }) {
+  const { data } = useStore();
   const [name, setName] = useState("");
+  const [color, setColor] = useState(() => freeColor(data));
   const groupIds = Object.keys(payers);
   const [group, setGroup] = useState(groupIds[0] ?? "main");
   const [groupName, setGroupName] = useState("");
@@ -448,12 +463,16 @@ function AddSiteForm({ table, payers, onAdd, onDone }: {
       : tpl === "custom"
         ? { ...emptySite(id), baseRate: finalStd, leadRate: finalLead, ...extra, weekday: { ...custom.weekday }, weekend: { ...custom.weekend }, holiday: { ...custom.holiday } }
         : applyTemplate({ ...emptySite(id), baseRate: finalStd, leadRate: finalLead, ...extra }, tpl);
-    onAdd(name.trim(), id, site, isNew ? groupName.trim() : undefined);
+    onAdd(name.trim(), id, site, isNew ? groupName.trim() : undefined, color);
     reset();
   };
   return (
     <div className="add-site page-form">
       <label>Site name<input placeholder="New site name" aria-label="New site name" value={name} onChange={(e) => setName(e.target.value)} /></label>
+      <div>
+        <span className="muted small">Calendar colour</span>
+        <ColorSwatches value={color} used={usedColors(data)} onPick={setColor} />
+      </div>
       <label>Group (which payslip it goes on)
         <select aria-label="Group for the new site" value={group} onChange={(e) => { setGroup(e.target.value); setTemplate(undefined); }}>
           {groupIds.map((id) => <option key={id} value={id}>{payers[id]}</option>)}
@@ -651,8 +670,9 @@ export function AddSitePage() {
       <section className="card">
         <AddSiteForm
           table={table} payers={payers} onDone={back}
-          onAdd={(name, payer, site, groupName) => update((d) => ({
+          onAdd={(name, payer, site, groupName, color) => update((d) => ({
             ...d,
+            siteColors: color === undefined ? d.siteColors : { ...d.siteColors, [name.toLowerCase()]: color },
             payerNames: groupName ? { ...d.payerNames, [payer]: groupName } : d.payerNames,
             history: { ...d.history, sites: d.history.sites.map((v) => ({ ...v, value: { ...v.value, [name]: structuredClone(site) } })) },
           }))}
