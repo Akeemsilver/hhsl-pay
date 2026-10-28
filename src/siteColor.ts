@@ -56,3 +56,23 @@ export function allSiteColors(data: AppData): Record<string, number> {
   for (const key of siteOrder(data)) out[key] = siteColorIndex(data, key);
   return out;
 }
+
+/** The colours already in use, each with the names of the sites that use it. `except` leaves one site out (the one being edited). */
+export function usedColors(data: AppData, except?: string): Map<number, string[]> {
+  const names: Record<string, string> = {};
+  for (const v of data.history.sites) for (const k of Object.keys(v.value)) names[k.toLowerCase()] ??= k;
+  const out = new Map<number, string[]>();
+  for (const key of siteOrder(data)) {
+    if (key === except?.toLowerCase()) continue;
+    const i = siteColorIndex(data, key);
+    out.set(i, [...(out.get(i) ?? []), names[key] ?? key]);
+  }
+  return out;
+}
+
+/** The first colour no site uses yet, or the next one in order when every colour is taken. */
+export function freeColor(data: AppData): number {
+  const used = usedColors(data);
+  const free = SITE_COLORS.findIndex((_, i) => !used.has(i));
+  return free >= 0 ? free : siteOrder(data).length % SITE_COLORS.length;
+}
