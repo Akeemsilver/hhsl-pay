@@ -19,8 +19,16 @@ export function SitePicker({ value, names, onPick, label = "Site", unknownNote }
     const vv = window.visualViewport;
     const set = () => document.documentElement.style.setProperty("--vvh", `${vv?.height ?? window.innerHeight}px`);
     set();
+    // Keyboards open at different speeds, so measure again shortly after the sheet opens as well.
+    const later = [100, 300, 600].map((ms) => window.setTimeout(set, ms));
     vv?.addEventListener("resize", set);
-    return () => { vv?.removeEventListener("resize", set); document.documentElement.style.removeProperty("--vvh"); };
+    vv?.addEventListener("scroll", set);
+    window.addEventListener("resize", set);
+    return () => {
+      later.forEach(window.clearTimeout);
+      vv?.removeEventListener("resize", set); vv?.removeEventListener("scroll", set); window.removeEventListener("resize", set);
+      document.documentElement.style.removeProperty("--vvh");
+    };
   }, [open]);
   const close = () => { setOpen(false); setQ(""); };
   const pick = (n: string) => { onPick(n); close(); };

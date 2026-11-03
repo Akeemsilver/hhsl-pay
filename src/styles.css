@@ -725,9 +725,10 @@ button.icon.gear, .bar.page button.icon[aria-label="Back"] { box-shadow: 0 1px 2
 .pick-list button.on { font-weight: 700; color: var(--accent); }
 button.danger.outline { background: var(--card); color: var(--danger); border: 2px solid var(--danger); font-weight: 600; }
 .sheet-backdrop.from-top { align-items: flex-start; }
-.sheet-backdrop.from-top .sheet { border-radius: 0 0 18px 18px; padding-top: calc(12px + env(safe-area-inset-top)); max-height: var(--vvh, 92%); }
+/* The search sheet fills everything above the keyboard, whatever keyboard it is, so no gap shows between it and the keyboard. */
+.sheet-backdrop.from-top .sheet { border-radius: 0; padding: calc(12px + env(safe-area-inset-top)) 16px 8px; height: min(var(--vvh, 100%), 100%); max-height: none; display: flex; flex-direction: column; overflow: hidden; }
 .pick-head { display: flex; align-items: center; justify-content: space-between; }
-.from-top .pick-list { max-height: calc(var(--vvh, 100vh) - 190px); }
+.from-top .pick-list { flex: 1 1 auto; min-height: 0; max-height: none; }
 .view-choices { display: grid; gap: 12px; margin: 8px 0 16px; }
 .view-choices button { min-height: 56px; font-size: 1.05rem; }
 .pdf-pages { display: grid; gap: 10px; justify-items: center; }
