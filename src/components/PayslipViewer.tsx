@@ -47,7 +47,7 @@ export function PayslipViewer({ month }: { month: string }) {
     <>
     {askDialog}
     <PdfViewer
-      pdf={pdf} error={error} busy="Preparing the payslip…" label="Payslip" onClose={back}
+      pdf={pdf} error={error} busy="Preparing the payslip…" label="Payslip" money onClose={back}
       title={`Payslip – ${monthName.slice(0, 3)} ${month.slice(0, 4)}`}
       foot={<>
         {note ? <span className="muted small">{note}</span> : <span className="muted small">Preview only. Nothing is downloaded.</span>}

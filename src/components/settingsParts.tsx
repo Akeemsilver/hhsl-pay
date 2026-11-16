@@ -9,7 +9,7 @@ export type Num = number | undefined;
 export function NumInput({ value, onChange, label, step = "any" }: { value: Num; onChange: (v: Num) => void; label: string; step?: string }) {
   return (
     <input
-      type="number" inputMode="decimal" step={step} aria-label={label}
+      type="number" inputMode="decimal" step={step} aria-label={label} data-money={/×|percent|factor|show rate above hours/i.test(label) ? undefined : ""}
       value={value ?? ""}
       onChange={(e) => onChange(e.target.value === "" ? undefined : Number(e.target.value))}
     />

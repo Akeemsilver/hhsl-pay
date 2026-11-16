@@ -104,11 +104,11 @@ export function CorrectionBox({ month, result }: { month: string; result: MonthR
             <legend>{p.payer === "all" ? "All sites (combined)" : payerLabel(data.payerNames, p.payer)}</legend>
             <div className="grid2">
               <label>Actual gross
-                <input type="number" inputMode="decimal" step="any" placeholder={String(Math.round(p.gross * 100) / 100)}
+                <input data-money="" type="number" inputMode="decimal" step="any" placeholder={String(Math.round(p.gross * 100) / 100)}
                   value={o?.gross ?? ""} onChange={(e) => setCorrection(p.payer, "gross", e.target.value)} />
               </label>
               <label>Actual PAYE
-                <input type="number" inputMode="decimal" step="any" placeholder="calculated"
+                <input data-money="" type="number" inputMode="decimal" step="any" placeholder="calculated"
                   value={o?.paye ?? ""} onChange={(e) => setCorrection(p.payer, "paye", e.target.value)} />
               </label>
             </div>

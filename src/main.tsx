@@ -4,9 +4,11 @@ import { App } from "./App";
 import { StoreProvider } from "./store";
 import { watchInstall } from "./install";
 import { applyTheme, getTheme } from "./theme";
+import { initHideMoney } from "./hideMoney";
 import "./styles.css";
 
 applyTheme(getTheme());
+initHideMoney();
 watchInstall();
 
 createRoot(document.getElementById("root")!).render(
