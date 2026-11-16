@@ -174,7 +174,7 @@ export function MonthColumns({ labels, series, title, tipTitle }: {
         {ticks.map((t) => (
           <g key={t}>
             <line x1={L} x2={W - R} y1={y(t)} y2={y(t)} className="grid" />
-            <text x={L - 6} y={y(t) + 3.5} textAnchor="end" className="axis">{compact(t)}</text>
+            <text x={L - 6} y={y(t) + 3.5} textAnchor="end" className="axis mny">{compact(t)}</text>
           </g>
         ))}
         {labels.map((lab, i) => {
@@ -210,7 +210,7 @@ export function MonthColumns({ labels, series, title, tipTitle }: {
         {peak.v > 0 && (
           <text
             x={L + peak.i * slot + (slot - group) / 2 + peak.s * (barW + gap) + barW / 2}
-            y={y(peak.v) - 4} textAnchor="middle" className="axis strong"
+            y={y(peak.v) - 4} textAnchor="middle" className="axis strong mny"
           >{compact(peak.v)}</text>
         )}
       </svg>

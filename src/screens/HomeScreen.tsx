@@ -13,7 +13,8 @@ import { backupReminderDue } from "../backupReminder";
 import { monthTitle, payrollReminderFor } from "../payrollReminder";
 import { useMarkPayroll } from "../components/PayrollReminder";
 import { TopBar } from "../components/TopBar";
-import { BackIcon, ForwardIcon } from "../components/Icons";
+import { BackIcon, EyeIcon, EyeOffIcon, ForwardIcon } from "../components/Icons";
+import { hideMoneySupported, useHideMoney } from "../hideMoney";
 import { TaxSwitch } from "../components/TaxMode";
 import { MonthPicker } from "../components/MonthPicker";
 import { AverageLine } from "../components/AverageLine";
@@ -70,6 +71,7 @@ export function HomeScreen() {
   const months = useYear(year);
   const prevYearMonths = useYear(year - 1);
 
+  const [hidden, toggleHidden] = useHideMoney();
   const payroll = payrollReminderFor(data, today);
   const markPayroll = useMarkPayroll();
   // The payroll reminder comes first; the backup reminder waits until it is answered.
@@ -178,7 +180,14 @@ export function HomeScreen() {
             <span className="delta">{diff >= 0 ? "▲" : "▼"} {money(Math.abs(diff))} vs {MONTHS[Number(prevShown.slice(5)) - 1]?.slice(0, 3)}</span>
           )}
         </div>
-        <div className="hero-value">{money(shownResult.gross)}</div>
+        <div className="hero-value-row">
+          <div className="hero-value">{money(shownResult.gross)}</div>
+          {hideMoneySupported() && (
+            <button className="hero-eye" aria-label={hidden ? "Show money" : "Hide money"} aria-pressed={hidden} title={hidden ? "Show money" : "Hide money"} onClick={toggleHidden}>
+              {hidden ? <EyeIcon /> : <EyeOffIcon />}
+            </button>
+          )}
+        </div>
         <div className="hero-stats">
           <div><span><i className="dot dot-net" />Net</span><strong className="c-net">{money(shownResult.net)}</strong></div>
           <div><span><i className="dot dot-paye" />PAYE</span><strong className="c-paye">{money(shownResult.paye)}</strong></div>
@@ -236,7 +245,7 @@ export function HomeScreen() {
             const x = i * 60 + 10;
             return (
               <g key={r.month}>
-                {r.gross > 0 && <text x={x + 20} y={96 - h} textAnchor="middle" className="axis">{r.gross >= 1000 ? `${(r.gross / 1000).toFixed(1)}k` : Math.round(r.gross)}</text>}
+                {r.gross > 0 && <text x={x + 20} y={96 - h} textAnchor="middle" className="axis mny">{r.gross >= 1000 ? `${(r.gross / 1000).toFixed(1)}k` : Math.round(r.gross)}</text>}
                 <rect x={x} y={102 - h} width="40" height={Math.max(h, r.gross > 0 ? 1 : 0)} rx="4" className={`bar-rect gross ${r.month === month ? "now" : ""}`} />
                 <text x={x + 20} y="120" textAnchor="middle" className="axis">{MONTHS[Number(r.month.slice(5)) - 1]?.slice(0, 3)}</text>
               </g>

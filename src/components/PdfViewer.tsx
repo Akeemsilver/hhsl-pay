@@ -11,8 +11,8 @@ interface Doc { numPages: number; getPage: (n: number) => Promise<any> }
  * A PDF reader like the phone's own: pages are drawn sharp at the phone's full pixel density, only the pages near the
  * screen are drawn (so a long guide stays light), and you can pinch or use + / − to zoom and scroll sideways.
  */
-export function PdfViewer({ pdf, title, label, error, busy, onClose, foot }: {
-  pdf: Uint8Array | null; title: string; label: string; error: string | null; busy: string; onClose: () => void; foot?: ReactNode;
+export function PdfViewer({ pdf, title, label, error, busy, onClose, foot, money }: {
+  pdf: Uint8Array | null; title: string; label: string; error: string | null; busy: string; onClose: () => void; foot?: ReactNode; /** The pages show money, so Hide money blurs them. */ money?: boolean;
 }) {
   const [doc, setDoc] = useState<Doc | null>(null);
   const [failed, setFailed] = useState(false);
@@ -174,7 +174,7 @@ export function PdfViewer({ pdf, title, label, error, busy, onClose, foot }: {
   const step = (delta: number) => setZoom((z) => clamp(z + delta));
   const problem = error ?? (failed ? `Could not show the ${label.toLowerCase()}.` : null);
   return (
-    <div className="viewer" role="dialog" aria-modal="true" aria-label={`${label} preview`}>
+    <div className={`viewer${money ? " money-doc" : ""}`} role="dialog" aria-modal="true" aria-label={`${label} preview`}>
       <header className="viewer-bar">
         <button onClick={onClose}>Close</button>
         <h2>{title}{doc && doc.numPages > 1 ? <small> · {page} of {doc.numPages}</small> : null}</h2>

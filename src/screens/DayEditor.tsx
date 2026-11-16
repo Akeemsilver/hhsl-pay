@@ -235,7 +235,7 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                 <label>
                   Amount paid ($, optional)
                   <input
-                    type="number" inputMode="decimal" min="0" step="any" placeholder="Unknown"
+                    data-money="" type="number" inputMode="decimal" min="0" step="any" placeholder="Unknown"
                     value={entry.amount ?? ""}
                     onChange={(e) => patch(entry.id, { amount: e.target.value === "" ? undefined : Number(e.target.value) })}
                   />
