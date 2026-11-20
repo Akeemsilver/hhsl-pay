@@ -16,6 +16,8 @@ jobs = {
 # The payslip check is as tall as its content: crop around its first group
 cx, cy, cw, ch = boxes["check"]["card"]
 jobs["h-check"] = ("check", ["net"], int(cy - 70), int(cy + ch + 24))
+bx, by, bw, bh = boxes["backup"]["line"]
+jobs["h-backup"] = ("backup", ["btn"], int(max(0, by - 90)), int(by + bh + 90))
 for out, (shot, rings, top, bottom) in jobs.items():
     im = Image.open(f"{SRC}/{shot}.png").convert("RGB"); d = ImageDraw.Draw(im)
     for r in rings:

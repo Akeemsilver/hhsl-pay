@@ -35,7 +35,7 @@ await session("2026-10-21", async (page, snap) => {
   await card.scrollIntoViewIfNeeded(); await page.evaluate(() => window.scrollBy(0, -20));
   await snap("check", { net: net, card: card.locator("fieldset").first() });
   // Backup line at the bottom of Home
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight)); await page.waitForTimeout(400);
+  await page.evaluate(() => { const el = document.querySelector(".backup-line"); window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 330); }); await page.waitForTimeout(400);
   await snap("backup", { btn: page.locator(".backup-line button"), line: page.locator(".backup-line") });
   // + Add, then the colour picker
   await page.getByLabel("Settings", { exact: true }).tap(); await page.getByRole("button", { name: /^Site locations/ }).tap(); await page.waitForTimeout(500);
