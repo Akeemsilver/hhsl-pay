@@ -8,7 +8,7 @@ import { useAskFirst } from "./AskFirst";
 
 /**
  * The mobile guide, read inside the app. It is never downloaded on its own: if it is not on the phone yet, a pop-up says so
- * (about 2.2 MB) and asks first. Once kept, it opens without downloading until the app itself updates.
+ * (about 2.3 MB) and asks first. Once kept, it opens without downloading until the app itself updates.
  */
 export function GuideViewer() {
   const { back } = useNav();
@@ -56,7 +56,7 @@ export function GuideViewer() {
       <ConfirmDialog
         safe
         title="Open the guide?"
-        message="The guide is about 2.2 MB. It downloads now and is kept on your phone, so next time it opens without downloading again (until the app updates)."
+        message="The guide is about 2.3 MB. It downloads now and is kept on your phone, so next time it opens without downloading again (until the app updates)."
         confirmLabel="Yes, open it" cancelLabel="Cancel"
         onCancel={back}
         onConfirm={() => setStep("go")}

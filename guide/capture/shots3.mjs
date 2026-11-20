@@ -29,7 +29,7 @@ await snap("share-after", { msg: page.locator(".notice[role=status]") });
 // site settings: colours + lunch
 await page.evaluate(() => window.scrollTo(0, 0));
 await page.getByRole("button", { name: /Site locations/ }).click(); await page.waitForTimeout(400);
-await page.locator("summary", { hasText: /^HHSL Compound/ }).first().click(); await page.waitForTimeout(300);
+await page.locator("summary", { hasText: /^Example Site A/ }).first().click(); await page.waitForTimeout(300);
 const site = page.locator("details.site[open]");
 await site.locator(".swatches").scrollIntoViewIfNeeded(); await page.evaluate(() => window.scrollBy(0, 120)); await page.waitForTimeout(200);
 await snap("site-settings", { colours: site.locator(".swatches"), lunch: site.locator(".lunch-choice") });

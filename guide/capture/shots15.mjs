@@ -18,7 +18,7 @@ await page.locator("input[aria-label='Starter kit file']").setInputFiles("/tmp/k
 await page.setViewportSize({ width: 390, height: 900 });
 await page.getByRole("button", { name: "View timesheet or payslip" }).tap(); await page.waitForTimeout(500);
 await snap("eye", { guide: page.getByRole("button", { name: "Guide (PDF)" }) });
-await page.getByRole("button", { name: "Guide (PDF)" }).tap(); await page.setViewportSize({ width: 390, height: 800 }); await page.waitForTimeout(3000);
+await page.getByRole("button", { name: "Guide (PDF)" }).tap(); await page.getByRole("button", { name: "Yes, open it" }).tap().catch(() => {}); await page.setViewportSize({ width: 390, height: 800 }); await page.waitForTimeout(3000);
 await snap("viewer", { dl: page.getByRole("button", { name: "Download guide (PDF)" }), zoom: page.getByRole("button", { name: "Zoom in" }) });
 fs.writeFileSync(`${S}/boxes.json`, JSON.stringify(boxes));
 await b.close();

@@ -111,8 +111,8 @@ rr(d,(16,12,624,796),WHITE,20,outline=LINE)
 label(d,(40,32),"Example Name · 2026 · 180 days",25,True)
 for i,(m,n) in enumerate([("January","20 days"),("February","18 days")]):
     y=76+i*32; label(d,(40,y),m,22,fill=GREY); label(d,(600,y),n,22,fill=GREY,anchor="ra")
-label(d,(40,150),"“Atlantic LNG” is",24)
-rr(d,(40,184,600,232),WHITE,12,outline=LINE); label(d,(56,196),"Atlantic",24); label(d,(580,196),"v",22,fill=GREY,anchor="ra")
+label(d,(40,150),"“Example Group A” is",24)
+rr(d,(40,184,600,232),WHITE,12,outline=LINE); label(d,(56,196),"Example Site A",24); label(d,(580,196),"v",22,fill=GREY,anchor="ra")
 ring(d,(40,184,600,232),4); label(d,(600,246),"Pick the site each name is",22,True,RED,"ra")
 rr(d,(40,284,600,364),(232,242,240),12)
 for i,(n,t) in enumerate([("13","new"),("2","the same"),("1","changed"),("23","only in app")]):
