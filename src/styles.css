@@ -1117,3 +1117,10 @@ html.hide-money .viewer.money-doc canvas { filter: blur(10px); }
 .backup-line .block { display: block; }
 .backup-line button { flex: none; min-width: 88px; }
 .backup-line.stale { border-color: var(--warn-line); background: var(--warn-bg); }
+
+/* Rate history: what changed on each date */
+.history .rh-line { display: block; margin-top: 2px; font-size: 0.78rem; }
+.history > summary .muted { font-weight: 400; }
+.history ul.plain { padding: 0; margin: 8px 0 0; list-style: none; }
+.history ul.plain li.row { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 10px; margin: 0; padding: 10px 0; border-top: 1px solid var(--line); }
+.history ul.plain li.row button.danger { min-height: 34px; padding: 4px 12px; }

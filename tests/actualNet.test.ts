@@ -38,4 +38,21 @@ describe("actual net pay", () => {
     expect(calc.corrected).toBe(false);
     expect(calc.estimate.net).toBeCloseTo(calc.net, 2);
   });
+
+  it("the gross never changes when a net or a PAYE is typed", () => {
+    expect(computeMonth("2026-10", entries, demoHistory, { alpha: { net: calc.net - 100 } }).payers[0]!.gross).toBe(calc.gross);
+    expect(computeMonth("2026-10", entries, demoHistory, { alpha: { paye: calc.paye + 70 } }).payers[0]!.gross).toBe(calc.gross);
+  });
+  it("an actual PAYE changes the net and nothing else", () => {
+    const p = computeMonth("2026-10", entries, demoHistory, { alpha: { paye: calc.paye + 70 } }).payers[0]!;
+    expect(p.net).toBeCloseTo(calc.net - 70, 2);
+    expect(p.nis).toBe(calc.nis);
+    expect(p.surcharge).toBe(calc.surcharge);
+  });
+  it("an actual gross alone changes the net and the PAYE (and the NIS and surcharge that follow from it)", () => {
+    const p = computeMonth("2026-10", entries, demoHistory, { alpha: { gross: 20000 } }).payers[0]!;
+    expect(p.gross).toBe(20000);
+    expect(p.paye).not.toBe(calc.paye);
+    expect(p.net).not.toBeCloseTo(calc.net, 0);
+  });
 });

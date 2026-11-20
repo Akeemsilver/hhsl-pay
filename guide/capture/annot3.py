@@ -18,7 +18,7 @@ def make(name, notes, crop, out):
 bx=boxes
 make("share-ask",[("yes","Tap Yes","below")],(300,bx["share-ask"]["yes"][1]+330),"b-share-ask")
 make("share-after",[("msg","Done: saved and shared","below")],(780,1600),"b-share-after")
-make("site-settings",[("colours","Pick a colour for the site","above"),("lunch","Lunch check: Yes or No","below")],(int(bx["site-settings"]["colours"][1])-230,int(bx["site-settings"]["lunch"][1]+bx["site-settings"]["lunch"][3])+260),"b-site")
+make("site-settings",[("colours","Pick a colour for the site","above")],(int(bx["site-settings"]["colours"][1])-230,int(bx["site-settings"]["colours"][1]+bx["site-settings"]["colours"][3])+380),"b-site")
 make("ts-jobs",[("summary","What goes on your time sheet","below")],(40,980),"b-tsjobs")
 make("time-picker",[],(330,1560),"b-time")
 for n in ["b-share-ask","b-share-after","b-site","b-tsjobs","b-time"]: print(n,Image.open(f"shots3/{n}.png").size)

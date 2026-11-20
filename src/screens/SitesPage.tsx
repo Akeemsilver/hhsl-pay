@@ -8,7 +8,7 @@ import { SITE_COLORS, freeColor, siteColorIndex, usedColors } from "../siteColor
 import { PageHeader } from "../components/TopBar";
 import { NumInput, TakeEffect, versionLabel, type Num } from "../components/settingsParts";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { applyFrom, changeGroup, commonValue, diffSite, groupSites, isFarBack, patchSite, rateImpact, type GroupChange, type Impact } from "../rateEdit";
+import { applyFrom, changeGroup, commonValue, describeChanges, diffSite, groupSites, isFarBack, patchSite, rateImpact, type GroupChange, type Impact } from "../rateEdit";
 import { HOURS_TEMPLATES, applyTemplate, detectTemplate, templateById } from "../templates";
 import { dmy, todayISO } from "../format";
 
@@ -638,15 +638,18 @@ export function SitesPage() {
       )}
 
       <details className="card history">
-        <summary>Rate history (advanced)</summary>
-        <p className="muted small">Each time you save a change with a “Take effect from” date, a new set of rates starts on that day. Older days always use the set that was in force on their date.</p>
+        <summary>Rate history<span className="muted small"> · when each rate changed</span></summary>
+        <p className="muted small">Each time you save a change with a “Take effect from” date, a new set of rates starts on that day. Days before that date keep the rates they had, so a change never alters past pay.</p>
         <label>Show the rates in force on
           <input type="date" value={asOf} onChange={(e) => setAsOf(e.target.value || todayISO())} />
         </label>
         <ul className="plain small">
-          {versions.map((v) => (
+          {versions.map((v, i) => (
             <li key={v.effectiveFrom} className="row">
-              <span>{versionLabel(v, versions)}</span>
+              <span>
+                {versionLabel(v, versions)}
+                {describeChanges(versions[i - 1]?.value, v.value).map((l) => <small key={l} className="muted block rh-line">{l}</small>)}
+              </span>
               <button className="danger" disabled={versions.length < 2} onClick={() => confirm(`Delete "${versionLabel(v, versions)}"? Those days will use the rates before them.`) && setVersions((list) => list.filter((x) => x.effectiveFrom !== v.effectiveFrom))}>Delete</button>
             </li>
           ))}

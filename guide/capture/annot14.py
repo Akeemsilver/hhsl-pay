@@ -18,3 +18,5 @@ def make(name, notes, out, up, down):
     im.crop((0,max(0,int(min(ys)-up)),im.width,min(im.height,int(max(ye)+down)))).save(f"shots14/{out}.png")
 make("other",[("tick","Tick: all other jobs","below")],"f-other",up=330,down=420)
 print(Image.open("shots14/f-other.png").size)
+make("top",[("sum","What goes on your time sheet","below")],"f-top",up=170,down=560)
+make("sites",[("roles","Roles: only certain roles","above"),("change","Change the time sheet text","below")],"f-sites",up=160,down=260)

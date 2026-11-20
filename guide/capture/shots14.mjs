@@ -18,7 +18,7 @@ await page.locator("input[aria-label='Starter kit file']").setInputFiles("/tmp/k
 await page.getByRole("button", { name: "Settings" }).click(); await page.getByRole("button", { name: /^Timesheet/ }).first().tap(); await page.waitForTimeout(500);
 const card = page.locator(".tj"); await card.scrollIntoViewIfNeeded(); await page.evaluate(() => window.scrollBy(0, 40));
 await snap("top", { sum: page.locator(".tj-summary") });
-const hhsl = page.locator(".tj-site", { has: page.locator(":scope > .tj-row .tj-check", { hasText: /^HHSL Compound$/ }) });
+const hhsl = page.locator(".tj-site", { has: page.locator(":scope > .tj-row .tj-check", { hasText: /^Example Site G$/ }) });
 await hhsl.scrollIntoViewIfNeeded(); await page.evaluate(() => window.scrollBy(0, 150));
 await snap("sites", { change: hhsl.locator(".tj-text summary"), roles: page.locator(".tj-roles summary").first() });
 await page.goBack(); await page.goBack(); await page.waitForTimeout(300);
