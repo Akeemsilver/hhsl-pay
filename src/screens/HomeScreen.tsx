@@ -1,9 +1,10 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { valueOn } from "../engine";
 import { useSelectedDate } from "../session";
 import { MONTHS, dayDMY, daysOfMonth, hoursText, localDMY, money, shiftMonth, todayISO } from "../format";
 import { useInstall } from "../install";
 import { OpenInChrome } from "../components/OpenInChrome";
+import { setKitNote, useKitNote } from "../kitNote";
 import { useSiteFilter } from "../filter";
 import { useMonth, useMonthSplit, useYear } from "../hooks";
 import { useMonthSlide } from "../slide";
@@ -61,6 +62,9 @@ export function HomeScreen() {
 
   const { site: filterSite } = useSiteFilter();
   const install = useInstall();
+  const kitNote = useKitNote();
+  // The Welcome page may have been scrolled down: bring the new note into view.
+  useEffect(() => { if (kitNote) window.scrollTo({ top: 0 }); }, [kitNote]);
   const shownResult = useMonth(shown);
   const shownYear = useYear(Number(shown.slice(0, 4)));
   const prevShown = shiftMonth(shown, -1);
@@ -118,6 +122,14 @@ export function HomeScreen() {
   return (
     <>
       <TopBar title={`${greeting()}`} subtitle={longDate(today)} month={shown} />
+
+      {kitNote && (
+        <div className={`notice ${kitNote.ok ? "" : "warn"}`} role="status">
+          <strong>{kitNote.title}</strong>
+          <p>{kitNote.text}</p>
+          <button onClick={() => setKitNote(null)}>OK</button>
+        </div>
+      )}
 
       {install.state === "ready" && (
         <div className="notice install-card">

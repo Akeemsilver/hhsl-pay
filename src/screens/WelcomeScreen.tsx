@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useNav } from "../nav";
 import { readKit } from "../kit";
+import { kitSummary, setKitNote } from "../kitNote";
 import { useStore } from "../store";
 import { InstallHelp } from "../components/InstallHelp";
 import { isInstalledApp, useInstall } from "../install";
@@ -54,6 +55,8 @@ export function WelcomeScreen() {
     setBusy(true);
     try {
       const r = await readKit(file, data);
+      // Home opens next, so the note is kept there for the person to read.
+      setKitNote({ ok: true, title: "Starter kit loaded", text: `${kitSummary(r.sites, r.groups, r.template)} were added. Check your rates in Settings, Site locations & rates.` });
       replace(r.data);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Could not read that file.");
@@ -77,7 +80,13 @@ export function WelcomeScreen() {
       <input ref={input} type="file" accept=".json,.txt,.pdf,application/json,text/plain,application/pdf" hidden aria-label="Starter kit file"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) void pick(f); e.target.value = ""; }} />
       <button className="primary wide" disabled={busy} onClick={() => input.current?.click()}>{busy ? "Reading…" : "Choose starter kit file…"}</button>
-      {message && <p className="notice warn" role="alert">{message}</p>}
+      {message && (
+        <div className="notice warn" role="alert">
+          <strong>Starter kit not loaded</strong>
+          <p>{message}</p>
+          <p className="muted small">Nothing was changed. Pick the file again, ask the sender for a new one, or skip this step and add your sites by hand.</p>
+        </div>
+      )}
       <button className="link" onClick={() => open({ page: "backup" })}>I have a yearly / monthly spreadsheet instead</button>
       <button className="link" onClick={() => update((d) => ({ ...d, setupSkipped: true }))}>Skip for now, I will add sites myself</button>
       {installGuide}

@@ -1,4 +1,5 @@
 import { kitTextFromFile } from "../kitPdf";
+import { kitSummary } from "../kitNote";
 import { useRef, useState } from "react";
 import { loadTemplate, saveTemplate } from "../storage";
 import { localDMY } from "../format";
@@ -35,7 +36,8 @@ export function BackupScreen() {
 
   async function readFile(file: File, kind: "full" | "rates") {
     let text: string;
-    try { text = await kitTextFromFile(file); } catch (e) { return say(e instanceof Error ? e.message : "Could not read that file.", false); }
+    const failed = kind === "rates" ? "Starter kit not loaded. " : "Backup not restored. ";
+    try { text = await kitTextFromFile(file); } catch (e) { return say(failed + (e instanceof Error ? e.message : "Could not read that file.") + " Nothing was changed.", false); }
     let pass: string | undefined;
     if (isEncrypted(text)) {
       pass = prompt("This backup is locked. Enter its password:") ?? undefined;
@@ -43,7 +45,7 @@ export function BackupScreen() {
     }
     try {
       const parsed = await parse(text, pass);
-      if (parsed.kind !== kind) return say(kind === "full" ? "That is a rates file, not a full backup." : "That is a full backup, not a rates file.", false);
+      if (parsed.kind !== kind) return say(failed + (kind === "full" ? "That is a rates file, not a full backup." : "That is a full backup, not a rates file.") + " Nothing was changed.", false);
       if (parsed.kind === "full" && parsed.data) {
         if (!confirm(`Replace everything on this phone with the backup (${parsed.data.entries.length} entries)?`)) return;
         replace({ ...parsed.data, lastBackupAt: new Date().toISOString() });
@@ -57,10 +59,12 @@ export function BackupScreen() {
           const bytes = fromB64(kit.timesheetTemplate.data);
           withForm = await saveTemplate({ name: kit.timesheetTemplate.name, bytes: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer });
         }
-        say(withForm ? "Rates and the timesheet form imported." : "Rates imported.");
+        const n = new Set(kit.sites[kit.sites.length - 1] ? Object.keys(kit.sites[kit.sites.length - 1]!.value) : []).size;
+        const groups = new Set(Object.values(kit.sites[kit.sites.length - 1]?.value ?? {}).map((x) => x.payer)).size;
+        say(`Starter kit loaded: ${kitSummary(n, groups, withForm)} were added. Check your rates in Site locations & rates.`);
       }
     } catch (e) {
-      say(e instanceof PasswordRequired ? "This backup needs a password." : e instanceof BadBackup ? e.message : "Could not read that file.", false);
+      say(failed + (e instanceof PasswordRequired ? "This file needs a password." : e instanceof BadBackup ? e.message : "Could not read that file.") + " Nothing was changed.", false);
     }
   }
 

@@ -136,7 +136,7 @@ s.append(steps([
  ("Open the app from its icon. Type your <b>full name</b> (it is printed on your payslips and time sheets) and tap <b>Continue</b>.", A("a-welcome"), 50),
  ("On the next screen, tap <b>Choose starter kit file</b>.", A("a-kit"), 50),
  ("Pick <b>HHSL-starter-kit-rates.pdf</b> from your <b>Downloads</b> (or <b>WhatsApp, Documents</b>). On iPhone, pick it from Files.", I("picker")),
- ("That is it. Your sites and rates are in and the Home screen opens.", A("a-home"), 50)]))
+ ("That is it. Your sites and rates are in and the Home screen opens with a note at the top, <b>Starter kit loaded</b>, that says how many sites and payslip groups came in (tap <b>OK</b> to close it). If the file cannot be read, you stay on this screen and a note, <b>Starter kit not loaded</b>, says why. Nothing is changed, so you can pick the file again.", A("a-home"), 50)]))
 s.append(Spacer(1, 3))
 s.append(callout("File will not download or will not load?", [
  "Check that you have a signal, then tap the file in WhatsApp again, or ask for it to be sent again.",
