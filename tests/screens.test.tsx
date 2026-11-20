@@ -60,6 +60,46 @@ describe("Check against your payslip", () => {
     expect(current.corrections?.["2026-10|alpha"]?.net).toBeCloseTo(estimate - 100, 2);
   });
 
+  it("shows the net, the gross and the PAYE boxes right away, with no extra tap", () => {
+    draw();
+    for (const l of ["Actual net (what the bank paid)", "Actual gross", "Actual PAYE"]) expect(screen.getByLabelText(l)).toBeTruthy();
+  });
+
+  it("typing the net locks the PAYE (it is worked out), and the gross stays free", () => {
+    draw();
+    const net = screen.getByLabelText("Actual net (what the bank paid)") as HTMLInputElement;
+    act(() => { fireEvent.change(net, { target: { value: String(Number(net.placeholder) - 50) } }); });
+    const paye = screen.getByLabelText("Actual PAYE") as HTMLInputElement;
+    expect(paye.disabled).toBe(true);
+    expect(Number(paye.value)).toBeCloseTo(50, 2);
+    expect((screen.getByLabelText("Actual gross") as HTMLInputElement).disabled).toBe(false);
+  });
+
+  it("typing the PAYE locks the net (it is worked out)", () => {
+    draw();
+    act(() => { fireEvent.change(screen.getByLabelText("Actual PAYE"), { target: { value: "120" } }); });
+    const net = screen.getByLabelText("Actual net (what the bank paid)") as HTMLInputElement;
+    expect(net.disabled).toBe(true);
+    expect(net.value).not.toBe("");
+    expect(screen.getByRole("status").textContent).toContain("Net pay");
+  });
+
+  it("a gross with a net locks the PAYE; a gross with a PAYE locks the net", () => {
+    draw();
+    act(() => { fireEvent.change(screen.getByLabelText("Actual gross"), { target: { value: "5000" } }); });
+    act(() => { fireEvent.change(screen.getByLabelText("Actual net (what the bank paid)"), { target: { value: "4000" } }); });
+    expect((screen.getByLabelText("Actual PAYE") as HTMLInputElement).disabled).toBe(true);
+    act(() => { fireEvent.change(screen.getByLabelText("Actual net (what the bank paid)"), { target: { value: "" } }); });
+    act(() => { fireEvent.change(screen.getByLabelText("Actual PAYE"), { target: { value: "300" } }); });
+    expect((screen.getByLabelText("Actual net (what the bank paid)") as HTMLInputElement).disabled).toBe(true);
+  });
+
+  it("warns when the figures cannot add up (a net far above the gross)", () => {
+    draw();
+    act(() => { fireEvent.change(screen.getByLabelText("Actual net (what the bank paid)"), { target: { value: "99999" } }); });
+    expect(screen.getByRole("alert").textContent).toContain("do not add up");
+  });
+
   it("clearing the net goes back to the calculated figures", () => {
     draw();
     const input = screen.getByLabelText("Actual net (what the bank paid)") as HTMLInputElement;
