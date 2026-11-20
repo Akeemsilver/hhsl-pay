@@ -72,6 +72,8 @@ export function HomeScreen() {
   const prevYearMonths = useYear(year - 1);
 
   const [hidden, toggleHidden] = useHideMoney();
+  // The payslip check is for the month in view, or, when nothing is logged in it yet (a new month), for last month, whose payslip is the one to check.
+  const checkFor = shownResult.payers.length > 0 ? { month: shown, result: shownResult } : lastMonth.payers.length > 0 ? { month: prevShown, result: lastMonth } : null;
   // Flagged only when the last backup is over six weeks old, or two weeks of days are logged and there never was one. A new user just sees a calm line.
   const backupStale = data.lastBackupAt ? Date.now() - new Date(data.lastBackupAt).getTime() > 42 * 86_400_000 : data.entries.length >= 14;
   const payroll = payrollReminderFor(data, today);
@@ -203,7 +205,7 @@ export function HomeScreen() {
         </div>
       </section>
 
-      {!filterSite && shownResult.payers.length > 0 && <PayslipCheck month={shown} result={shownResult} />}
+      {!filterSite && checkFor && <PayslipCheck month={checkFor.month} result={checkFor.result} />}
 
       <div className="actions">
         <button className="primary" disabled={shown === month} onClick={() => setShown(month)}>{shown === month ? "This month" : `Back to ${MONTHS[Number(month.slice(5)) - 1]?.slice(0, 3)}`}</button>

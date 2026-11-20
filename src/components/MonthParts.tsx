@@ -1,6 +1,7 @@
 import { TaxSwitch } from "./TaxMode";
 import { WEEKDAYS, hoursText, money, timeRange } from "../format";
 import { correctionKey, othersByDate, payerLabel } from "../model";
+import { monthTitle } from "../payrollReminder";
 import { useSiteFilter } from "../filter";
 import { holidayMap } from "../holidays";
 import { useStore } from "../store";
@@ -106,7 +107,7 @@ export function PayslipCheck({ month, result, open }: { month: string; result: M
     <details className="card correction payslip-check" open={open || undefined}>
       <summary>
         <span className="pc-title">Check against your payslip</span>
-        <span className="pc-sub muted small">Put in what the bank paid and the app works out the PAYE taken.</span>
+        <span className="pc-sub muted small">{monthTitle(month)}: put in what the bank paid and the app works out the PAYE taken.</span>
       </summary>
       <p className="muted small">Look in your bank app for what was paid into your account (the net). NIS and the health surcharge are always right, so the PAYE taken is the gross less those and less your net. Leave it blank to use the calculated figures.</p>
       {result.payers.map((p) => {
