@@ -49,5 +49,5 @@ export default defineConfig(({ command }) => ({
       },
     }),
   ],
-  test: { include: ["tests/**/*.test.ts"] },
+  test: { include: ["tests/**/*.test.{ts,tsx}"] },
 }));

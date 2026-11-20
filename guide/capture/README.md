@@ -14,3 +14,4 @@ shows has changed.
 4. `ill.py` redraws the picture mock-ups (Chrome and Safari menus, Google Sheets menus, WhatsApp)
    into `guide/assets/ill/`.
 5. Use made-up data only (for example "Example Site"). Never show real rates or pay.
+3c. `shots17.mjs <scratch> <made-up-backup.json>` with `annot17.py <scratch>/shots17 guide/assets/shots` make the `h-*` images (payslip check, Hide money, backup line, + Add, colour picker, payroll pop-up). Use a backup with made-up sites (Example Site A/B/C), never real data.

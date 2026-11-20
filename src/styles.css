@@ -1097,3 +1097,23 @@ html.hide-money .viewer.money-doc canvas { filter: blur(10px); }
 .hero-eye[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
 .hide-money-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .hide-money-btn svg { width: 18px; height: 18px; }
+
+/* Check against your payslip: a clear title and a one-line hint, so people can see it is there */
+.payslip-check { margin: 0 0 12px; }
+.payslip-check > summary { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 40px; }
+.payslip-check .pc-title { font-weight: 700; }
+.payslip-check .pc-sub { font-weight: 400; }
+.payslip-check .pc-result { margin: 8px 0 0; }
+.payslip-check .pc-result .block { display: block; margin-top: 2px; }
+.payslip-check .pc-more { margin-top: 8px; }
+.payslip-check .pc-more > summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; font-weight: 500; }
+.payslip-check input:disabled { opacity: 0.55; }
+.payslip-check > summary { position: relative; padding-right: 28px; }
+.payslip-check > summary::after { content: "▾"; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 1.1rem; color: var(--muted); }
+.payslip-check[open] > summary::after { content: "▴"; }
+
+/* Backup status at the bottom of Home */
+.backup-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.backup-line .block { display: block; }
+.backup-line button { flex: none; min-width: 88px; }
+.backup-line.stale { border-color: var(--warn-line); background: var(--warn-bg); }

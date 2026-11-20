@@ -299,7 +299,7 @@ export function SettingsHub() {
       {askGuideDownload && (
         <ConfirmDialog
           title="Download the guide?"
-          message="The guide (PDF, about 2.7 MB) is saved to your Downloads."
+          message="The guide (PDF, about 2.2 MB) is saved to your Downloads."
           confirmLabel="Yes, download" cancelLabel="Cancel" safe
           onCancel={() => setAskGuideDownload(false)}
           onConfirm={() => { setAskGuideDownload(false); void downloadGuidePdf(); }}
