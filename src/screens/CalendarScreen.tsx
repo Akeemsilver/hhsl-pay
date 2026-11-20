@@ -11,7 +11,7 @@ import { useStore } from "../store";
 import { TopBar } from "../components/TopBar";
 import { BackIcon, ForwardIcon } from "../components/Icons";
 import { DayPanel } from "../components/DayPanel";
-import { CalendarGrid, CorrectionBox, DayList, MonthSummary, SiteTable } from "../components/MonthParts";
+import { CalendarGrid, PayslipCheck, DayList, MonthSummary, SiteTable } from "../components/MonthParts";
 
 export function CalendarScreen() {
   const { data } = useStore();
@@ -72,7 +72,7 @@ export function CalendarScreen() {
 
       <MonthSummary result={result} label={month} />
       <SiteTable result={result} />
-      <CorrectionBox month={month} result={result} />
+      <PayslipCheck month={month} result={result} />
     </>
   );
 }

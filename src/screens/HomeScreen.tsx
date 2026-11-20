@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { valueOn } from "../engine";
 import { useSelectedDate } from "../session";
-import { MONTHS, dayDMY, daysOfMonth, hoursText, money, shiftMonth, todayISO } from "../format";
+import { MONTHS, dayDMY, daysOfMonth, hoursText, localDMY, money, shiftMonth, todayISO } from "../format";
 import { useInstall } from "../install";
 import { useSiteFilter } from "../filter";
 import { useMonth, useMonthSplit, useYear } from "../hooks";
@@ -18,7 +18,7 @@ import { hideMoneySupported, useHideMoney } from "../hideMoney";
 import { TaxSwitch } from "../components/TaxMode";
 import { MonthPicker } from "../components/MonthPicker";
 import { AverageLine } from "../components/AverageLine";
-import { CalendarGrid, PayerTax } from "../components/MonthParts";
+import { CalendarGrid, PayerTax, PayslipCheck } from "../components/MonthParts";
 import { sheetSplit } from "../sheetSplit";
 
 
@@ -72,6 +72,8 @@ export function HomeScreen() {
   const prevYearMonths = useYear(year - 1);
 
   const [hidden, toggleHidden] = useHideMoney();
+  // Flagged only when the last backup is over six weeks old, or two weeks of days are logged and there never was one. A new user just sees a calm line.
+  const backupStale = data.lastBackupAt ? Date.now() - new Date(data.lastBackupAt).getTime() > 42 * 86_400_000 : data.entries.length >= 14;
   const payroll = payrollReminderFor(data, today);
   const markPayroll = useMarkPayroll();
   // The payroll reminder comes first; the backup reminder waits until it is answered.
@@ -201,6 +203,8 @@ export function HomeScreen() {
         </div>
       </section>
 
+      {!filterSite && shownResult.payers.length > 0 && <PayslipCheck month={shown} result={shownResult} />}
+
       <div className="actions">
         <button className="primary" disabled={shown === month} onClick={() => setShown(month)}>{shown === month ? "This month" : `Back to ${MONTHS[Number(month.slice(5)) - 1]?.slice(0, 3)}`}</button>
         <button onClick={() => selectTab("calendar")}>Month</button>
@@ -274,6 +278,16 @@ export function HomeScreen() {
           </ul>
         )}
       </section>
+
+      {data.entries.length > 0 && (
+        <section className={`card backup-line ${backupStale ? "stale" : ""}`} aria-label="Backup">
+          <div>
+            <strong>{data.lastBackupAt ? `Last backup: ${localDMY(new Date(data.lastBackupAt))}` : "Not backed up yet"}</strong>
+            <span className="muted small block">{backupStale ? "Your days are only on this phone. Back up now so they are safe if it is lost." : "Your days are only on this phone, so keep a backup file somewhere safe."}</span>
+          </div>
+          <button className={backupStale ? "primary" : ""} onClick={() => open({ page: "backup" })}>Back up</button>
+        </section>
+      )}
     </>
   );
 }

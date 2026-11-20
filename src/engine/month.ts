@@ -35,14 +35,18 @@ export interface PayerMonth extends MonthTax {
   weighted: number;
   /** Days worked on this payslip (a day with pay, or an other job). */
   days: number;
-  /** True when the payslip's actual gross or PAYE replaced the calculated figure. */
+  /** True when the payslip's actual gross, PAYE or net replaced the calculated figure. */
   corrected: boolean;
+  /** What the app would have worked out with no payslip figures typed in, to compare with the real payslip. */
+  estimate: { gross: number; paye: number; net: number };
 }
 
 /** What a payslip actually says, when it differs from the calculation. */
 export interface PayerOverride {
   gross?: number;
   paye?: number;
+  /** What the bank actually paid. NIS and the health surcharge are always right, so the PAYE taken is worked out from it. */
+  net?: number;
 }
 
 export interface MonthResult<E extends DayEntry = DayEntry> {
@@ -55,6 +59,8 @@ export interface MonthResult<E extends DayEntry = DayEntry> {
   nis: number;
   surcharge: number;
 }
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /** Each entry is priced with the rules in force on its own date, so a raise never touches earlier days. */
 export function computeMonth<E extends DayEntry>(
@@ -101,20 +107,23 @@ export function computeMonth<E extends DayEntry>(
 
   // A payer with a correction is shown even when no days were logged for it.
   for (const [payer, o] of Object.entries(overrides)) {
-    if (!byPayer.has(payer) && ((o.gross ?? 0) > 0 || o.paye !== undefined)) byPayer.set(payer, { gross: 0, hours: 0, weighted: 0, dates: new Set<string>() });
+    if (!byPayer.has(payer) && ((o.gross ?? 0) > 0 || o.paye !== undefined || o.net !== undefined)) byPayer.set(payer, { gross: 0, hours: 0, weighted: 0, dates: new Set<string>() });
   }
 
   const payers: PayerMonth[] = [...byPayer.entries()].map(([payer, { gross: calculated, hours, weighted, dates }]) => {
     const o = overrides[payer];
     const gross = o?.gross !== undefined && o.gross > 0 ? o.gross : calculated;
     const tax = monthTax(gross, mondays, rules);
-    const paye = o?.paye !== undefined ? o.paye : tax.paye;
+    // An actual net pay settles the PAYE: what is left after NIS and the surcharge came off the gross is what PAYE took.
+    const paye = o?.net !== undefined ? round2(tax.gross - tax.nis - tax.surcharge - o.net) : o?.paye !== undefined ? o.paye : tax.paye;
+    const estimateTax = monthTax(calculated, mondays, rules);
     return {
       payer,
       hours,
       weighted: Math.round(weighted * 100) / 100,
       days: dates.size,
-      corrected: gross !== calculated || (o?.paye !== undefined && o.paye !== tax.paye),
+      corrected: gross !== calculated || o?.net !== undefined || (o?.paye !== undefined && o.paye !== tax.paye),
+      estimate: { gross: estimateTax.gross, paye: estimateTax.paye, net: estimateTax.gross - estimateTax.paye - estimateTax.nis - estimateTax.surcharge },
       ...tax,
       paye,
       net: tax.gross - paye - tax.nis - tax.surcharge,
