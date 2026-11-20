@@ -91,6 +91,8 @@ export function PayslipCheck({ month, result, open }: { month: string; result: M
       const key = correctionKey(month, payer);
       const next = { ...(d.corrections ?? {}) };
       const merged = { ...next[key], [field]: raw === "" ? undefined : Number(raw) };
+      // The net settles the PAYE, so a PAYE typed before it is dropped (it would otherwise come back if the net were cleared).
+      if (field === "net" && raw !== "") merged.paye = undefined;
       if (merged.gross === undefined && merged.paye === undefined && merged.net === undefined) delete next[key];
       else next[key] = merged;
       return { ...d, corrections: next };

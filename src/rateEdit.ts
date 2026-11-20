@@ -113,3 +113,44 @@ export function isFarBack(from: string, today: string, earliestEntry: string | u
   const limit = d.toISOString().slice(0, 10);
   return from < today && (from < limit || (!!earliestEntry && from < earliestEntry));
 }
+
+const money = (n: number | undefined): string => (n === undefined ? "none" : `$${Number.isInteger(n) ? n : n.toFixed(2)}`);
+
+/** The rate fields worth naming, in the order they are shown. */
+const RATE_FIELDS: Array<[keyof SiteRates, string]> = [
+  ["baseRate", "standard rate"],
+  ["leadRate", "team lead rate"],
+  ["dailyStd", "fixed day rate"],
+  ["dailyLead", "team lead day rate"],
+  ["dailyHoliday", "holiday day rate"],
+  ["dailyWeekend", "weekend day rate"],
+  ["rateAboveHrs", "rate above the threshold"],
+];
+
+/**
+ * What changed between one set of rates and the one before it, as short lines for the rate history: a site added or removed,
+ * a rate that went from one amount to another, or hours / overtime settings that changed.
+ */
+export function describeChanges(before: SiteTable | undefined, after: SiteTable): string[] {
+  if (!before) return [];
+  const lines: string[] = [];
+  for (const name of Object.keys(after)) {
+    const a = after[name]!, b = before[name];
+    if (!b) { lines.push(`${name} added`); continue; }
+    const parts: string[] = [];
+    for (const [key, label] of RATE_FIELDS) {
+      if (a[key] !== b[key]) parts.push(`${label} ${money(b[key] as number | undefined)} to ${money(a[key] as number | undefined)}`);
+    }
+    const roleNames = new Set([...Object.keys(a.roles ?? {}), ...Object.keys(b.roles ?? {})]);
+    for (const r of roleNames) {
+      const x = a.roles?.[r], y = b.roles?.[r];
+      if (JSON.stringify(x) !== JSON.stringify(y)) parts.push(`${r} role ${x && !y ? "added" : !x ? "removed" : "changed"}`);
+    }
+    const hoursChanged = (["weekday", "weekend", "holiday"] as const).some((k) => JSON.stringify(a[k]) !== JSON.stringify(b[k]));
+    if (hoursChanged || a.lunch !== b.lunch || a.showRateAboveHrs !== b.showRateAboveHrs) parts.push("hours or overtime settings changed");
+    if (a.payer !== b.payer) parts.push("moved to another payslip group");
+    if (parts.length) lines.push(`${name}: ${parts.join("; ")}`);
+  }
+  for (const name of Object.keys(before)) if (!after[name]) lines.push(`${name} removed`);
+  return lines;
+}
