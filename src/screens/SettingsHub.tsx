@@ -36,6 +36,7 @@ export function SettingsHub() {
   const sitesCount = siteCount(data);
   const [copied, setCopied] = useState(false);
   const [askDownload, setAskDownload] = useState(false);
+  const [askDownloadText, setAskDownloadText] = useState(false);
   const [askShare, setAskShare] = useState(false);
   const [askGuide, setAskGuide] = useState(false);
   const [askGuideDownload, setAskGuideDownload] = useState(false);
@@ -109,6 +110,11 @@ export function SettingsHub() {
       setKitMessage(`The share menu would not open (${error}; tried ${KIT_ATTEMPTS.length} ways, last as ${type}). Use “Download starter kit”, then send the file from your Downloads.`);
     } else setKitMessage("This browser cannot open the share menu. Use “Download starter kit” and send the file from your Downloads.");
   };
+  // For email: a plain text file, which email apps and scanners leave alone (they can rewrite a PDF).
+  const saveKitText = async () => {
+    download(withTime(backupFileName("rates", false).replace(/\.json$/, ".txt")), await kitText(), "text/plain");
+    setKitMessage("Starter kit saved to your Downloads as a text file. Attach that file to your email.");
+  };
   const saveKit = async () => {
     download(withTime(kitFileName()), kitToPdf(await kitText(), backupFileName("rates", false)), "application/pdf");
     setKitMessage("Starter kit saved to your Downloads. Send that file on WhatsApp.");
@@ -146,6 +152,7 @@ export function SettingsHub() {
           <button className="primary" disabled={sitesCount === 0} onClick={() => setAskShare(true)}>Share starter kit</button>
           <button disabled={sitesCount === 0} onClick={() => setAskDownload(true)}>Download starter kit</button>
         </div>
+        <button className="link small" disabled={sitesCount === 0} onClick={() => setAskDownloadText(true)}>Sending by email? Download the starter kit as a text file</button>
         {kitMessage && <p className="notice" role="status">{kitMessage}</p>}
         <p className="muted small">Mobile guide: a step-by-step PDF with pictures that shows your colleague how to install the app and load the starter kit. Send it too.</p>
         <div className="row pair">
@@ -303,6 +310,15 @@ export function SettingsHub() {
           confirmLabel="Yes, download" cancelLabel="Cancel" safe
           onCancel={() => setAskGuideDownload(false)}
           onConfirm={() => { setAskGuideDownload(false); void downloadGuidePdf(); }}
+        />
+      )}
+      {askDownloadText && (
+        <ConfirmDialog
+          title="Download the starter kit as a text file?"
+          message="It saves the same starter kit as a plain text file (.txt) to your Downloads. Use it when you send the kit by email: some email apps and scanners change a PDF, but they leave a text file as it is. It still holds your pay rates, so only send it to colleagues."
+          confirmLabel="Download" cancelLabel="Cancel" safe
+          onCancel={() => setAskDownloadText(false)}
+          onConfirm={() => { setAskDownloadText(false); void saveKitText(); }}
         />
       )}
       {askDownload && (

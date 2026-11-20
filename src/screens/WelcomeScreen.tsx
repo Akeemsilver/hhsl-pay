@@ -3,7 +3,8 @@ import { useNav } from "../nav";
 import { readKit } from "../kit";
 import { useStore } from "../store";
 import { InstallHelp } from "../components/InstallHelp";
-import { isInstalledApp } from "../install";
+import { isInstalledApp, useInstall } from "../install";
+import { OpenInChrome } from "../components/OpenInChrome";
 import { userNameOf } from "../model";
 
 /** First start. Step 1: your name (printed on payslips and timesheets). Step 2: get the starter kit with the pay rates. */
@@ -15,13 +16,17 @@ export function WelcomeScreen() {
   const [busy, setBusy] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const hasName = !!userNameOf(data);
+  const install = useInstall();
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   // Not installed yet: show how to put the app on the home screen, with the iPhone steps open on an iPhone.
   const installGuide = isInstalledApp() ? null : (
+    <>
+    {install.state === "chrome" && <OpenInChrome />}
     <details className="welcome-install" open={ios}>
       <summary>Put this app on your home screen</summary>
       <InstallHelp open={ios ? "iphone" : undefined} />
     </details>
+    </>
   );
 
   if (!hasName) {
@@ -65,7 +70,7 @@ export function WelcomeScreen() {
       <p className="muted small">Why a file? The rates belong to the company, so they are kept out of the app itself, which is public. Sharing them as a file between colleagues is how company rates stay out of public code.</p>
       <ol className="steps">
         <li>Ask the person who sent you the link to this app to send you the <strong>starter kit file</strong>. They find it in the app under Settings, Share this app.</li>
-        <li>They send it to you on WhatsApp.</li>
+        <li>They send it to you on WhatsApp, or by email. By email, save the attachment to your phone first and do not open it in another PDF app.</li>
         <li>In WhatsApp, tap the file. <strong>Android:</strong> it downloads. <strong>iPhone:</strong> tap it to open, then tap the Share icon, then <strong>Save to Files</strong>.</li>
         <li>Come back here, tap <strong>Choose starter kit file</strong>, and pick it from your Downloads.</li>
       </ol>

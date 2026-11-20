@@ -3,6 +3,7 @@ import { valueOn } from "../engine";
 import { useSelectedDate } from "../session";
 import { MONTHS, dayDMY, daysOfMonth, hoursText, localDMY, money, shiftMonth, todayISO } from "../format";
 import { useInstall } from "../install";
+import { OpenInChrome } from "../components/OpenInChrome";
 import { useSiteFilter } from "../filter";
 import { useMonth, useMonthSplit, useYear } from "../hooks";
 import { useMonthSlide } from "../slide";
@@ -125,6 +126,7 @@ export function HomeScreen() {
           <button className="primary wide" onClick={() => void install.install()}>Install app</button>
         </div>
       )}
+      {install.state === "chrome" && <OpenInChrome />}
       {install.state === "ios" && (
         <div className="notice install-card">
           <strong>Install the app</strong>

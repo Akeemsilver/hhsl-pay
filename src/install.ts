@@ -39,7 +39,25 @@ export const isIos = () => {
   return /iphone|ipad|ipod/i.test(n.userAgent) || (n.platform === "MacIntel" && n.maxTouchPoints > 1);
 };
 
-export type InstallState = "hidden" | "ready" | "ios";
+/**
+ * True on an Android phone whose browser is not Chrome (Firefox, a browser inside WhatsApp, Gmail, Facebook, Instagram and so on, or another
+ * browser), where the install offer usually never comes. The person is then pointed to Chrome.
+ */
+export function needsChromeToInstall(ua: string, referrer = ""): boolean {
+  if (!/android/i.test(ua)) return false;
+  // A link tapped inside another app (Gmail, WhatsApp) opens in a small Chrome window that looks like Chrome but cannot install the app.
+  if (referrer.startsWith("android-app://")) return true;
+  const other = /; wv\)|\bwv\b|Firefox\/|EdgA\/|OPR\/|OPT\/|SamsungBrowser\/|Vivaldi|DuckDuckGo|YaBrowser|UCBrowser|MiuiBrowser|HeyTap|Brave|FBAN|FBAV|FB_IAB|Instagram|Line\/|GSA\/|WhatsApp|Snapchat|Twitter|MicroMessenger|Messenger|TikTok|musical_ly|Telegram|LinkedInApp|Pinterest/i.test(ua);
+  return other || !/Chrome\/\d/.test(ua);
+}
+
+/** A link that opens this page in Chrome on Android (it falls back to the normal address if Chrome is not there). */
+export function chromeIntentUrl(href: string): string {
+  const u = new URL(href);
+  return `intent://${u.host}${u.pathname}${u.search}#Intent;scheme=${u.protocol.replace(":", "")};package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(u.href)};end`;
+}
+
+export type InstallState = "hidden" | "ready" | "ios" | "chrome";
 
 /** What the Home screen should show: an Install button, iPhone instructions, or nothing (installed or not possible). */
 export function useInstall(): { state: InstallState; install: () => Promise<void> } {
@@ -50,7 +68,10 @@ export function useInstall(): { state: InstallState; install: () => Promise<void
     return () => { listeners.delete(l); };
   }, []);
 
-  const state: InstallState = installed || isInstalledApp() ? "hidden" : deferred ? "ready" : isIos() ? "ios" : "hidden";
+  // The browser's install offer arrives a moment after the page loads, so "open it in Chrome" is only said once it has had time to come.
+  const [waited, setWaited] = useState(false);
+  useEffect(() => { const t = window.setTimeout(() => setWaited(true), 2500); return () => window.clearTimeout(t); }, []);
+  const state: InstallState = installed || isInstalledApp() ? "hidden" : deferred ? "ready" : isIos() ? "ios" : waited && needsChromeToInstall(window.navigator.userAgent, document.referrer) ? "chrome" : "hidden";
 
   const install = async () => {
     if (!deferred) return;

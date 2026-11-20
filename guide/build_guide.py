@@ -112,7 +112,7 @@ s.append(PageBreak())
 s.append(Paragraph('<a name="p1"/>Part 1. Install the app', h1))
 s.append(Paragraph("Android (Chrome)", h2))
 s.append(steps([
- (f"Tap this link: {lk(LINK, 'open the app')}. It must open in <b>Chrome</b>, not inside WhatsApp, Gmail or another app, and not in a private tab. If it opens inside another app, tap the three dots there and choose <b>Open in Chrome</b>, or copy the link and paste it into Chrome.", None),
+ (f"Tap this link: {lk(LINK, 'open the app')}. It must open in <b>Chrome</b>, not inside WhatsApp, Gmail or another app, and not in a private tab. If it opens inside another app, tap the three dots there and choose <b>Open in Chrome</b>, or copy the link and paste it into Chrome. If the app is opened in a browser that cannot install it (Firefox, a browser inside another app, or a small Chrome window from an email), the first screen shows <b>Open this in Chrome to install the app</b> with an <b>Open in Chrome</b> button and a <b>Copy link</b> button: tap <b>Open in Chrome</b>, or copy the link and paste it into Chrome.", None),
  ("Tap the <b>three dots</b> at the top right, then <b>Install app</b> (or <b>Add to Home screen</b>). The app's own <b>Install app</b> button on the Home screen does the same.", I("chrome-menu")),
  ("Tap <b>Install</b> (or <b>Add</b>, if Chrome says Add to Home screen). The app icon appears on your home screen.", I("chrome-install")),
  ("Open the app from this icon. It runs full screen like any other app.", os.path.join(HERE, "assets", "logo.png"), 24)]))
@@ -140,6 +140,7 @@ s.append(steps([
 s.append(Spacer(1, 3))
 s.append(callout("File will not download or will not load?", [
  "Check that you have a signal, then tap the file in WhatsApp again, or ask for it to be sent again.",
+ "<b>Sent by email?</b> Save the attachment to your phone first (Downloads on Android, Save to Files on iPhone) and pick that saved file. Do not open it in another PDF app and save it again, print it, or use Save as: that can remove the starter kit from the PDF, and the app then says <b>That PDF has lost the starter kit</b>. If that happens, ask the sender for the starter kit again, or for the <b>text file (.txt)</b> version: in the sender's app, <b>Settings, Share this app, Sending by email? Download the starter kit as a text file</b>. Email does not change a text file. Pick the .txt file the same way.",
  "WhatsApp does not download files by itself. Tap the file once, that is normal.",
  "The starter kit holds company pay rates. Only pass it to colleagues."], WARN, WARNB))
 

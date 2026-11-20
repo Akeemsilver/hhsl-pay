@@ -1,4 +1,4 @@
-import { kitTextOf } from "../kitPdf";
+import { kitTextFromFile } from "../kitPdf";
 import { useRef, useState } from "react";
 import { loadTemplate, saveTemplate } from "../storage";
 import { localDMY } from "../format";
@@ -35,7 +35,7 @@ export function BackupScreen() {
 
   async function readFile(file: File, kind: "full" | "rates") {
     let text: string;
-    try { text = kitTextOf(await file.text()); } catch (e) { return say(e instanceof Error ? e.message : "Could not read that file.", false); }
+    try { text = await kitTextFromFile(file); } catch (e) { return say(e instanceof Error ? e.message : "Could not read that file.", false); }
     let pass: string | undefined;
     if (isEncrypted(text)) {
       pass = prompt("This backup is locked. Enter its password:") ?? undefined;

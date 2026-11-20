@@ -1132,3 +1132,4 @@ html.hide-money .viewer.money-doc canvas { filter: blur(10px); }
 .payslip-check fieldset { margin: 10px 0 0; }
 .payslip-check label { display: block; }
 .payslip-check .grid2 { margin-top: 8px; }
+.share-app button.link.small { display: block; margin: 8px auto 12px; text-align: center; font-weight: 600; }

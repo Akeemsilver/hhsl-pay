@@ -14,3 +14,16 @@ describe("starter kit as a PDF", () => {
     expect(() => kitTextOf("%PDF-1.4 nothing")).toThrow(/not a starter kit/);
   });
 });
+
+describe("reading a picked file", () => {
+  it("takes the kit from a PDF, from a text file, and from JSON as they are", async () => {
+    const { kitTextFromFile } = await import("../src/kitPdf");
+    const kit = '{"app":"hhsl-salary-tracker","kind":"rates"}';
+    expect(await kitTextFromFile(new File([kitToPdf(kit, "kit.json")], "kit.pdf"))).toBe(kit);
+    expect(await kitTextFromFile(new File([kit], "kit.txt"))).toBe(kit);
+  });
+  it("says the kit is gone when a PDF no longer holds it", async () => {
+    const { kitTextFromFile } = await import("../src/kitPdf");
+    await expect(kitTextFromFile(new File(["%PDF-1.4 nothing in here"], "kit.pdf"))).rejects.toThrow(/lost the starter kit/);
+  });
+});

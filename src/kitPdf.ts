@@ -55,3 +55,36 @@ export function kitTextOf(fileText: string): string {
   if (a < 0 || b < a) throw new Error("That PDF is not a starter kit. Pick the HHSL starter kit file you were sent.");
   return fileText.slice(a + BEGIN.length, b);
 }
+
+const LOST = "That PDF has lost the starter kit. A PDF or email app probably saved it again or cleaned it. Ask for the starter kit again and save it straight from the message without opening it in another app, or ask for the text file (.txt) version, which email does not change.";
+
+/** The starter kit that is inside a PDF whose bytes were rewritten by another app (the kit is then packed, so its markers are not in plain view). */
+async function attachmentText(bytes: Uint8Array): Promise<string | null> {
+  try {
+    const pdfjs = await import("pdfjs-dist");
+    pdfjs.GlobalWorkerOptions.workerSrc = (await import("pdfjs-dist/build/pdf.worker.min.js?url")).default;
+    const doc = await pdfjs.getDocument({ data: bytes.slice() }).promise;
+    const files = (await doc.getAttachments()) as Record<string, { content: Uint8Array }> | null;
+    for (const f of Object.values(files ?? {})) {
+      const t = new TextDecoder().decode(f.content);
+      const a = t.indexOf(BEGIN), b = t.lastIndexOf(END);
+      if (a >= 0 && b > a) return t.slice(a + BEGIN.length, b);
+      if (t.trimStart().startsWith("{")) return t;
+    }
+  } catch { /* not readable: the caller explains */ }
+  return null;
+}
+
+/**
+ * The kit text from a picked file. A plain text or JSON file is used as it is. A kit PDF is read from the markers in its bytes; if another app
+ * rewrote the PDF, the embedded file is looked up through the PDF reader; if the kit is gone, the person is told what to do.
+ */
+export async function kitTextFromFile(file: File): Promise<string> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const text = new TextDecoder().decode(bytes);
+  if (!text.startsWith("%PDF")) return text;
+  try { return kitTextOf(text); } catch { /* look inside the PDF instead */ }
+  const found = await attachmentText(bytes);
+  if (found) return found;
+  throw new Error(LOST);
+}
