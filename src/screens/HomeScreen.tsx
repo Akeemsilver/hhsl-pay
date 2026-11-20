@@ -205,8 +205,6 @@ export function HomeScreen() {
         </div>
       </section>
 
-      {!filterSite && checkFor && <PayslipCheck month={checkFor.month} result={checkFor.result} />}
-
       <div className="actions">
         <button className="primary" disabled={shown === month} onClick={() => setShown(month)}>{shown === month ? "This month" : `Back to ${MONTHS[Number(month.slice(5)) - 1]?.slice(0, 3)}`}</button>
         <button onClick={() => selectTab("calendar")}>Month</button>
@@ -290,6 +288,8 @@ export function HomeScreen() {
           <button className={backupStale ? "primary" : ""} onClick={() => open({ page: "backup" })}>Back up</button>
         </section>
       )}
+
+      {!filterSite && checkFor && <PayslipCheck month={checkFor.month} result={checkFor.result} />}
     </>
   );
 }
