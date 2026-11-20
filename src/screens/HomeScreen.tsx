@@ -1,8 +1,10 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { valueOn } from "../engine";
 import { useSelectedDate } from "../session";
 import { MONTHS, dayDMY, daysOfMonth, hoursText, localDMY, money, shiftMonth, todayISO } from "../format";
 import { useInstall } from "../install";
+import { OpenInChrome } from "../components/OpenInChrome";
+import { setKitNote, useKitNote } from "../kitNote";
 import { useSiteFilter } from "../filter";
 import { useMonth, useMonthSplit, useYear } from "../hooks";
 import { useMonthSlide } from "../slide";
@@ -18,7 +20,7 @@ import { hideMoneySupported, useHideMoney } from "../hideMoney";
 import { TaxSwitch } from "../components/TaxMode";
 import { MonthPicker } from "../components/MonthPicker";
 import { AverageLine } from "../components/AverageLine";
-import { CalendarGrid, PayerTax, PayslipCheck } from "../components/MonthParts";
+import { CalendarGrid, PayerTax } from "../components/MonthParts";
 import { sheetSplit } from "../sheetSplit";
 
 
@@ -60,6 +62,9 @@ export function HomeScreen() {
 
   const { site: filterSite } = useSiteFilter();
   const install = useInstall();
+  const kitNote = useKitNote();
+  // The Welcome page may have been scrolled down: bring the new note into view.
+  useEffect(() => { if (kitNote) window.scrollTo({ top: 0 }); }, [kitNote]);
   const shownResult = useMonth(shown);
   const shownYear = useYear(Number(shown.slice(0, 4)));
   const prevShown = shiftMonth(shown, -1);
@@ -72,8 +77,6 @@ export function HomeScreen() {
   const prevYearMonths = useYear(year - 1);
 
   const [hidden, toggleHidden] = useHideMoney();
-  // The payslip check is for the month in view, or, when nothing is logged in it yet (a new month), for last month, whose payslip is the one to check.
-  const checkFor = shownResult.payers.length > 0 ? { month: shown, result: shownResult } : lastMonth.payers.length > 0 ? { month: prevShown, result: lastMonth } : null;
   // Flagged only when the last backup is over six weeks old, or two weeks of days are logged and there never was one. A new user just sees a calm line.
   const backupStale = data.lastBackupAt ? Date.now() - new Date(data.lastBackupAt).getTime() > 42 * 86_400_000 : data.entries.length >= 14;
   const payroll = payrollReminderFor(data, today);
@@ -118,6 +121,14 @@ export function HomeScreen() {
     <>
       <TopBar title={`${greeting()}`} subtitle={longDate(today)} month={shown} />
 
+      {kitNote && (
+        <div className={`notice ${kitNote.ok ? "" : "warn"}`} role="status">
+          <strong>{kitNote.title}</strong>
+          <p>{kitNote.text}</p>
+          <button onClick={() => setKitNote(null)}>OK</button>
+        </div>
+      )}
+
       {install.state === "ready" && (
         <div className="notice install-card">
           <strong>Install the app</strong>
@@ -125,6 +136,7 @@ export function HomeScreen() {
           <button className="primary wide" onClick={() => void install.install()}>Install app</button>
         </div>
       )}
+      {install.state === "chrome" && <OpenInChrome />}
       {install.state === "ios" && (
         <div className="notice install-card">
           <strong>Install the app</strong>
@@ -288,8 +300,6 @@ export function HomeScreen() {
           <button className={backupStale ? "primary" : ""} onClick={() => open({ page: "backup" })}>Back up</button>
         </section>
       )}
-
-      {!filterSite && checkFor && <PayslipCheck month={checkFor.month} result={checkFor.result} />}
     </>
   );
 }

@@ -27,16 +27,17 @@ await session("2026-10-21", async (page, snap) => {
   await page.getByRole("button", { name: "Hide money" }).first().tap(); await page.waitForTimeout(600);
   await snap("hide", { eye: page.locator(".hero-eye"), hero: page.locator(".hero") });
   await page.getByRole("button", { name: "Show money" }).first().tap(); await page.waitForTimeout(400);
-  // Check against your payslip
+  // Backup line at the bottom of Home
+  await page.evaluate(() => { const el = document.querySelector(".backup-line"); window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 330); }); await page.waitForTimeout(400);
+  await snap("backup", { btn: page.locator(".backup-line button"), line: page.locator(".backup-line") });
+  // Check against your payslip: at the bottom of the Month tab
+  await page.getByLabel("Main").getByRole("button", { name: "Month" }).tap(); await page.waitForTimeout(600);
   const card = page.locator(".payslip-check").first(); await card.scrollIntoViewIfNeeded();
   // The card is open by default: nothing to tap.
   const net = card.getByLabel("Actual net (what the bank paid)").first();
   await net.fill(String(Math.round((Number(await net.getAttribute("placeholder")) - 120) * 100) / 100)); await page.waitForTimeout(400);
   await card.scrollIntoViewIfNeeded(); await page.evaluate(() => window.scrollBy(0, -20));
   await snap("check", { net: net, card: card.locator("fieldset").first() });
-  // Backup line at the bottom of Home
-  await page.evaluate(() => { const el = document.querySelector(".backup-line"); window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 330); }); await page.waitForTimeout(400);
-  await snap("backup", { btn: page.locator(".backup-line button"), line: page.locator(".backup-line") });
   // + Add, then the colour picker
   await page.getByLabel("Settings", { exact: true }).tap(); await page.getByRole("button", { name: /^Site locations/ }).tap(); await page.waitForTimeout(500);
   await snap("add", { add: page.getByRole("button", { name: "＋ Add", exact: true }) });
