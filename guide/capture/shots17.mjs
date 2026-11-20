@@ -1,10 +1,11 @@
 // Pictures for: Check against your payslip, Hide money, the payroll pop-up, + Add and the colour picker, the backup line.
 // Needs the preview server (BASE_PATH=/ build) and a made-up backup file, path in argv[3] (Example Site A/B/C, no real data).
-import { chromium } from "/tmp/claude-0/-home-user-hhsl-salary-tracker/9686a773-84c2-5a35-bb6d-72418f620b9d/scratchpad/pw/node_modules/playwright-core/index.mjs";
+import { createRequire } from "module";
+const { chromium } = createRequire(import.meta.url)("/opt/node-tools/node_modules/playwright");
 import fs from "fs";
 const S = process.argv[2] + "/shots17"; fs.mkdirSync(S, { recursive: true });
 const BACKUP = process.argv[3];
-const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome", args: ["--no-sandbox"] });
+const b = await chromium.launch({ args: ["--no-sandbox"] });
 const boxes = {};
 async function session(date, fn) {
   const ctx = await b.newContext({ viewport: { width: 390, height: 800 }, deviceScaleFactor: 2, hasTouch: true, colorScheme: "light" });
@@ -28,7 +29,7 @@ await session("2026-10-21", async (page, snap) => {
   await page.getByRole("button", { name: "Show money" }).first().tap(); await page.waitForTimeout(400);
   // Check against your payslip
   const card = page.locator(".payslip-check").first(); await card.scrollIntoViewIfNeeded();
-  await card.locator("summary").first().tap(); await page.waitForTimeout(300);
+  // The card is open by default: nothing to tap.
   const net = card.getByLabel("Actual net (what the bank paid)").first();
   await net.fill(String(Math.round((Number(await net.getAttribute("placeholder")) - 120) * 100) / 100)); await page.waitForTimeout(400);
   await card.scrollIntoViewIfNeeded(); await page.evaluate(() => window.scrollBy(0, -20));

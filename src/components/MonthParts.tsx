@@ -1,6 +1,7 @@
 import { TaxSwitch } from "./TaxMode";
 import { WEEKDAYS, hoursText, money, timeRange } from "../format";
 import { correctionKey, othersByDate, payerLabel } from "../model";
+import { monthTitle } from "../payrollReminder";
 import { useSiteFilter } from "../filter";
 import { holidayMap } from "../holidays";
 import { useStore } from "../store";
@@ -80,10 +81,12 @@ export function MonthSummary({ result, label }: { result: MonthResult<Entry>; la
 }
 
 /**
- * "Check against your payslip". Type in what the bank actually paid (net) and the app works out the PAYE that was taken,
- * since NIS and the health surcharge are always right. The gross or the PAYE can be typed in instead.
+ * "Check against your payslip". Three figures sit side by side for each payslip group: the gross, the net the bank paid and the PAYE
+ * taken. NIS and the health surcharge always follow from the gross, so the three are tied together: once two are known the third is
+ * fixed. The net and the PAYE therefore lock each other (typing one works out the other); the gross can always be typed. A locked box
+ * shows the worked-out figure and cannot be edited, so impossible combinations cannot be entered.
  */
-export function PayslipCheck({ month, result, open }: { month: string; result: MonthResult<Entry>; open?: boolean }) {
+export function PayslipCheck({ month, result, open = true }: { month: string; result: MonthResult<Entry>; open?: boolean }) {
   const { data, update } = useStore();
   if (result.payers.length === 0) return null;
   const setCorrection = (payer: string, field: "gross" | "paye" | "net", raw: string) =>
@@ -97,6 +100,7 @@ export function PayslipCheck({ month, result, open }: { month: string; result: M
       else next[key] = merged;
       return { ...d, corrections: next };
     });
+  const cents = (n: number) => String(Math.round(n * 100) / 100);
   const diff = (actual: number, estimate: number) => {
     const d = Math.round((actual - estimate) * 100) / 100;
     return d === 0 ? "the same as the app worked out" : `${money(Math.abs(d))} ${d < 0 ? "lower" : "higher"} than the app worked out`;
@@ -106,39 +110,46 @@ export function PayslipCheck({ month, result, open }: { month: string; result: M
     <details className="card correction payslip-check" open={open || undefined}>
       <summary>
         <span className="pc-title">Check against your payslip</span>
-        <span className="pc-sub muted small">Put in what the bank paid and the app works out the PAYE taken.</span>
+        <span className="pc-sub muted small">{monthTitle(month)}: put in what the bank paid and the app works out the PAYE taken.</span>
       </summary>
-      <p className="muted small">Look in your bank app for what was paid into your account (the net). NIS and the health surcharge are always right, so the PAYE taken is the gross less those and less your net. Leave it blank to use the calculated figures.</p>
+      <p className="muted small">You do not need to fill in every box. NIS and the health surcharge are always right, so the net and the PAYE depend on each other: type one and the other is worked out (that box is greyed and cannot be typed in). Leave a box blank to use the calculated figure.</p>
       {result.payers.map((p) => {
         const o = data.corrections?.[correctionKey(month, p.payer)];
-        const hasNet = o?.net !== undefined;
+        const netTyped = o?.net !== undefined;
+        const payeTyped = !netTyped && o?.paye !== undefined;
+        const anyTyped = netTyped || payeTyped || o?.gross !== undefined;
+        const impossible = anyTyped && (p.paye < -0.005 || p.net < -0.005);
         return (
           <fieldset key={p.payer}>
             <legend>{p.payer === "all" ? "All sites (combined)" : payerLabel(data.payerNames, p.payer)}</legend>
             <label>Actual net (what the bank paid)
-              <input data-money="" type="number" inputMode="decimal" step="any" placeholder={String(Math.round(p.estimate.net * 100) / 100)}
-                value={o?.net ?? ""} onChange={(e) => setCorrection(p.payer, "net", e.target.value)} />
+              <input data-money="" type="number" inputMode="decimal" step="any" placeholder={cents(p.estimate.net)} disabled={payeTyped}
+                value={payeTyped ? cents(p.net) : (o?.net ?? "")} onChange={(e) => setCorrection(p.payer, "net", e.target.value)} />
             </label>
-            {hasNet && (
+            <div className="grid2">
+              <label>Actual gross
+                <input data-money="" type="number" inputMode="decimal" step="any" placeholder={cents(p.estimate.gross)}
+                  value={o?.gross ?? ""} onChange={(e) => setCorrection(p.payer, "gross", e.target.value)} />
+              </label>
+              <label>Actual PAYE
+                <input data-money="" type="number" inputMode="decimal" step="any" placeholder={cents(p.estimate.paye)} disabled={netTyped}
+                  value={netTyped ? cents(p.paye) : (o?.paye ?? "")} onChange={(e) => setCorrection(p.payer, "paye", e.target.value)} />
+              </label>
+            </div>
+            {netTyped && !impossible && (
               <p className="pc-result" role="status">
                 PAYE taken: <strong className="c-paye">{money(p.paye)}</strong>
                 <span className="muted small block">Your net is {diff(p.net, p.estimate.net)} (estimate {money(p.estimate.net)}, calculated PAYE {money(p.estimate.paye)}).</span>
               </p>
             )}
-            <details className="pc-more">
-              <summary className="muted small">Enter the gross or the PAYE instead</summary>
-              <div className="grid2">
-                <label>Actual gross
-                  <input data-money="" type="number" inputMode="decimal" step="any" placeholder={String(Math.round(p.estimate.gross * 100) / 100)}
-                    value={o?.gross ?? ""} onChange={(e) => setCorrection(p.payer, "gross", e.target.value)} />
-                </label>
-                <label>Actual PAYE
-                  <input data-money="" type="number" inputMode="decimal" step="any" placeholder={hasNet ? "from your net" : "calculated"} disabled={hasNet}
-                    value={hasNet ? "" : (o?.paye ?? "")} onChange={(e) => setCorrection(p.payer, "paye", e.target.value)} />
-                </label>
-              </div>
-              {hasNet && <p className="muted small">The PAYE comes from the net you typed. Clear the net to type a PAYE instead.</p>}
-            </details>
+            {payeTyped && !impossible && (
+              <p className="pc-result" role="status">
+                Net pay: <strong className="c-net">{money(p.net)}</strong>
+                <span className="muted small block">That is {diff(p.net, p.estimate.net)} (estimate {money(p.estimate.net)}).</span>
+              </p>
+            )}
+            {(netTyped || payeTyped) && <p className="muted small pc-note">{netTyped ? "The PAYE box is worked out from the net, so it cannot be typed. Clear the net to type a PAYE instead." : "The net box is worked out from the PAYE, so it cannot be typed. Clear the PAYE to type a net instead."}</p>}
+            {impossible && <p className="notice warn" role="alert">These figures do not add up: with this gross, NIS and surcharge, {netTyped ? "the net is higher than what is left after NIS and the surcharge, so the PAYE would be below zero" : "the PAYE is higher than what is left after NIS and the surcharge, so the net would be below zero"}. Check what you typed.</p>}
           </fieldset>
         );
       })}

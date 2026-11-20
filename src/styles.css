@@ -1124,3 +1124,11 @@ html.hide-money .viewer.money-doc canvas { filter: blur(10px); }
 .history ul.plain { padding: 0; margin: 8px 0 0; list-style: none; }
 .history ul.plain li.row { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 10px; margin: 0; padding: 10px 0; border-top: 1px solid var(--line); }
 .history ul.plain li.row button.danger { min-height: 34px; padding: 4px 12px; }
+
+/* Payslip check: group names stand out, the three boxes are always in view */
+.payslip-check fieldset > legend { font-weight: 700; color: var(--text); font-size: 1.02rem; padding: 0 6px; }
+.payslip-check .pc-lock { font-weight: 500; }
+.payslip-check .pc-note { margin: 6px 0 0; }
+.payslip-check fieldset { margin: 10px 0 0; }
+.payslip-check label { display: block; }
+.payslip-check .grid2 { margin-top: 8px; }
