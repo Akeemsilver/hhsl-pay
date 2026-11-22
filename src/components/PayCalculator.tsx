@@ -51,7 +51,7 @@ export function PayCalculator({ rules, fiveByDefault }: { rules: TaxRules; fiveB
         ] as const).map(([name, v, key]) => (
           <li key={name} className={key !== null && key === source && typed ? "typed" : ""}><span>{name}</span><strong>{v === undefined ? "–" : money(v)}</strong></li>
         ))}
-        <li className="total"><span>All taken off the gross</span><strong>{solved ? money(solved.tax.nis + solved.tax.surcharge + solved.tax.paye) : "–"}</strong></li>
+        <li className="total"><span>Total deductions</span><strong>{solved ? money(solved.tax.nis + solved.tax.surcharge + solved.tax.paye) : "–"}</strong></li>
       </ul>
       {solved?.zeroPaye && <p className="notice" role="status">No PAYE is paid up to a gross of {money(solved.tax.gross)} in a {mondays} week month.</p>}
       {solved && solved.others.length > 0 && (
