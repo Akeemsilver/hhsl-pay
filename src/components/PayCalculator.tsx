@@ -1,3 +1,4 @@
+import { DecimalInput } from "./DecimalInput";
 import { useState } from "react";
 import { solvePay, type Known, type TaxRules } from "../engine";
 import { money } from "../format";
@@ -35,10 +36,10 @@ export function PayCalculator({ rules, fiveByDefault }: { rules: TaxRules; fiveB
       <p className="muted small">Weeks means the Mondays in the month: NIS is paid for each one, and a 5 week month has a bigger health surcharge.</p>
       {BOXES.map(({ key, label: l }) => (
         <label key={key}>{l}
-          <input data-money="" type="number" inputMode="decimal" step="any" min="0" aria-label={l}
+          <DecimalInput data-money="" aria-label={l}
             placeholder="0.00"
             value={source === key ? text : solved ? cents(solved.tax[key]) : ""}
-            onChange={(e) => { setSource(key); setText(e.target.value); }} />
+            onText={(t) => { setSource(key); setText(t); }} />
         </label>
       ))}
       <ul className="calc-lines" aria-label="Summary">

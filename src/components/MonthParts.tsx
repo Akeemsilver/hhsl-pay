@@ -1,3 +1,4 @@
+import { DecimalInput } from "./DecimalInput";
 import { TaxSwitch } from "./TaxMode";
 import { WEEKDAYS, hoursText, money, timeRange } from "../format";
 import { correctionKey, othersByDate, payerLabel } from "../model";
@@ -123,17 +124,17 @@ export function PayslipCheck({ month, result, open = true }: { month: string; re
           <fieldset key={p.payer}>
             <legend>{p.payer === "all" ? "All sites (combined)" : payerLabel(data.payerNames, p.payer)}</legend>
             <label>Actual net (what the bank paid)
-              <input data-money="" type="number" inputMode="decimal" step="any" placeholder={cents(p.estimate.net)} disabled={payeTyped}
-                value={payeTyped ? cents(p.net) : (o?.net ?? "")} onChange={(e) => setCorrection(p.payer, "net", e.target.value)} />
+              <DecimalInput data-money="" placeholder={cents(p.estimate.net)} disabled={payeTyped}
+                value={payeTyped ? cents(p.net) : (o?.net ?? "")} onText={(t) => setCorrection(p.payer, "net", t)} />
             </label>
             <div className="grid2">
               <label>Actual gross
-                <input data-money="" type="number" inputMode="decimal" step="any" placeholder={cents(p.estimate.gross)}
-                  value={o?.gross ?? ""} onChange={(e) => setCorrection(p.payer, "gross", e.target.value)} />
+                <DecimalInput data-money="" placeholder={cents(p.estimate.gross)}
+                  value={o?.gross ?? ""} onText={(t) => setCorrection(p.payer, "gross", t)} />
               </label>
               <label>Actual PAYE
-                <input data-money="" type="number" inputMode="decimal" step="any" placeholder={cents(p.estimate.paye)} disabled={netTyped}
-                  value={netTyped ? cents(p.paye) : (o?.paye ?? "")} onChange={(e) => setCorrection(p.payer, "paye", e.target.value)} />
+                <DecimalInput data-money="" placeholder={cents(p.estimate.paye)} disabled={netTyped}
+                  value={netTyped ? cents(p.paye) : (o?.paye ?? "")} onText={(t) => setCorrection(p.payer, "paye", t)} />
               </label>
             </div>
             {netTyped && !impossible && (
