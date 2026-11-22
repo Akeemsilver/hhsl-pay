@@ -1,9 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { valueOn } from "../engine";
+import { mondaysInMonth, valueOn } from "../engine";
 import { useSelectedDate } from "../session";
 import { MONTHS, dayDMY, daysOfMonth, hoursText, localDMY, money, shiftMonth, todayISO } from "../format";
 import { useInstall } from "../install";
 import { OpenInChrome } from "../components/OpenInChrome";
+import { PayCalculator } from "../components/PayCalculator";
 import { setKitNote, useKitNote } from "../kitNote";
 import { useSiteFilter } from "../filter";
 import { useMonth, useMonthSplit, useYear } from "../hooks";
@@ -300,6 +301,8 @@ export function HomeScreen() {
           <button className={backupStale ? "primary" : ""} onClick={() => open({ page: "backup" })}>Back up</button>
         </section>
       )}
+
+      <PayCalculator rules={rules} fiveByDefault={mondaysInMonth(Number(today.slice(0, 4)), Number(today.slice(5, 7))) === 5} />
     </>
   );
 }

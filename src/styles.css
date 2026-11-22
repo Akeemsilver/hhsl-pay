@@ -1133,3 +1133,14 @@ html.hide-money .viewer.money-doc canvas { filter: blur(10px); }
 .payslip-check label { display: block; }
 .payslip-check .grid2 { margin-top: 8px; }
 .share-app button.link.small { display: block; margin: 8px auto 12px; text-align: center; font-weight: 600; }
+
+/* Pay calculator at the bottom of Home */
+.pay-calc label { display: block; margin-top: 10px; }
+.pay-calc .segmented { margin-top: 6px; }
+.pay-calc .calc-lines { list-style: none; margin: 12px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.pay-calc .calc-lines li { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+.pay-calc .calc-lines li.total { border-bottom: 0; font-weight: 700; }
+.pay-calc button:not(.on) { margin-top: 10px; }
+.pay-calc .segmented button { margin-top: 0; }
+.pay-calc .calc-lines li.total { margin-top: 2px; }
+.pay-calc .calc-lines { margin-top: 14px; }

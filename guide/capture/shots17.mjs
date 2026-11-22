@@ -30,6 +30,14 @@ await session("2026-10-21", async (page, snap) => {
   // Backup line at the bottom of Home
   await page.evaluate(() => { const el = document.querySelector(".backup-line"); window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 330); }); await page.waitForTimeout(400);
   await snap("backup", { btn: page.locator(".backup-line button"), line: page.locator(".backup-line") });
+  // Pay calculator at the bottom of Home
+  await page.setViewportSize({ width: 390, height: 1000 }); // the card is tall: a taller screen keeps the tab bar off its summary
+  const calc = page.locator(".pay-calc"); await calc.scrollIntoViewIfNeeded();
+  await calc.getByRole("button", { name: "4 weeks" }).tap();
+  const cnet = calc.getByLabel("Net (what the bank pays)"); await cnet.fill("10000"); await page.waitForTimeout(400);
+  await page.evaluate(() => { const el = document.querySelector(".pay-calc"); window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 70); }); await page.waitForTimeout(300);
+  await snap("calc", { net: cnet, card: calc, weeks: calc.locator(".segmented") });
+  await page.setViewportSize({ width: 390, height: 800 });
   // Check against your payslip: at the bottom of the Month tab
   await page.getByLabel("Main").getByRole("button", { name: "Month" }).tap(); await page.waitForTimeout(600);
   const card = page.locator(".payslip-check").first(); await card.scrollIntoViewIfNeeded();
