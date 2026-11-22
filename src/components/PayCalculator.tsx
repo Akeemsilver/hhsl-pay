@@ -12,7 +12,7 @@ const BOXES: Array<{ key: Known; label: string }> = [
 
 /**
  * A small calculator at the bottom of Home. Type a net, a gross or a PAYE and the other boxes are filled in with the same formulas the
- * app uses for your pay (NIS by the Mondays in the month, PAYE, the health surcharge). The box you typed in is the one that is kept.
+ * app uses for your pay (NIS by the Mondays in the month, PAYE, the health surcharge). Any of the three boxes can be typed in; all look the same.
  */
 export function PayCalculator({ rules, fiveByDefault }: { rules: TaxRules; fiveByDefault: boolean }) {
   const [five, setFive] = useState(fiveByDefault);
@@ -34,7 +34,7 @@ export function PayCalculator({ rules, fiveByDefault }: { rules: TaxRules; fiveB
       </div>
       <p className="muted small">Weeks means the Mondays in the month: NIS is paid for each one, and a 5 week month has a bigger health surcharge.</p>
       {BOXES.map(({ key, label: l }) => (
-        <label key={key} className={source === key ? "calc-src" : ""}>{l}{source === key && <small className="muted"> · you typed this</small>}
+        <label key={key}>{l}
           <input data-money="" type="number" inputMode="decimal" step="any" min="0" aria-label={l}
             placeholder="0.00"
             value={source === key ? text : solved ? cents(solved.tax[key]) : ""}
@@ -48,8 +48,8 @@ export function PayCalculator({ rules, fiveByDefault }: { rules: TaxRules; fiveB
           ["PAYE", solved?.tax.paye, "paye"],
           ["NIS", solved?.tax.nis, null],
           ["Health surcharge", solved?.tax.surcharge, null],
-        ] as const).map(([name, v, key]) => (
-          <li key={name} className={key !== null && key === source && typed ? "typed" : ""}><span>{name}</span><strong>{v === undefined ? "–" : money(v)}</strong></li>
+        ] as const).map(([name, v]) => (
+          <li key={name}><span>{name}</span><strong>{v === undefined ? "–" : money(v)}</strong></li>
         ))}
         <li className="total"><span>Total deductions</span><strong>{solved ? money(solved.tax.nis + solved.tax.surcharge + solved.tax.paye) : "–"}</strong></li>
       </ul>
