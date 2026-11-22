@@ -5,8 +5,8 @@ import { money } from "../format";
 const cents = (n: number) => String(Math.round(n * 100) / 100);
 
 const BOXES: Array<{ key: Known; label: string }> = [
-  { key: "net", label: "Net (what the bank pays)" },
   { key: "gross", label: "Gross" },
+  { key: "net", label: "Net (what the bank pays)" },
   { key: "paye", label: "PAYE" },
 ];
 
@@ -41,14 +41,18 @@ export function PayCalculator({ rules, fiveByDefault }: { rules: TaxRules; fiveB
             onChange={(e) => { setSource(key); setText(e.target.value); }} />
         </label>
       ))}
-      {solved && (
-        <ul className="calc-lines" aria-label="Breakdown">
-          <li><span>NIS</span><strong>{money(solved.tax.nis)}</strong></li>
-          <li><span>Health surcharge</span><strong>{money(solved.tax.surcharge)}</strong></li>
-          <li><span>PAYE</span><strong>{money(solved.tax.paye)}</strong></li>
-          <li className="total"><span>All taken off the gross</span><strong>{money(solved.tax.nis + solved.tax.surcharge + solved.tax.paye)}</strong></li>
-        </ul>
-      )}
+      <ul className="calc-lines" aria-label="Summary">
+        {([
+          ["Gross", solved?.tax.gross, "gross"],
+          ["Net (what the bank pays)", solved?.tax.net, "net"],
+          ["PAYE", solved?.tax.paye, "paye"],
+          ["NIS", solved?.tax.nis, null],
+          ["Health surcharge", solved?.tax.surcharge, null],
+        ] as const).map(([name, v, key]) => (
+          <li key={name} className={key !== null && key === source && typed ? "typed" : ""}><span>{name}</span><strong>{v === undefined ? "–" : money(v)}</strong></li>
+        ))}
+        <li className="total"><span>All taken off the gross</span><strong>{solved ? money(solved.tax.nis + solved.tax.surcharge + solved.tax.paye) : "–"}</strong></li>
+      </ul>
       {solved?.zeroPaye && <p className="notice" role="status">No PAYE is paid up to a gross of {money(solved.tax.gross)} in a {mondays} week month.</p>}
       {solved && solved.others.length > 0 && (
         <p className="notice" role="status">The same {label.toLowerCase()} can also be reached with a gross of {solved.others.map(money).join(" or ")}, because the NIS and surcharge step up at that point. The lowest gross is shown.</p>
