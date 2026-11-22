@@ -47,9 +47,20 @@ describe("pay calculator", () => {
     expect(summary()[0]).toBe("Gross–");
   });
 
-  it("says so when no gross gives the figure", () => {
+  it("only lets numbers through: letters and a minus sign are dropped, a comma counts as the dot, a typed dot stays", () => {
     draw();
-    act(() => { fireEvent.change(screen.getByLabelText("Net (what the bank pays)"), { target: { value: "-5" } }); });
-    expect(screen.getByRole("alert").textContent).toContain("No gross gives exactly that net");
+    const net = screen.getByLabelText("Net (what the bank pays)") as HTMLInputElement;
+    act(() => { fireEvent.change(net, { target: { value: "-5a,5" } }); });
+    expect(net.value).toBe("5.5");
+    act(() => { fireEvent.change(net, { target: { value: "5." } }); });
+    expect(net.value).toBe("5.");
+  });
+
+  it("the boxes use the number keypad and the keyboard tick", () => {
+    draw();
+    const net = screen.getByLabelText("Net (what the bank pays)");
+    expect(net.getAttribute("inputmode")).toBe("decimal");
+    expect(net.getAttribute("enterkeyhint")).toBe("done");
+    expect(net.getAttribute("type")).toBe("text");
   });
 });

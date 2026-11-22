@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { DecimalInput } from "../components/DecimalInput";
 import { SitePicker } from "../components/SitePicker";
 import { computeDay, findSite, valueOn } from "../engine";
 import { dayDMY, dmy, durationText, hoursText, money, timeRange } from "../format";
@@ -234,10 +235,10 @@ export function DayEditor({ date, add, focus, onClose }: { date: string; add?: "
                 </label>
                 <label>
                   Amount paid ($, optional)
-                  <input
-                    data-money="" type="number" inputMode="decimal" min="0" step="any" placeholder="Unknown"
+                  <DecimalInput
+                    data-money="" placeholder="Unknown"
                     value={entry.amount ?? ""}
-                    onChange={(e) => patch(entry.id, { amount: e.target.value === "" ? undefined : Number(e.target.value) })}
+                    onText={(t) => patch(entry.id, { amount: t === "" ? undefined : Number(t) })}
                   />
                   <span className="muted small">Leave blank until the company confirms it, then tap the date to add the amount. Once it has an amount it is added to your Point Lisas / other gross and taxed with it.</span>
                 </label>

@@ -1,3 +1,4 @@
+import { DecimalInput } from "./DecimalInput";
 import type { Dated } from "../engine";
 import type { Impact } from "../rateEdit";
 import { dmy, money } from "../format";
@@ -8,10 +9,10 @@ export type Num = number | undefined;
 
 export function NumInput({ value, onChange, label, step = "any" }: { value: Num; onChange: (v: Num) => void; label: string; step?: string }) {
   return (
-    <input
-      type="number" inputMode="decimal" step={step} aria-label={label} data-money={/×|percent|factor|show rate above hours/i.test(label) ? undefined : ""}
+    <DecimalInput
+      aria-label={label} data-money={/×|percent|factor|show rate above hours/i.test(label) ? undefined : ""}
       value={value ?? ""}
-      onChange={(e) => onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+      onText={(t) => onChange(t === "" ? undefined : Number(t))}
     />
   );
 }
